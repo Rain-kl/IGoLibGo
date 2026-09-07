@@ -75,14 +75,16 @@ export function SnowEffect() {
     createSnowflakes();
     drawSnowflakes();
 
-    window.addEventListener('resize', () => {
+    const handleResize = () => {
       resizeCanvas();
       createSnowflakes();
-    });
+    };
+
+    window.addEventListener('resize', handleResize);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 

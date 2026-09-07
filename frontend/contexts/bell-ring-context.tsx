@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -42,8 +43,13 @@ export function BellRingProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ isRinging, triggerRing }),
+    [isRinging, triggerRing],
+  );
+
   return (
-    <BellRingContext.Provider value={{ isRinging, triggerRing }}>
+    <BellRingContext.Provider value={contextValue}>
       {children}
     </BellRingContext.Provider>
   );

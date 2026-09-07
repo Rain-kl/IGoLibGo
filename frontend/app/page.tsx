@@ -1,5 +1,3 @@
-'use client';
-
 import { HeroSection } from '@/components/home/hero-section';
 import { DeveloperSection } from '@/components/home/developer-section';
 import { FooterSection } from '@/components/home/footer-section';

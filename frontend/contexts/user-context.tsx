@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -128,17 +129,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchUser]);
 
+  const contextValue = useMemo<UserContextValue>(
+    () => ({
+      ...state,
+      setUser,
+      refetch,
+      logout,
+    }),
+    [state, setUser, refetch, logout],
+  );
+
   return (
-    <UserContext.Provider
-      value={{
-        ...state,
-        setUser,
-        refetch,
-        logout,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
   );
 }
 
