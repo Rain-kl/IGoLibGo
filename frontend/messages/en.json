@@ -497,7 +497,66 @@
       "menuDisplayManagementDesc": "Configure the visibility of sidebar menu items for all logged-in users.",
       "notHideable": "Cannot be hidden",
       "securityTipTitle": "Security note:",
-      "securityTipDesc": "To prevent admins from being locked out after hiding \"System Settings\", the system restricts disabling this menu item. All other menu items can be freely toggled. When hidden, empty group headers are also automatically hidden."
+      "securityTipDesc": "To prevent admins from being locked out after hiding \"System Settings\", the system restricts disabling this menu item. All other menu items can be freely toggled. When hidden, empty group headers are also automatically hidden.",
+      "groups": {
+        "basic": "Basic Menus",
+        "admin": "Management Menus",
+        "docs": "Documentation Menus"
+      },
+      "items": {
+        "home": {
+          "label": "Home",
+          "description": "System console / personal home page"
+        },
+        "files": {
+          "label": "My Files",
+          "description": "Personal file management and upload"
+        },
+        "users": {
+          "label": "User Management",
+          "description": "View and manage system users and statuses"
+        },
+        "tasks": {
+          "label": "Task Management",
+          "description": "View and schedule asynchronous and cron tasks"
+        },
+        "storage": {
+          "label": "Storage Management",
+          "description": "Manage system storage and clean up unused files"
+        },
+        "database": {
+          "label": "Database Management",
+          "description": "Monitor physical database, paginate tables, and run interactive SQL"
+        },
+        "push": {
+          "label": "Push Notification",
+          "description": "Configure and dispatch system notifications and push messages"
+        },
+        "logs": {
+          "label": "System Logs",
+          "description": "View asynchronous task execution logs and system status"
+        },
+        "system": {
+          "label": "System Config",
+          "description": "Manage and maintain system key-value configurations"
+        },
+        "settings": {
+          "label": "System Settings",
+          "description": "Configure security verification, mail service, and menu visibility"
+        },
+        "demo": {
+          "label": "UI Showcase",
+          "description": "Showcase, debug, and reference built-in UI components and design specs"
+        },
+        "apiDocs": {
+          "label": "API Docs",
+          "description": "Interactive Swagger API documentation"
+        },
+        "usageDocs": {
+          "label": "User Guide",
+          "description": "Deployment and operational guides for developers and operators"
+        }
+      }
     },
     "templates": {
       "templateCreated": "Notification template created",
