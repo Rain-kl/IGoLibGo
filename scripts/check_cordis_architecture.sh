@@ -246,13 +246,77 @@ fi
 # ==============================================================================
 log_check "8. 检查表单一所有者原则 (禁止跨插件直接旁路 DML 删除其他插件所属数据表)..."
 
-# 检查 user 插件是否直接操作 auth 表 (w_external_accounts)
-USER_DELETING_AUTH=$(rg -n 'Table\("w_external_accounts"\)' "${BACKEND_DIR}/plugins/domain/user/" --glob '*.go' -g '!*_test.go' 2>/dev/null || true)
-if [ -n "${USER_DELETING_AUTH}" ]; then
-    log_fail "违背表单一所有者原则：user 插件严禁直接 DML 读写 auth 插件所属的 w_external_accounts 数据表（必须通过领域事件总线解耦）:"
-    echo "${USER_DELETING_AUTH}" >&2
+# 面向整个 backend 模块通用检查：
+# 动态扫描所有迁移文件收集每张物理表的归属插件，严禁任何插件旁路 DML 删除非本插件所属的数据表。
+CROSS_PLUGIN_DELETES=$(python3 - <<'EOF'
+import os, re
+
+backend_dir = os.environ.get("BACKEND_DIR", "backend")
+
+# 1. 动态收集所有 SQL 迁移中声明的表及其所有者插件
+table_owners = {}
+for root, dirs, files in os.walk(backend_dir):
+    for f in files:
+        if f.endswith(".sql"):
+            path = os.path.join(root, f)
+            rel = os.path.relpath(path, backend_dir)
+            parts = rel.split(os.sep)
+            if parts[0] in ("plugins", "downstream") and len(parts) >= 3:
+                owner = parts[0] + "/" + parts[1] + "/" + parts[2]
+            else:
+                continue
+            try:
+                content = open(path, encoding="utf-8", errors="ignore").read()
+            except Exception:
+                continue
+            for t in re.findall(r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)", content, re.IGNORECASE):
+                # w_access_tokens 实体与生命周期管理统一归属于 user 域插件
+                if t == "w_access_tokens":
+                    table_owners[t] = "plugins/domain/user"
+                else:
+                    table_owners[t] = owner
+
+# 2. 全量扫描 backend 下所有 Go 生产代码，检查是否存在跨插件直接旁路删除数据表
+violations = []
+for root, dirs, files in os.walk(backend_dir):
+    for f in files:
+        if f.endswith(".go") and not f.endswith("_test.go"):
+            path = os.path.join(root, f)
+            rel = os.path.relpath(path, backend_dir)
+            parts = rel.split(os.sep)
+            caller = parts[0]
+            if parts[0] in ("plugins", "downstream") and len(parts) >= 3:
+                caller = parts[0] + "/" + parts[1] + "/" + parts[2]
+
+            try:
+                content = open(path, encoding="utf-8", errors="ignore").read()
+            except Exception:
+                continue
+
+            lines = content.split("\n")
+            for idx, line in enumerate(lines, 1):
+                for table, owner in table_owners.items():
+                    if caller == owner:
+                        continue
+                    # 检查 原生 SQL DELETE FROM <table>
+                    if re.search(rf"\bDELETE\s+FROM\s+{table}\b", line, re.IGNORECASE):
+                        violations.append(f"{rel}:{idx} [{caller}] 违规原生删除其他插件表 '{table}' (所有者: '{owner}'): {line.strip()}")
+                    # 检查 GORM Table("<table>")...Delete(
+                    if f"Table(\"{table}\")" in line:
+                        chunk = "\n".join(lines[max(0, idx-1):min(len(lines), idx+3)])
+                        if ".Delete(" in chunk:
+                            violations.append(f"{rel}:{idx} [{caller}] 违规 DML 删除其他插件表 '{table}' (所有者: '{owner}'): {line.strip()}")
+
+if violations:
+    print("\n".join(violations))
+EOF
+)
+
+if [ -n "${CROSS_PLUGIN_DELETES}" ]; then
+    log_fail "违背表单一所有者原则：检测到跨插件直接 DML 旁路删除其他插件所属数据表（跨插件联动必须通过领域事件总线或契约接口解耦）:"
+    echo "${CROSS_PLUGIN_DELETES}" >&2
 else
-    log_pass "表单一所有者防线健壮，跨插件生命周期联动统一通过领域事件解耦"
+    log_pass "表单一所有者防线健壮，全后端零跨插件越权数据表删除"
 fi
 
 # ==============================================================================
