@@ -57,9 +57,9 @@ export function UserDetailSheet({
                     </Avatar>
 
                     <div className='space-y-1.5'>
-                      <h3 className='text-lg font-bold tracking-tight'>
+                      <p className='text-lg font-bold tracking-tight'>
                         {selectedUser.nickname}
-                      </h3>
+                      </p>
                       <div className='flex items-center justify-center gap-2'>
                         <code className='px-1.5 py-0.5 rounded-md bg-muted text-[10px] font-mono text-muted-foreground'>
                           @{selectedUser.username}

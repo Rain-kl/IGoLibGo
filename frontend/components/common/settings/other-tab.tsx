@@ -32,112 +32,61 @@ import type { SystemConfig } from '@/lib/services/admin';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
+type GroupKey = 'basic' | 'admin' | 'docs';
+type ItemKey =
+  | 'home'
+  | 'files'
+  | 'users'
+  | 'tasks'
+  | 'storage'
+  | 'database'
+  | 'push'
+  | 'logs'
+  | 'system'
+  | 'settings'
+  | 'demo'
+  | 'apiDocs'
+  | 'usageDocs';
+
 interface MenuItem {
+  key: ItemKey;
   path: string;
-  label: string;
-  description: string;
   icon: ComponentType<{ className?: string }>;
   readOnly?: boolean;
 }
 
 interface MenuGroup {
-  name: string;
+  key: GroupKey;
   items: MenuItem[];
 }
 
 const MENU_GROUPS: MenuGroup[] = [
   {
-    name: '基础菜单',
+    key: 'basic',
     items: [
-      {
-        path: '/home',
-        label: '首页',
-        description: '系统控制台/个人首页',
-        icon: Home,
-      },
-      {
-        path: '/files',
-        label: '我的文件',
-        description: '用户个人文件管理与上传',
-        icon: FolderOpen,
-      },
+      { key: 'home', path: '/home', icon: Home },
+      { key: 'files', path: '/files', icon: FolderOpen },
     ],
   },
   {
-    name: '管理菜单',
+    key: 'admin',
     items: [
-      {
-        path: '/admin/users',
-        label: '用户管理',
-        description: '查看和管理系统用户列表及其状态',
-        icon: UserRound,
-      },
-      {
-        path: '/admin/tasks',
-        label: '任务管理',
-        description: '查看和调度系统异步及定时任务',
-        icon: Layers,
-      },
-      {
-        path: '/admin/files',
-        label: '存储管理',
-        description: '管理系统文件存储和清理无用文件',
-        icon: FolderOpen,
-      },
-      {
-        path: '/admin/database',
-        label: '数据管理',
-        description: '监控物理数据库状态、分页浏览表数据及交互式 SQL 查询',
-        icon: Database,
-      },
-      {
-        path: '/admin/push',
-        label: '通知推送',
-        description: '配置和发送系统通知及推送消息',
-        icon: Bell,
-      },
-      {
-        path: '/admin/logs',
-        label: '系统日志',
-        description: '查看异步任务执行日志和系统运行情况',
-        icon: Terminal,
-      },
-      {
-        path: '/admin/system',
-        label: '系统配置',
-        description: '管理和维护系统基础键值对配置',
-        icon: ShieldCheck,
-      },
-      {
-        path: '/admin/settings',
-        label: '系统设置',
-        description: '配置安全验证、邮箱服务及目录显示',
-        icon: Settings,
-        readOnly: true,
-      },
+      { key: 'users', path: '/admin/users', icon: UserRound },
+      { key: 'tasks', path: '/admin/tasks', icon: Layers },
+      { key: 'storage', path: '/admin/files', icon: FolderOpen },
+      { key: 'database', path: '/admin/database', icon: Database },
+      { key: 'push', path: '/admin/push', icon: Bell },
+      { key: 'logs', path: '/admin/logs', icon: Terminal },
+      { key: 'system', path: '/admin/system', icon: ShieldCheck },
+      { key: 'settings', path: '/admin/settings', icon: Settings, readOnly: true },
     ],
   },
   {
-    name: '文档菜单',
+    key: 'docs',
     items: [
-      {
-        path: '/admin/demo',
-        label: '规范示例',
-        description: '内置 UI 组件与设计规范的展示、调试与参考',
-        icon: Code,
-      },
-      {
-        path: '/docs/api',
-        label: '接口文档',
-        description: '系统 Swagger 交互式 API 接口文档',
-        icon: CreditCard,
-      },
-      {
-        path: '/docs/how-to-use',
-        label: '使用文档',
-        description: '面向开发与运营的部署使用指南',
-        icon: FileText,
-      },
+      { key: 'demo', path: '/admin/demo', icon: Code },
+      { key: 'apiDocs', path: '/docs/api', icon: CreditCard },
+      { key: 'usageDocs', path: '/docs/how-to-use', icon: FileText },
     ],
   },
 ];
@@ -215,10 +164,10 @@ export function OtherTab({ configs }: OtherTabProps) {
       </CardHeader>
       <CardContent className='pt-6 space-y-6'>
         {MENU_GROUPS.map((group) => (
-          <div key={group.name} className='space-y-3'>
+          <div key={group.key} className='space-y-3'>
             <div className='flex items-center gap-2'>
               <span className='text-xs font-semibold text-muted-foreground tracking-wider uppercase'>
-                {group.name}
+                {t(`groups.${group.key}`)}
               </span>
               <div className='h-px bg-border/40 flex-1' />
             </div>
@@ -227,6 +176,8 @@ export function OtherTab({ configs }: OtherTabProps) {
                 const Icon = item.icon;
                 const isReadOnly = !!item.readOnly;
                 const checked = menuDisplayConfig[item.path] !== false;
+                const itemLabel = t(`items.${item.key}.label`);
+                const itemDesc = t(`items.${item.key}.description`);
 
                 return (
                   <div
@@ -239,7 +190,7 @@ export function OtherTab({ configs }: OtherTabProps) {
                           <Icon className='size-4 text-primary shrink-0' />
                         )}
                         <span className='font-medium text-sm text-foreground truncate'>
-                          {item.label}
+                          {itemLabel}
                         </span>
                         {isReadOnly && (
                           <span className='text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border shrink-0'>
@@ -248,11 +199,12 @@ export function OtherTab({ configs }: OtherTabProps) {
                         )}
                       </div>
                       <p className='text-xs text-muted-foreground leading-normal line-clamp-2'>
-                        {item.description}
+                        {itemDesc}
                       </p>
                     </div>
                     <div className='flex items-center'>
                       <Switch
+                        aria-label={itemLabel}
                         checked={checked}
                         disabled={
                           isReadOnly || updateMenuConfigMutation.isPending

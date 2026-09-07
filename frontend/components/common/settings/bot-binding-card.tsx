@@ -96,9 +96,9 @@ export function BotBindingCard() {
       </div>
 
       <div className='space-y-2'>
-        <h3 className='text-[11px] font-semibold text-muted-foreground uppercase tracking-wider'>
+        <p className='text-[11px] font-semibold text-muted-foreground uppercase tracking-wider'>
           {t('bound')}
-        </h3>
+        </p>
         {bindingsQuery.isPending ? (
           <div className='flex items-center justify-center py-4'>
             <Loader2 className='size-4 animate-spin text-primary' />

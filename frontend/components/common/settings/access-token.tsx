@@ -504,6 +504,7 @@ export function AccessTokenMain() {
                   type='button'
                   size='icon'
                   variant='outline'
+                  aria-label={ta('copy')}
                   className='size-8 rounded-lg shrink-0 border-dashed text-primary hover:bg-primary/10 hover:border-primary/30 transition-colors'
                   onClick={() => {
                     const secret =

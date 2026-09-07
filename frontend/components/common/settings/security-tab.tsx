@@ -480,6 +480,7 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
                     <Switch
                       checked={source.is_active}
                       disabled={toggleSourceMutation.isPending}
+                      aria-label={`${source.display_name || source.name} - ${t('status')}`}
                       className='scale-90 mr-2'
                       onCheckedChange={() =>
                         toggleSourceMutation.mutate(source)
@@ -489,6 +490,7 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
                       type='button'
                       variant='ghost'
                       size='icon'
+                      aria-label={tCommon('edit')}
                       className='size-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors'
                       onClick={() => {
                         setSelectedSource(source);
@@ -501,6 +503,7 @@ export function SecurityTab({ configs, systemConfigsQuery }: SecurityTabProps) {
                       type='button'
                       variant='ghost'
                       size='icon'
+                      aria-label={tCommon('delete')}
                       className='size-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors'
                       disabled={deleteSourceMutation.isPending}
                       onClick={() => setDeleteTarget(source)}

@@ -50,6 +50,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { FileImagePreview } from '@/components/common/file-image-preview';
+import { formatDateTime } from '@/lib/utils';
 import services, { formatFileSize } from '@/lib/services';
 import type { Upload as UploadRecord } from '@/lib/services/upload/types';
 
@@ -72,13 +73,7 @@ function getFileIcon(mimeType: string, className = 'size-8') {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTime(dateStr);
 }
 
 export function FileList() {
@@ -411,6 +406,7 @@ export function FileList() {
                           variant='ghost'
                           className='h-7 w-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground'
                           title={t('list.viewDetail')}
+                          aria-label={t('list.viewDetail')}
                           onClick={() => setDetailTarget(file)}
                         >
                           <Eye className='size-3.5' />
@@ -420,6 +416,7 @@ export function FileList() {
                           variant='ghost'
                           className='h-7 w-7 rounded-md hover:bg-muted'
                           title={t('list.download')}
+                          aria-label={t('list.download')}
                           onClick={() => handleDownload(file)}
                         >
                           <Download className='size-3.5' />
@@ -429,6 +426,7 @@ export function FileList() {
                           variant='ghost'
                           className='h-7 w-7 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive'
                           title={t('list.delete')}
+                          aria-label={t('list.delete')}
                           onClick={() => setDeleteTarget(file)}
                         >
                           <Trash2 className='size-3.5' />

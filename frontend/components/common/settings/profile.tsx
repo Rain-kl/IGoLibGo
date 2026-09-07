@@ -556,9 +556,9 @@ export function ProfileMain() {
 
             {/* 已绑定账号列表 */}
             <div className='space-y-2 pt-4'>
-              <h3 className='text-[11px] font-semibold text-muted-foreground uppercase tracking-wider'>
+              <p className='text-[11px] font-semibold text-muted-foreground uppercase tracking-wider'>
                 {t('boundAccounts')}
-              </h3>
+              </p>
               {externalAccountBindingsQuery.isPending ? (
                 <div className='flex items-center justify-center py-4'>
                   <Loader2 className='size-4 animate-spin text-primary' />
@@ -613,9 +613,9 @@ export function ProfileMain() {
 
             {/* 绑定新账号列表 */}
             <div className='space-y-2'>
-              <h3 className='text-[11px] font-semibold text-muted-foreground uppercase tracking-wider'>
+              <p className='text-[11px] font-semibold text-muted-foreground uppercase tracking-wider'>
                 {t('bindNewAccount')}
-              </h3>
+              </p>
               {publicAuthSourcesQuery.isPending ? (
                 <div className='flex items-center justify-center py-4'>
                   <Loader2 className='size-4 animate-spin text-primary' />

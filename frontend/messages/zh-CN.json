@@ -4,6 +4,7 @@
     "cancel": "取消",
     "confirm": "确认",
     "delete": "删除",
+    "edit": "编辑",
     "loading": "加载中...",
     "retry": "重试",
     "optional": "（可选）",
@@ -125,7 +126,14 @@
       "registerNow": "立即注册",
       "codeSent": "登录验证码已发送至您的邮箱，请注意查收",
       "codeTipMasked": "已向您的安全邮箱 {email} 发送了登录验证码。",
-      "codeTipGeneric": "请输入您的登录验证码。"
+      "codeTipGeneric": "请输入您的登录验证码。",
+      "needBindNotice": "您的第三方账号未绑定本地账号，系统已关闭注册。请登录已有本地账号进行绑定。",
+      "boundSuccess": "绑定成功",
+      "checkingSession": "正在检查登录状态",
+      "checkingSessionDesc": "请稍候，我们正在确认当前会话...",
+      "redirecting": "正在跳转至控制台...",
+      "verifyingCredentials": "正在验证凭据",
+      "verifyingCredentialsDesc": "请稍候，我们正在为您建立安全会话..."
     },
     "otp": {
       "title": "验证您的登录",
@@ -416,6 +424,8 @@
       "confirmDelete": "确认删除",
       "deleting": "删除中...",
       "noAuthSources": "暂无配置的认证源，点击上方按钮新增",
+      "editAuthSource": "编辑认证源",
+      "deleteAuthSource": "删除认证源",
       "captchaConfig": "人机验证配置 (Cap CAPTCHA)",
       "captchaConfigDesc": "配置基于 Proof-of-Work (PoW) 的无感人机验证，保护系统登录免受暴力破解和撞库攻击",
       "autoStartSolving": "打开页面后自动开始计算",
@@ -487,7 +497,66 @@
       "menuDisplayManagementDesc": "配置系统左侧菜单的显示与隐藏状态，适用于所有登录用户。",
       "notHideable": "不可隐藏",
       "securityTipTitle": "安全提示：",
-      "securityTipDesc": "为了防止管理员在关闭\"系统设置\"后导致无法重新访问此配置页，系统限制了\"系统设置\"的关闭权限。其它所有菜单均可自由开关，隐藏后对应的分组标题在为空时也会自动隐藏。"
+      "securityTipDesc": "为了防止管理员在关闭\"系统设置\"后导致无法重新访问此配置页，系统限制了\"系统设置\"的关闭权限。其它所有菜单均可自由开关，隐藏后对应的分组标题在为空时也会自动隐藏。",
+      "groups": {
+        "basic": "基础菜单",
+        "admin": "管理菜单",
+        "docs": "文档菜单"
+      },
+      "items": {
+        "home": {
+          "label": "首页",
+          "description": "系统控制台/个人首页"
+        },
+        "files": {
+          "label": "我的文件",
+          "description": "用户个人文件管理与上传"
+        },
+        "users": {
+          "label": "用户管理",
+          "description": "查看和管理系统用户列表及其状态"
+        },
+        "tasks": {
+          "label": "任务管理",
+          "description": "查看和调度系统异步及定时任务"
+        },
+        "storage": {
+          "label": "存储管理",
+          "description": "管理系统文件存储和清理无用文件"
+        },
+        "database": {
+          "label": "数据管理",
+          "description": "监控物理数据库状态、分页浏览表数据及交互式 SQL 查询"
+        },
+        "push": {
+          "label": "通知推送",
+          "description": "配置和发送系统通知及推送消息"
+        },
+        "logs": {
+          "label": "系统日志",
+          "description": "查看异步任务执行日志和系统运行情况"
+        },
+        "system": {
+          "label": "系统配置",
+          "description": "管理和维护系统基础键值对配置"
+        },
+        "settings": {
+          "label": "系统设置",
+          "description": "配置安全验证、邮箱服务及目录显示"
+        },
+        "demo": {
+          "label": "规范示例",
+          "description": "内置 UI 组件与设计规范的展示、调试与参考"
+        },
+        "apiDocs": {
+          "label": "接口文档",
+          "description": "系统 Swagger 交互式 API 接口文档"
+        },
+        "usageDocs": {
+          "label": "使用文档",
+          "description": "面向开发与运营的部署使用指南"
+        }
+      }
     },
     "templates": {
       "templateCreated": "通知模板已成功创建",

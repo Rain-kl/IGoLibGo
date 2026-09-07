@@ -41,6 +41,7 @@ import { useTranslations } from 'next-intl';
 export function TemplatesManager() {
   const queryClient = useQueryClient();
   const t = useTranslations('settings.templates');
+  const tCommon = useTranslations('common');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     null,
@@ -224,6 +225,7 @@ export function TemplatesManager() {
                       type='button'
                       variant='ghost'
                       size='icon'
+                      aria-label={tCommon('edit')}
                       className='size-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors'
                       onClick={() => handleOpenEdit(tmpl)}
                     >
@@ -233,6 +235,7 @@ export function TemplatesManager() {
                       type='button'
                       variant='ghost'
                       size='icon'
+                      aria-label={tCommon('delete')}
                       className='size-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors'
                       disabled={
                         tmpl.is_system || deleteTemplateMutation.isPending

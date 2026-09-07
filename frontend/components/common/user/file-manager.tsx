@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { FileImagePreview } from '@/components/common/file-image-preview';
+import { formatDateTime } from '@/lib/utils';
 import services, { formatFileSize } from '@/lib/services';
 import type { Upload as UploadRecord } from '@/lib/services/upload/types';
 
@@ -60,13 +61,7 @@ function getFileIcon(mimeType: string, className = 'size-10') {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateTime(dateStr);
 }
 
 export function UserFileManager() {
@@ -301,12 +296,12 @@ export function UserFileManager() {
               {/* 文件详情区 */}
               <CardContent className='p-4 flex-1 flex flex-col justify-between gap-3'>
                 <div className='space-y-1'>
-                  <h4
+                  <p
                     className='font-semibold text-xs text-foreground truncate select-all'
                     title={file.file_name}
                   >
                     {file.file_name}
-                  </h4>
+                  </p>
                   <div className='flex items-center justify-between text-[10px] text-muted-foreground font-mono'>
                     <span>{formatFileSize(file.file_size)}</span>
                     <span
@@ -329,6 +324,7 @@ export function UserFileManager() {
                       variant='ghost'
                       className='size-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground'
                       title={t('downloadFile')}
+                      aria-label={t('downloadFile')}
                       onClick={() => handleDownload(file)}
                     >
                       <Download className='size-3.5' />
@@ -338,6 +334,7 @@ export function UserFileManager() {
                       variant='ghost'
                       className='size-7 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive'
                       title={t('deleteFile')}
+                      aria-label={t('deleteFile')}
                       onClick={() => setDeleteTarget(file)}
                     >
                       <Trash2 className='size-3.5' />

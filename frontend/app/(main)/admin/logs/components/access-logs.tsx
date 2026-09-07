@@ -204,7 +204,7 @@ export function AccessLogs() {
     return (
       <div className='flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-card text-center my-6 min-h-[300px]'>
         <XCircle className='size-10 text-muted-foreground mb-3' />
-        <h3 className='text-base font-semibold'>{t('clickhouseDisabled')}</h3>
+        <p className='text-base font-semibold'>{t('clickhouseDisabled')}</p>
         <p className='text-sm text-muted-foreground mt-1 max-w-[400px] mb-4'>
           {t('clickhouseDisabledDesc')}
         </p>

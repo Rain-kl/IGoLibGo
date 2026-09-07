@@ -4,6 +4,7 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "delete": "Delete",
+    "edit": "Edit",
     "loading": "Loading...",
     "retry": "Retry",
     "optional": "(optional)",
@@ -125,7 +126,14 @@
       "registerNow": "Register",
       "codeSent": "A sign-in code was sent to your email",
       "codeTipMasked": "A sign-in code was sent to your secure email {email}.",
-      "codeTipGeneric": "Please enter your sign-in verification code."
+      "codeTipGeneric": "Please enter your sign-in verification code.",
+      "needBindNotice": "Your third-party account is not bound to a local account and registration is closed. Please log in with an existing local account to bind.",
+      "boundSuccess": "Bound successfully",
+      "checkingSession": "Checking login status",
+      "checkingSessionDesc": "Please wait while we confirm your current session...",
+      "redirecting": "Redirecting to console...",
+      "verifyingCredentials": "Verifying credentials",
+      "verifyingCredentialsDesc": "Please wait while we establish a secure session..."
     },
     "otp": {
       "title": "Verify your sign-in",
@@ -416,6 +424,8 @@
       "confirmDelete": "Confirm delete",
       "deleting": "Deleting...",
       "noAuthSources": "No authentication sources configured. Click the button above to add one.",
+      "editAuthSource": "Edit authentication source",
+      "deleteAuthSource": "Delete authentication source",
       "captchaConfig": "CAPTCHA configuration (Cap CAPTCHA)",
       "captchaConfigDesc": "Configure Proof-of-Work (PoW) based invisible CAPTCHA to protect login from brute-force and credential-stuffing attacks",
       "autoStartSolving": "Start solving automatically when page loads",
