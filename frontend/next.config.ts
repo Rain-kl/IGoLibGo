@@ -9,7 +9,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Prevent 308 redirects on /api/* trailing slashes; dev rewrites proxy legacy APIs as-is.
   skipTrailingSlashRedirect: true,
-  experimental: {},
+  experimental: {
+    turbopackRustReactCompiler: true,
+  },
   ...(isExport
     ? { output: 'export' }
     : {
