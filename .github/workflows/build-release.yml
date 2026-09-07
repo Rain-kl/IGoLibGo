@@ -17,9 +17,9 @@ env:
   GO_BUILD_TAGS: embed_frontend
   GO_LDFLAGS: -s -w
   NODE_VERSION: "22"
-  PNPM_VERSION: "10.10.0"
+  BUN_VERSION: "latest"
   FRONTEND_DIR: frontend
-  FRONTEND_BUILD_COMMAND: pnpm build:embed
+  FRONTEND_BUILD_COMMAND: bun run build:embed
   FRONTEND_OUT_DIR: frontend/out
   EMBED_DIST_DIR: backend/plugins/drivers/driver_http/dist
   EXTRA_FILES: |
@@ -115,22 +115,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: ${{ env.FRONTEND_DIR }}/pnpm-lock.yaml
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install frontend dependencies
         working-directory: ${{ env.FRONTEND_DIR }}
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Build frontend
         env:

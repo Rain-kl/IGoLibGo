@@ -19,14 +19,14 @@ format:
 	@echo "==> Formatting backend Go source with golangci-lint fmt (gofumpt, same gate as code-check)..."
 	cd backend && golangci-lint fmt
 	@echo "==> Formatting frontend source..."
-	cd frontend && pnpm format
+	cd frontend && bun run format
 
 build-embedded:
 	@echo "==> Building embedded frontend version=$(VERSION) build_date=$(BUILD_DATE)..."
 	cd frontend && \
 		NEXT_PUBLIC_APP_VERSION="$(VERSION)" \
 		NEXT_PUBLIC_APP_BUILD_DATE="$(BUILD_DATE)" \
-		pnpm build:embed
+		bun run build:embed
 	[ ! -e backend/plugins/drivers/driver_http/dist ] || /bin/rm -rf backend/plugins/drivers/driver_http/dist
 	cp -R frontend/out backend/plugins/drivers/driver_http/dist
 	test -f backend/plugins/drivers/driver_http/dist/index.html
@@ -39,7 +39,7 @@ build-embedded:
 code-check:
 	@scripts/check_cordis_architecture.sh
 	cd backend && golangci-lint run
-	cd frontend && pnpm tsc --noEmit --jsx preserve && npx eslint . --max-warnings 0
+	cd frontend && bunx tsc --noEmit --jsx preserve && bunx eslint . --max-warnings 0
 
 build-backend:
 	@echo "==> Building backend version=$(VERSION) build_date=$(BUILD_DATE)..."
@@ -53,13 +53,13 @@ build-frontend:
 	cd frontend && \
 		NEXT_PUBLIC_APP_VERSION="$(VERSION)" \
 		NEXT_PUBLIC_APP_BUILD_DATE="$(BUILD_DATE)" \
-		pnpm build:embed
+		bun run build:embed
 
 build-test:
 	@echo "==> Running frontend and backend build tests in parallel..."
 	@PIDS=""; \
 	STATUS=0; \
-	( cd frontend && pnpm build:embed 2>&1 | sed 's/^/[frontend] /' ) & PIDS="$$PIDS $$!"; \
+	( cd frontend && bun run build:embed 2>&1 | sed 's/^/[frontend] /' ) & PIDS="$$PIDS $$!"; \
 	( cd backend && go test ./... && go build -o /dev/null ./... 2>&1 | sed 's/^/[backend]  /' ) & PIDS="$$PIDS $$!"; \
 	for PID in $$PIDS; do \
 		wait $$PID || STATUS=1; \
@@ -91,7 +91,7 @@ cross-build:
 
 dev-f:
 	@echo "==> Starting frontend development server..."
-	cd frontend && pnpm dev
+	cd frontend && bun dev
 
 dev-b:
 	@echo "==> Starting backend development server..."
@@ -101,7 +101,7 @@ dev:
 	@echo "==> Starting frontend and backend development servers in parallel..."
 	@PIDS=""; \
 	STATUS=0; \
-	( cd frontend && pnpm dev 2>&1 | sed 's/^/[frontend] /' ) & PIDS="$$PIDS $$!"; \
+	( cd frontend && bun dev 2>&1 | sed 's/^/[frontend] /' ) & PIDS="$$PIDS $$!"; \
 	( cd backend && go run main.go all 2>&1 | sed 's/^/[backend]  /' ) & PIDS="$$PIDS $$!"; \
 	for PID in $$PIDS; do \
 		wait $$PID || STATUS=1; \

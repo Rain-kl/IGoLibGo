@@ -10,27 +10,26 @@ Modern frontend application for the Wavelet scaffold framework.
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
 - **UI Components**: [Radix UI](https://www.radix-ui.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Package Manager**: [pnpm](https://pnpm.io/)
+- **Package Manager**: [Bun](https://bun.sh/)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (Latest LTS recommended)
-- pnpm
+- Bun >= 1.2
 
 ### Installation
 
 1. Install dependencies:
 
    ```bash
-   pnpm install
+   bun install
    ```
 
 2. Run the development server:
 
    ```bash
-   pnpm dev
+   bun dev
    ```
 
    Open [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal) with your browser to see the result.
@@ -46,7 +45,7 @@ Modern frontend application for the Wavelet scaffold framework.
 
 ## Scripts
 
-- `pnpm dev`: Start development server with Turbopack
-- `pnpm build`: Build the application for production
-- `pnpm start`: Start production server
-- `pnpm lint`: Run ESLint
+- `bun dev`: Start development server with Turbopack
+- `bun run build`: Build the application for production
+- `bun start`: Start production server
+- `bun run lint`: Run ESLint

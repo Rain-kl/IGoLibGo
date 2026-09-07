@@ -14,22 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 10.10.0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: 'pnpm'
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          bun-version: latest
 
       - name: Install dependencies
         working-directory: frontend
-        run: pnpm install
+        run: bun install --frozen-lockfile
 
       - name: Run ESLint
         working-directory: frontend
-        run: npx eslint . --max-warnings 0
+        run: bunx eslint . --max-warnings 0

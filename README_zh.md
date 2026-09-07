@@ -81,7 +81,7 @@
 - **Node.js** >= 18.0
 - **PostgreSQL** >= 14
 - **Redis** >= 6.0
-- **pnpm** >= 8.0（推荐）
+- **Bun** >= 1.2（推荐）
 
 ## 🚀 快速开始
 
@@ -140,10 +140,10 @@ go run main.go api
 cd frontend
 
 # 安装依赖
-pnpm install
+bun install
 
 # 启动开发服务器（Turbopack）
-pnpm dev
+bun dev
 ```
 
 ### 6. 访问应用
@@ -193,17 +193,17 @@ make tidy
 cd frontend
 
 # 开发模式（Turbopack）
-pnpm dev
+bun dev
 
 # 构建生产版本
-pnpm build
+bun run build
 
 # 启动生产服务器
-pnpm start
+bun start
 
 # 代码 Lint 和格式化
-pnpm lint
-pnpm format
+bun run lint
+bun run format
 ```
 
 ## 📁 项目结构
@@ -251,7 +251,7 @@ http://localhost:8000/swagger/index.html
 go test ./...
 
 # 前端 Lint
-cd frontend && pnpm lint
+cd frontend && bun run lint
 ```
 
 ## 🚀 部署
@@ -313,7 +313,7 @@ docker run -d -p 8000:8000 \
 
 1. 构建前端资源：
    ```bash
-   cd frontend && pnpm build
+   cd frontend && bun run build
    ```
 
 2. 编译后端程序：

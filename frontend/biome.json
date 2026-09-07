@@ -16,8 +16,7 @@
       "!!**/coverage",
       "!!**/public",
       "!!**/next-env.d.ts",
-      "!!**/pnpm-lock.yaml",
-      "!!**/.pnpm-store"
+      "!!**/bun.lock"
     ]
   },
   "formatter": {

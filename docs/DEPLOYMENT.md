@@ -13,7 +13,7 @@
 | **HTTP API 服务** | `bin/wavelet api` | 接收并处理前端及第三方的 RESTful API 请求 | **必选** |
 | **异步任务工作进程** | `bin/wavelet worker` | 消费并处理异步队列任务（如邮件发送、清理上传文件等） | **必选** |
 | **定时任务调度器** | `bin/wavelet scheduler` | 定时向 Redis 队列下发 Cron 任务（仅负责触发，不负责执行） | **必选** |
-| **前端服务 (Node.js)** | `pnpm start` | 提供 React/Next.js 页面服务（在分离部署时使用） | 分离模式必选 |
+| **前端服务 (Bun / Node.js)** | `bun start` | 提供 React/Next.js 页面服务（在分离部署时使用） | 分离模式必选 |
 | **PostgreSQL** | 关系型主数据库 | 存储用户、系统配置、认证源、任务执行记录等核心数据 | **必选** |
 | **Redis** | 缓存与消息队列中间件 | 存储 Session 会话、临时缓存以及 Asynq 异步任务队列数据 | **必选** |
 | **ClickHouse** | 分析型数据库 | 可选的日志主库；关闭时访问审计由 PostgreSQL/SQLite 承接 | 可选 |
@@ -177,12 +177,12 @@ server {
 3. 配置后端 Nginx 将客户端 API 请求（如 `/api/...`）反向代理至后端绑定的端口（如 `:8000`）。
 
 #### 2. 部署前端 Next.js 服务
-1. 前端服务器环境确保已安装 Node.js 和 pnpm。
+1. 前端服务器环境确保已安装 Bun（>= 1.2）。
 2. 安装依赖并编译生产版本：
    ```bash
    cd frontend
-   pnpm install
-   pnpm build
+   bun install
+   bun run build
    ```
 3. 使用 PM2 守护前端 Node.js 服务运行。新建 `ecosystem.config.js`：
    ```javascript

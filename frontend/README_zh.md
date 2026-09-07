@@ -10,27 +10,26 @@ Wavelet 脚手架系统的现代化前端应用。
 - **样式**: [Tailwind CSS 4](https://tailwindcss.com/)
 - **UI 组件**: [Radix UI](https://www.radix-ui.com/)
 - **图标**: [Lucide React](https://lucide.dev/)
-- **包管理器**: [pnpm](https://pnpm.io/)
+- **包管理器**: [Bun](https://bun.sh/)
 
 ## 快速开始
 
 ### 前置要求
 
-- Node.js (建议使用最新的 LTS 版本)
-- pnpm
+- Bun >= 1.2
 
 ### 安装
 
 1. 安装依赖:
 
    ```bash
-   pnpm install
+   bun install
    ```
 
 2. 运行开发服务器:
 
    ```bash
-   pnpm dev
+   bun dev
    ```
 
    在浏览器中打开 [http://localhost:3000](http://localhost:3000) (或终端中显示的端口) 查看结果。
@@ -46,7 +45,7 @@ Wavelet 脚手架系统的现代化前端应用。
 
 ## 脚本
 
-- `pnpm dev`: 启动开发服务器 (使用 Turbopack)
-- `pnpm build`: 构建生产版本
-- `pnpm start`: 启动生产服务器
-- `pnpm lint`: 运行 ESLint
+- `bun dev`: 启动开发服务器 (使用 Turbopack)
+- `bun run build`: 构建生产版本
+- `bun start`: 启动生产服务器
+- `bun run lint`: 运行 ESLint

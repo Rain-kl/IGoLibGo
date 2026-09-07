@@ -1,32 +1,28 @@
 # syntax=docker/dockerfile:1.7
 
 ARG GO_VERSION=1.25
-ARG NODE_VERSION=22
+ARG BUN_VERSION=1
 ARG ALPINE_VERSION=3.23
 
-FROM node:${NODE_VERSION}-alpine AS frontend-builder
+FROM oven/bun:${BUN_VERSION}-alpine AS frontend-builder
 
 ARG VERSION=dev
 ARG BUILD_DATE=""
 
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
 ENV NODE_ENV=production
 ENV NEXT_STANDALONE_EXPORT=true
 ENV NEXT_PUBLIC_APP_VERSION=${VERSION}
 ENV NEXT_PUBLIC_APP_BUILD_DATE=${BUILD_DATE}
 
-RUN corepack enable && corepack prepare pnpm@10.10.0 --activate
-
 WORKDIR /workspace/frontend
 
-COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY frontend/package.json frontend/bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY frontend/ ./
 
 # Assert index.html so a silent export failure cannot ship an API-only binary.
-RUN pnpm build:embed && test -f out/index.html
+RUN bun run build:embed && test -f out/index.html
 
 FROM golang:${GO_VERSION}-alpine AS backend-builder
 

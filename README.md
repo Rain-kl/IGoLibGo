@@ -81,7 +81,7 @@ The project was designed from the ground up to be **framework-first and business
 - **Node.js** >= 18.0
 - **PostgreSQL** >= 14
 - **Redis** >= 6.0
-- **pnpm** >= 8.0 (recommended)
+- **Bun** >= 1.2 (recommended)
 
 ## 🚀 Quick Start
 
@@ -140,10 +140,10 @@ go run main.go api
 cd frontend
 
 # Install dependencies
-pnpm install
+bun install
 
 # Start dev server (Turbopack)
-pnpm dev
+bun dev
 ```
 
 ### 6. Access the Application
@@ -193,17 +193,17 @@ make tidy
 cd frontend
 
 # Development mode (Turbopack)
-pnpm dev
+bun dev
 
 # Production build
-pnpm build
+bun run build
 
 # Start production server
-pnpm start
+bun start
 
 # Lint & format
-pnpm lint
-pnpm format
+bun run lint
+bun run format
 ```
 
 ## 📁 Project Structure
@@ -251,7 +251,7 @@ The built-in frontend docs portal at `/docs` includes:
 go test ./...
 
 # Frontend lint
-cd frontend && pnpm lint
+cd frontend && bun run lint
 ```
 
 ## 🚀 Deployment
@@ -313,7 +313,7 @@ docker run -d -p 8000:8000 \
 
 1. Build the frontend:
    ```bash
-   cd frontend && pnpm build
+   cd frontend && bun run build
    ```
 
 2. Compile the backend:
