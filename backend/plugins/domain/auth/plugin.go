@@ -204,6 +204,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 
 	ctx.Events().On(contracts.EventTopicUserDeleted, func(c context.Context, e contracts.UserDeletedEvent) error {
 		svc.DAO.InvalidateCachedUser(c, e.TargetUserID)
+		_ = svc.DAO.DeleteExternalAccountsByUserID(c, e.TargetUserID)
 		return nil
 	})
 

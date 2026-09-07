@@ -36,3 +36,8 @@ func (d *DAO) ListExternalAccountsByUserID(ctx context.Context, userID uint64) (
 func (d *DAO) UnbindExternalAccount(ctx context.Context, id, userID uint64) error {
 	return d.DB(ctx).Where("id = ? AND user_id = ?", id, userID).Delete(&entity.ExternalAccount{}).Error
 }
+
+// DeleteExternalAccountsByUserID 删除指定用户的所有外部账号绑定
+func (d *DAO) DeleteExternalAccountsByUserID(ctx context.Context, userID uint64) error {
+	return d.DB(ctx).Where("user_id = ?", userID).Delete(&entity.ExternalAccount{}).Error
+}

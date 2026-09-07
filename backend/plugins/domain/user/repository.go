@@ -345,13 +345,10 @@ func getUserAdminFlags(ctx context.Context, id uint64) (userAdminFlags, error) {
 	return flags, nil
 }
 
-// deleteUserCascadeAdmin 在事务中删除用户的访问令牌、外部账号绑定与用户行
+// deleteUserCascadeAdmin 在事务中删除用户的访问令牌与用户行
 func deleteUserCascadeAdmin(ctx context.Context, id uint64) error {
 	return getDB(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Table("w_access_tokens").Where("user_id = ?", id).Delete(map[string]any{}).Error; err != nil {
-			return err
-		}
-		if err := tx.Table("w_external_accounts").Where("user_id = ?", id).Delete(map[string]any{}).Error; err != nil {
 			return err
 		}
 		return tx.Table("w_users").Where("id = ?", id).Delete(map[string]any{}).Error
