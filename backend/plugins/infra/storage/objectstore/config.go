@@ -202,18 +202,18 @@ func upsertSystemConfig(_ context.Context, tx *gorm.DB, key string, value any, d
 		Key         string `gorm:"primaryKey"`
 		Value       string
 		Type        string
-		Visibility  string
+		Visibility  int
 		Description string
 	}
 	sc := sysConfig{
 		Key:         key,
 		Value:       string(data),
 		Type:        "system",
-		Visibility:  "hidden",
+		Visibility:  0,
 		Description: description,
 	}
 	return tx.Table("w_system_configs").Where("key = ?", key).
-		Assign(map[string]any{"value": sc.Value, "description": description, "visibility": "hidden"}).
+		Assign(map[string]any{"value": sc.Value, "description": description, "visibility": 0}).
 		FirstOrCreate(&sc).Error
 }
 

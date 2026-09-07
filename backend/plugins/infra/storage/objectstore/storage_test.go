@@ -15,6 +15,8 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	cache "Wavelet/plugins/infra/cache"
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestStorageCache(t *testing.T) {
@@ -140,5 +142,53 @@ func TestStorageCachePubSub(t *testing.T) {
 
 	if configJSON != "" {
 		t.Error("Memory cache was not cleared after Redis Pub/Sub broadcast")
+	}
+}
+
+func TestUpsertSystemConfigVisibility(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to open sqlite: %v", err)
+	}
+
+	// Create table with visibility INTEGER as in production PG / SQLite migrations
+	err = db.Exec(`CREATE TABLE w_system_configs (
+		key VARCHAR(64) PRIMARY KEY,
+		value TEXT NOT NULL,
+		type VARCHAR(32) NOT NULL DEFAULT 'system',
+		visibility INTEGER NOT NULL DEFAULT 0,
+		description VARCHAR(255),
+		updated_at TIMESTAMP,
+		created_at TIMESTAMP
+	)`).Error
+	if err != nil {
+		t.Fatalf("failed to create table: %v", err)
+	}
+
+	cfg := DefaultConfig()
+	if err := upsertSystemConfig(context.Background(), db, "storage_config", cfg, "desc"); err != nil {
+		t.Fatalf("upsertSystemConfig failed: %v", err)
+	}
+
+	var row struct {
+		Key        string
+		Visibility int
+	}
+	if err := db.Table("w_system_configs").Where("key = ?", "storage_config").Scan(&row).Error; err != nil {
+		t.Fatalf("query system config failed: %v", err)
+	}
+	if row.Visibility != 0 {
+		t.Fatalf("expected visibility 0, got %d", row.Visibility)
+	}
+
+	// Update existing record
+	if err := upsertSystemConfig(context.Background(), db, "storage_config", cfg, "updated desc"); err != nil {
+		t.Fatalf("upsertSystemConfig update failed: %v", err)
+	}
+	if err := db.Table("w_system_configs").Where("key = ?", "storage_config").Scan(&row).Error; err != nil {
+		t.Fatalf("query updated system config failed: %v", err)
+	}
+	if row.Visibility != 0 {
+		t.Fatalf("expected visibility 0 after update, got %d", row.Visibility)
 	}
 }
