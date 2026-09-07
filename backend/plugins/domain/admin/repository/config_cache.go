@@ -143,15 +143,15 @@ func StopSystemConfigCacheListener() {
 
 // StartSystemConfigCacheListener starts the cache listener.
 func StartSystemConfigCacheListener(ctx context.Context) {
+	rdb := GetRedisClient(ctx)
+	if rdb == nil {
+		return
+	}
+
 	systemConfigListenerMu.Lock()
 	defer systemConfigListenerMu.Unlock()
 
 	if systemConfigPubsub != nil {
-		return
-	}
-
-	rdb := GetRedisClient(ctx)
-	if rdb == nil {
 		return
 	}
 
@@ -198,6 +198,9 @@ func StartSystemConfigCacheListener(ctx context.Context) {
 }
 
 func ensureSystemConfigCacheListener(ctx context.Context) {
+	if GetRedisClient(ctx) == nil {
+		return
+	}
 	systemConfigListenerMu.Lock()
 	isNil := systemConfigPubsub == nil
 	systemConfigListenerMu.Unlock()

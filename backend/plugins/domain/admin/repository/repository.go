@@ -69,10 +69,11 @@ func GetRedisClient(ctx context.Context) redis.UniversalClient {
 // ResetServices clears injected persistence services.
 func ResetServices() {
 	repoMu.Lock()
-	defer repoMu.Unlock()
 	dbService = nil
 	cacheService = nil
 	redisClient = nil
+	repoMu.Unlock()
+
 	StopSystemConfigCacheListener()
 }
 
