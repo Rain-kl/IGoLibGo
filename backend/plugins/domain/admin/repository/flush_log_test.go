@@ -5,10 +5,7 @@ package repository_test
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"testing"
-	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
@@ -56,7 +53,9 @@ func newFlushLogTestCache(t *testing.T) (contracts.CacheService, *miniredis.Mini
 	require.NoError(t, err)
 
 	repository.SetCacheService(svc)
+	repository.SetRedisClient(rdb)
 	cleanup := func() {
+		repository.SetRedisClient(nil)
 		repository.SetCacheService(nil)
 		_ = rdb.Close()
 		mr.Close()
@@ -94,7 +93,7 @@ func TestFlushTaskExecutionLogCacheMissIsNoop(t *testing.T) {
 
 // TestFlushTaskExecutionLogPersistsAndClears 验证正常路径：缓冲日志写入执行记录后清理缓存。
 func TestFlushTaskExecutionLogPersistsAndClears(t *testing.T) {
-	svc, _, cleanup := newFlushLogTestCache(t)
+	_, _, cleanup := newFlushLogTestCache(t)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -117,41 +116,89 @@ func TestFlushTaskExecutionLogPersistsAndClears(t *testing.T) {
 	assert.Contains(t, got.Log, "done")
 
 	// 缓存中的缓冲日志应已被清理
-	var buf string
-	err = svc.Get(ctx, repository.TaskExecutionLogRedisKey(taskID), &buf)
-	assert.True(t, errors.Is(err, contracts.ErrCacheMiss), "flush 后缓存应清空, got %v", err)
+	rdb := repository.GetRedisClient(ctx)
+	require.NotNil(t, rdb)
+	logLines, err := rdb.LRange(ctx, repository.TaskExecutionLogRedisKey(taskID), 0, -1).Result()
+	require.NoError(t, err)
+	assert.Empty(t, logLines, "flush 后缓存应清空")
 }
 
-// readFailCache 读取永远报错而写入成功，用于区分「未命中」与「缓存故障」两种语义。
-type readFailCache struct {
-	writes []string
-}
-
-func (c *readFailCache) Get(context.Context, string, any) error {
-	return errors.New("cache unavailable")
-}
-
-func (c *readFailCache) Set(_ context.Context, key string, value any, _ time.Duration) error {
-	c.writes = append(c.writes, fmt.Sprintf("%s=%v", key, value))
-	return nil
-}
-
-func (c *readFailCache) Delete(context.Context, string) error { return nil }
-
-func (c *readFailCache) GetOrSet(context.Context, string, any, time.Duration, func() (any, error)) error {
-	return errors.New("cache unavailable")
-}
-
-func (c *readFailCache) Invalidate(context.Context, string) error { return nil }
-
-// TestAppendTaskExecutionLogKeepsBufferOnCacheReadError 回归：缓存读取失败（而非未命中）时
-// 不得把「读不到」当成「没有缓冲」继续写入，否则整段任务日志会被最新一行覆盖丢失。
+// TestAppendTaskExecutionLogKeepsBufferOnCacheReadError 回归：Redis 故障或未初始化时，
+// AppendTaskExecutionLog 必须报错上抛，且采用 LIST RPush 不会因读失败而覆盖已有缓冲日志。
 func TestAppendTaskExecutionLogKeepsBufferOnCacheReadError(t *testing.T) {
-	fake := &readFailCache{}
-	repository.SetCacheService(fake)
-	defer repository.SetCacheService(nil)
+	// 1. 未初始化 Redis 时必须返回错误
+	repository.SetRedisClient(nil)
+	err := repository.AppendTaskExecutionLog(context.Background(), "append-err-task", "step-1")
+	assert.Error(t, err, "未初始化 Redis 时必须上抛错误")
 
-	err := repository.AppendTaskExecutionLog(context.Background(), "append-err-task", "step-2")
-	assert.Error(t, err, "缓存故障必须上抛，而不是覆盖缓冲")
-	assert.Empty(t, fake.writes, "读取失败时不得写入，避免覆盖已缓冲日志")
+	// 2. Redis 故障时也必须返回错误
+	_, mr, cleanup := newFlushLogTestCache(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	const taskID = "append-fail-task"
+	require.NoError(t, repository.AppendTaskExecutionLog(ctx, taskID, "line-1 ok"))
+
+	mr.Close()
+	err = repository.AppendTaskExecutionLog(ctx, taskID, "line-2 fail")
+	assert.Error(t, err, "Redis 不可用时必须返回错误，而不是静默丢失或覆盖")
+}
+
+// TestTaskExecutionLogUsesRedisList 验证任务日志底层严格采用 LIST 数据结构，杜绝与 Worker 的 WRONGTYPE 冲突。
+func TestTaskExecutionLogUsesRedisList(t *testing.T) {
+	_, _, cleanup := newFlushLogTestCache(t)
+	defer cleanup()
+
+	ctx := context.Background()
+	const taskID = "task-list-data-type-check"
+	key := repository.TaskExecutionLogRedisKey(taskID)
+	rdb := repository.GetRedisClient(ctx)
+	require.NotNil(t, rdb)
+
+	// 追加两条日志
+	require.NoError(t, repository.AppendTaskExecutionLog(ctx, taskID, "first log line"))
+	require.NoError(t, repository.AppendTaskExecutionLog(ctx, taskID, "second log line"))
+
+	// 验证 Redis key 的类型严格为 list
+	keyType, err := rdb.Type(ctx, key).Result()
+	require.NoError(t, err)
+	assert.Equal(t, "list", keyType, "任务日志必须存储为 Redis LIST")
+
+	sqliteDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, sqliteDB.AutoMigrate(&model.TaskExecution{}))
+	repository.SetDBService(stubDBService{db: sqliteDB})
+	defer repository.SetDBService(nil)
+
+	execDirect := &model.TaskExecution{TaskID: taskID}
+	execDirect.ID = 1001
+	execDirect.TaskType = "test"
+	require.NoError(t, sqliteDB.Create(execDirect).Error)
+
+	gotExec, err := repository.GetTaskExecutionByTaskID(ctx, taskID)
+	require.NoError(t, err)
+	require.NotNil(t, gotExec)
+	assert.Contains(t, gotExec.Log, "first log line")
+	assert.Contains(t, gotExec.Log, "second log line")
+
+	// 验证批量加载 loadTaskExecutionLogs
+	batchList, total, err := repository.ListTaskExecutionRecords(ctx, model.ListTaskExecutionsRequest{
+		Page:     1,
+		PageSize: 10,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), total)
+	assert.Contains(t, batchList[0].Log, "first log line")
+
+	// 验证 FlushTaskExecutionLog 持久化并清理
+	require.NoError(t, repository.FlushTaskExecutionLog(ctx, taskID))
+	var flushed model.TaskExecution
+	require.NoError(t, sqliteDB.First(&flushed, execDirect.ID).Error)
+	assert.Contains(t, flushed.Log, "first log line")
+	assert.Contains(t, flushed.Log, "second log line")
+
+	// 验证 Redis key 已被清理
+	postFlushLines, err := rdb.LRange(ctx, key, 0, -1).Result()
+	require.NoError(t, err)
+	assert.Empty(t, postFlushLines)
 }

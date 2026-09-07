@@ -122,9 +122,11 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		keyPrefix:     p.keyPrefix,
 		pubSubChannel: defaultPubSubChannel,
 		stopCh:        make(chan struct{}),
+		done:          make(chan struct{}),
 	}
 
 	if redisClient != nil {
+		core.Provide[redis.UniversalClient](ctx, redisClient)
 		svc.startPubSubListener()
 		ctx.OnDispose(func() error {
 			svc.stopPubSubListener()
@@ -160,6 +162,7 @@ type cacheServiceImpl struct {
 	subOnce  sync.Once
 	stopOnce sync.Once
 	stopCh   chan struct{}
+	done     chan struct{}
 	pubsub   *redis.PubSub
 }
 
@@ -180,6 +183,7 @@ func (s *cacheServiceImpl) startPubSubListener() {
 		s.pubsub = pubsub
 
 		util.Go(func() {
+			defer close(s.done)
 			ch := pubsub.Channel()
 			for {
 				select {
@@ -203,6 +207,7 @@ func (s *cacheServiceImpl) stopPubSubListener() {
 		close(s.stopCh)
 		if s.pubsub != nil {
 			_ = s.pubsub.Close()
+			<-s.done
 		}
 	})
 }
@@ -222,8 +227,13 @@ func (s *cacheServiceImpl) Get(ctx context.Context, key string, target any) erro
 		data, err := s.redisClient.Get(ctx, s.prefixedKey(key)).Bytes()
 		if err == nil {
 			// Backfill L1 RAM cache
+			ttl := time.Minute
+			if pttl, pttlErr := s.redisClient.PTTL(ctx, s.prefixedKey(key)).Result(); pttlErr == nil && pttl > 0 {
+				ttl = pttl
+			}
 			s.ramCache.Set(key, ramEntry{
-				data: data,
+				data:     data,
+				expireAt: time.Now().Add(ttl),
 			})
 			return json.Unmarshal(data, target)
 		} else if !errors.Is(err, redis.Nil) {

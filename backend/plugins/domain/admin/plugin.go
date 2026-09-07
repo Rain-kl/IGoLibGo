@@ -11,11 +11,15 @@ import (
 	"Wavelet/pkg/ginutil"
 	"Wavelet/plugins/domain/admin/handler"
 	"Wavelet/plugins/domain/admin/model"
+	"Wavelet/plugins/domain/admin/repository"
 	"Wavelet/plugins/domain/admin/service"
 	"embed"
 	"reflect"
 
+	"context"
+
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 // SystemConfig aliases model.SystemConfig for external compatibility.
@@ -92,6 +96,10 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 
 	core.Bind[contracts.DBService](ctx, service.SetDBService)
 	core.Bind[contracts.CacheService](ctx, service.SetCacheService)
+	core.Bind[redis.UniversalClient](ctx, func(client redis.UniversalClient) {
+		repository.SetRedisClient(client)
+		repository.StartSystemConfigCacheListener(context.Background())
+	})
 	core.Bind[contracts.UserService](ctx, service.SetUserService)
 	core.Bind[contracts.AuthService](ctx, service.SetAuthService)
 	core.Bind[contracts.TaskService](ctx, service.SetTaskService)

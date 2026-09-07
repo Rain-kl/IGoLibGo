@@ -4,7 +4,6 @@
 package repository
 
 import (
-	"Wavelet/core/contracts"
 	"Wavelet/pkg/idgen"
 	"Wavelet/pkg/util"
 	"Wavelet/plugins/domain/admin/errs"
@@ -15,12 +14,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 const (
 	taskExecutionLogRedisKeyPrefix = "task:execution:log:"
 	taskExecutionLogExpiration     = 24 * time.Hour
+	taskExecutionLogMaxLines       = 1000
 )
 
 // CreateScheduleRecord 创建定时任务
@@ -115,46 +116,43 @@ func GetLatestTaskExecutionByTaskType(ctx context.Context, taskType string) (*mo
 
 // AppendTaskExecutionLog 将日志追加到缓冲，任务完成后再持久化到数据库。
 func AppendTaskExecutionLog(ctx context.Context, taskID, logLine string) error {
-	cacheSvc := GetCache(ctx)
-	if cacheSvc == nil {
-		return errors.New(errs.ErrCacheServiceNotInitialized)
+	rdb := GetRedisClient(ctx)
+	if rdb == nil {
+		return errors.New("redis client is not initialized")
 	}
 
 	now := time.Now().Format("15:04:05")
 	line := fmt.Sprintf("[%s] %s\n", now, logLine)
 	key := TaskExecutionLogRedisKey(taskID)
 
-	var existing string
-	if err := cacheSvc.Get(ctx, key, &existing); err != nil {
-		// 只有未命中才代表「尚无缓冲」；其余读取失败若被当作空缓冲继续写入，
-		// 会用这一行覆盖掉整段已缓冲的任务日志。
-		if !errors.Is(err, contracts.ErrCacheMiss) {
-			return fmt.Errorf("load buffered task execution log: %w", err)
-		}
+	_, err := rdb.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+		pipe.RPush(ctx, key, line)
+		pipe.LTrim(ctx, key, -taskExecutionLogMaxLines, -1)
+		pipe.Expire(ctx, key, taskExecutionLogExpiration)
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("append task execution log to redis: %w", err)
 	}
-	return cacheSvc.Set(ctx, key, existing+line, taskExecutionLogExpiration)
+	return nil
 }
 
 // FlushTaskExecutionLog 将缓冲中的完整任务日志写入数据库，并在成功后清理缓存。
 func FlushTaskExecutionLog(ctx context.Context, taskID string) error {
-	cacheSvc := GetCache(ctx)
-	if cacheSvc == nil {
-		return errors.New(errs.ErrCacheServiceNotInitialized)
+	rdb := GetRedisClient(ctx)
+	if rdb == nil {
+		return errors.New("redis client is not initialized")
 	}
 
 	key := TaskExecutionLogRedisKey(taskID)
-	var logText string
-	if err := cacheSvc.Get(ctx, key, &logText); err != nil {
-		// 缓存未命中属于正常情况（任务无输出），其余错误必须上抛，
-		// 否则缓冲日志会被静默丢弃并误报持久化成功。
-		if !errors.Is(err, contracts.ErrCacheMiss) {
-			return fmt.Errorf("load buffered task execution log: %w", err)
-		}
+	logLines, err := rdb.LRange(ctx, key, 0, -1).Result()
+	if err != nil {
+		return fmt.Errorf("load buffered task execution log: %w", err)
+	}
+	if len(logLines) == 0 {
 		return nil
 	}
-	if logText == "" {
-		return nil
-	}
+	logText := strings.Join(logLines, "")
 
 	gormDB := GetDB(ctx)
 	if gormDB == nil {
@@ -170,7 +168,9 @@ func FlushTaskExecutionLog(ctx context.Context, taskID string) error {
 		return fmt.Errorf("persist task execution log: task %q not found", taskID)
 	}
 
-	_ = cacheSvc.Delete(ctx, key)
+	if err := rdb.Del(ctx, key).Err(); err != nil {
+		return fmt.Errorf("delete persisted task execution log from redis: %w", err)
+	}
 	return nil
 }
 
@@ -303,28 +303,35 @@ func TaskExecutionLogRedisKey(taskID string) string {
 // loadTaskExecutionLog best-effort enriches an execution with its cached log;
 // a cache miss or failure simply leaves the stored log column in place.
 func loadTaskExecutionLog(ctx context.Context, execution *model.TaskExecution) {
-	cacheSvc := GetCache(ctx)
-	if cacheSvc == nil {
+	rdb := GetRedisClient(ctx)
+	if rdb == nil || execution == nil {
 		return
 	}
 
-	var logText string
-	if err := cacheSvc.Get(ctx, TaskExecutionLogRedisKey(execution.TaskID), &logText); err == nil && logText != "" {
-		execution.Log = logText
+	logLines, err := rdb.LRange(ctx, TaskExecutionLogRedisKey(execution.TaskID), 0, -1).Result()
+	if err == nil && len(logLines) > 0 {
+		execution.Log = strings.Join(logLines, "")
 	}
 }
 
 // loadTaskExecutionLogs best-effort enriches every execution with its cached log.
 func loadTaskExecutionLogs(ctx context.Context, executions []model.TaskExecution) {
-	cacheSvc := GetCache(ctx)
-	if cacheSvc == nil || len(executions) == 0 {
+	rdb := GetRedisClient(ctx)
+	if rdb == nil || len(executions) == 0 {
 		return
 	}
 
+	pipe := rdb.Pipeline()
+	cmds := make([]*redis.StringSliceCmd, len(executions))
 	for i := range executions {
-		var logText string
-		if err := cacheSvc.Get(ctx, TaskExecutionLogRedisKey(executions[i].TaskID), &logText); err == nil && logText != "" {
-			executions[i].Log = logText
+		cmds[i] = pipe.LRange(ctx, TaskExecutionLogRedisKey(executions[i].TaskID), 0, -1)
+	}
+	_, _ = pipe.Exec(ctx)
+
+	for i := range executions {
+		lines, err := cmds[i].Result()
+		if err == nil && len(lines) > 0 {
+			executions[i].Log = strings.Join(lines, "")
 		}
 	}
 }

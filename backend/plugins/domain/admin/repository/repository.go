@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -31,6 +32,7 @@ var (
 	repoMu       sync.RWMutex
 	dbService    contracts.DBService
 	cacheService contracts.CacheService
+	redisClient  redis.UniversalClient
 )
 
 // SetDBService injects the DBService contract.
@@ -47,12 +49,31 @@ func SetCacheService(s contracts.CacheService) {
 	cacheService = s
 }
 
+// SetRedisClient sets the redis client used for task logs and cache pubsub.
+func SetRedisClient(c redis.UniversalClient) {
+	repoMu.Lock()
+	defer repoMu.Unlock()
+	redisClient = c
+}
+
+// GetRedisClient returns the Redis client instance bound to context or fallback to injected instance.
+func GetRedisClient(ctx context.Context) redis.UniversalClient {
+	if s, err := core.InjectFrom[redis.UniversalClient](ctx); err == nil && s != nil {
+		return s
+	}
+	repoMu.RLock()
+	defer repoMu.RUnlock()
+	return redisClient
+}
+
 // ResetServices clears injected persistence services.
 func ResetServices() {
 	repoMu.Lock()
 	defer repoMu.Unlock()
 	dbService = nil
 	cacheService = nil
+	redisClient = nil
+	StopSystemConfigCacheListener()
 }
 
 // GetDB returns the GORM DB instance bound to the context if available.
@@ -108,7 +129,7 @@ func PreheatSystemConfigByKey(ctx context.Context, key string) (model.SystemConf
 
 // GetSystemConfigByGroup queries a configuration by Type and Key.
 func GetSystemConfigByGroup(ctx context.Context, configType, key string) (model.SystemConfig, error) {
-	ensureSystemConfigCacheListener()
+	ensureSystemConfigCacheListener(ctx)
 
 	if item, ok := ram.Get(configType, key); ok {
 		var sc model.SystemConfig
@@ -151,7 +172,7 @@ func ListSystemConfigsByKeys(ctx context.Context, keys []string) (map[string]mod
 		return map[string]model.SystemConfig{}, nil
 	}
 
-	ensureSystemConfigCacheListener()
+	ensureSystemConfigCacheListener(ctx)
 
 	result := make(map[string]model.SystemConfig, len(keys))
 	missing := make([]string, 0, len(keys))
@@ -204,7 +225,7 @@ func InvalidateVisibleSystemConfigsCache(ctx context.Context) error {
 
 // ListVisibleSystemConfigs queries visible configs using local cache store.
 func ListVisibleSystemConfigs(ctx context.Context) ([]model.SystemConfig, error) {
-	ensureSystemConfigCacheListener()
+	ensureSystemConfigCacheListener(ctx)
 
 	items := ram.GetTypeItems(ConfigCacheType)
 	if len(items) > 0 {
