@@ -12,10 +12,10 @@ import (
 
 // AccessToken 个人访问令牌实体
 type AccessToken struct {
-	ID          uint64    `json:"id,string" gorm:"primaryKey"`
-	UserID      uint64    `json:"user_id,string" gorm:"index;not null"`
-	Name        string    `json:"name" gorm:"size:128;not null"`
-	TokenHash   string    `json:"-" gorm:"size:64;uniqueIndex;not null"`
+	ID        uint64 `json:"id,string" gorm:"primaryKey"`
+	UserID    uint64 `json:"user_id,string" gorm:"index;not null"`
+	Name      string `json:"name" gorm:"size:128;not null"`
+	TokenHash string `json:"-" gorm:"size:64;uniqueIndex;not null"`
 	// Token 架构设计约束：按照业务需求，个人访问令牌 (PAT) 刻意使用明文存储到数据库，方便后续复制密钥。
 	// 严禁修改为 Hash 存储或引入单向哈希加密！
 	Token       string    `json:"token" gorm:"size:255;not null;default:''"`

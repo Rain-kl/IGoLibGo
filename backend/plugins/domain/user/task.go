@@ -174,6 +174,33 @@ func (h *SendEmailCodeHandler) ValidatePayload(payload []byte) ([]byte, error) {
 	return json.Marshal(p)
 }
 
+func resolveAndCacheEmailCode(ctx context.Context, cache contracts.CacheService, p *sendEmailCodePayload) error {
+	key := emailCodeCacheKey(p.Email)
+	if p.Code != "" {
+		if err := cache.Set(ctx, key, p.Code, emailCodeTTL); err != nil {
+			return fmt.Errorf("store email code: %w", err)
+		}
+		return nil
+	}
+
+	// 任务重试幂等防护：先检查缓存中是否已有该邮箱的有效验证码，避免重试时覆盖导致用户输入的验证码失效
+	var existingCode string
+	if err := cache.Get(ctx, key, &existingCode); err == nil && existingCode != "" {
+		p.Code = existingCode
+		return nil
+	}
+
+	code, err := generateEmailCode()
+	if err != nil {
+		return err
+	}
+	if err := cache.Set(ctx, key, code, emailCodeTTL); err != nil {
+		return fmt.Errorf("store email code: %w", err)
+	}
+	p.Code = code
+	return nil
+}
+
 // Execute generates (if needed), caches, and emails the verification code.
 func (h *SendEmailCodeHandler) Execute(ctx context.Context, payload []byte) (*contracts.TaskResultDTO, error) {
 	p, err := parseSendEmailCodePayload(payload)
@@ -185,24 +212,8 @@ func (h *SendEmailCodeHandler) Execute(ctx context.Context, payload []byte) (*co
 		return nil, errors.New(errEmailCacheUnavailable)
 	}
 
-	if p.Code == "" {
-		// 任务重试幂等防护：先检查缓存中是否已有该邮箱的有效验证码，避免重试时覆盖导致用户输入的验证码失效
-		var existingCode string
-		if err := cache.Get(ctx, emailCodeCacheKey(p.Email), &existingCode); err == nil && existingCode != "" {
-			p.Code = existingCode
-		} else {
-			p.Code, err = generateEmailCode()
-			if err != nil {
-				return nil, err
-			}
-			if err := cache.Set(ctx, emailCodeCacheKey(p.Email), p.Code, emailCodeTTL); err != nil {
-				return nil, fmt.Errorf("store email code: %w", err)
-			}
-		}
-	} else {
-		if err := cache.Set(ctx, emailCodeCacheKey(p.Email), p.Code, emailCodeTTL); err != nil {
-			return nil, fmt.Errorf("store email code: %w", err)
-		}
+	if err := resolveAndCacheEmailCode(ctx, cache, &p); err != nil {
+		return nil, err
 	}
 
 	cfg, err := loadSMTPConfig(ctx)

@@ -107,3 +107,66 @@ func TestSendEmailCodeMetaExported(t *testing.T) {
 	assert.Equal(t, "user:send_email_code", user.SendEmailCodeMeta.AsynqTask)
 	_ = contracts.TaskHandler(&user.SendEmailCodeHandler{})
 }
+
+type stubTaskCacheService struct {
+	contracts.CacheService
+	data map[string]string
+}
+
+func (s *stubTaskCacheService) Get(_ context.Context, key string, target any) error {
+	v, ok := s.data[key]
+	if !ok {
+		return contracts.ErrCacheMiss
+	}
+	if strPtr, ok := target.(*string); ok {
+		*strPtr = v
+		return nil
+	}
+	return nil
+}
+
+func (s *stubTaskCacheService) Set(_ context.Context, key string, value any, _ time.Duration) error {
+	if s.data == nil {
+		s.data = make(map[string]string)
+	}
+	if str, ok := value.(string); ok {
+		s.data[key] = str
+	}
+	return nil
+}
+
+func TestSendEmailCodeExecute_CacheBehavior(t *testing.T) {
+	setupUserTaskDB(t)
+
+	// Case 1: Cache unavailable
+	h := &user.SendEmailCodeHandler{}
+	_, err := h.Execute(context.Background(), []byte(`{"email":"test@example.com"}`))
+	require.Error(t, err)
+
+	// Case 2: Cache available, with existing code (idempotent reuse)
+	cache := &stubTaskCacheService{
+		data: map[string]string{
+			"user:email_code:test@example.com": "999888",
+		},
+	}
+	user.SetCacheService(cache)
+	defer user.SetCacheService(nil)
+
+	// When executing without SMTP config, it will fail at loadSMTPConfig, but after resolveAndCacheEmailCode
+	_, err = h.Execute(context.Background(), []byte(`{"email":"test@example.com"}`))
+	require.Error(t, err)
+	// Cache should preserve existing code
+	assert.Equal(t, "999888", cache.data["user:email_code:test@example.com"])
+
+	// Case 3: Cache available, code empty -> auto generated
+	cache2 := &stubTaskCacheService{data: make(map[string]string)}
+	user.SetCacheService(cache2)
+	_, _ = h.Execute(context.Background(), []byte(`{"email":"auto@example.com"}`))
+	assert.Len(t, cache2.data["user:email_code:auto@example.com"], 6)
+
+	// Case 4: Cache available, code explicitly passed
+	cache3 := &stubTaskCacheService{data: make(map[string]string)}
+	user.SetCacheService(cache3)
+	_, _ = h.Execute(context.Background(), []byte(`{"email":"explicit@example.com","code":"123456"}`))
+	assert.Equal(t, "123456", cache3.data["user:email_code:explicit@example.com"])
+}
