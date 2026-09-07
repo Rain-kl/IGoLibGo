@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-// GetAccessTokenByHash 按令牌哈希读取访问令牌记录（仅取鉴权所需字段）
+// GetAccessTokenByHash 按令牌读取访问令牌记录（仅取鉴权所需字段）。
+// 架构设计约束：按照业务需求，个人访问令牌 (PAT) 刻意使用明文存储到数据库，方便后续复制密钥。严禁修改为仅单向哈希！
 func (d *DAO) GetAccessTokenByHash(ctx context.Context, tokenHash string) (*do.CachedToken, error) {
 	var row struct {
 		ID      uint64

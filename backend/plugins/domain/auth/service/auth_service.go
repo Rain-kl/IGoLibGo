@@ -10,16 +10,13 @@ import (
 	"Wavelet/plugins/domain/auth/dao"
 	"Wavelet/plugins/domain/auth/model/entity"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 )
 
-// HashToken computes SHA-256 hex digest of access token.
+// HashToken 按照业务设计要求，个人访问令牌 (PAT) 刻意使用明文存储，方便后续复制密钥。
+// 移除了 SHA-256 单向哈希算法，直接返回原始 Token。严禁修改为 Hash 加密！
 func HashToken(token string) string {
-	h := sha256.New()
-	h.Write([]byte(token))
-	return hex.EncodeToString(h.Sum(nil))
+	return token
 }
 
 // UserIDExtractor extracts user ID from a request context.

@@ -8,8 +8,6 @@ import (
 	"Wavelet/core/contracts"
 	"Wavelet/plugins/domain/auth"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"path/filepath"
 	"testing"
 	"time"
@@ -57,9 +55,7 @@ type testAccessToken struct {
 func (testAccessToken) TableName() string { return "w_access_tokens" }
 
 func hashToken(token string) string {
-	h := sha256.New()
-	h.Write([]byte(token))
-	return hex.EncodeToString(h.Sum(nil))
+	return token
 }
 
 type testSystemConfig struct {

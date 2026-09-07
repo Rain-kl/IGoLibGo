@@ -116,7 +116,8 @@ func UpdateUser(ctx context.Context, u *User) error {
 	return getDB(ctx).Save(u).Error
 }
 
-// GetAccessTokenByHash 通过 Hash 查询访问令牌
+// GetAccessTokenByHash 通过 Token 或 TokenHash 查询访问令牌。
+// 架构设计约束：按照业务需求，个人访问令牌 (PAT) 刻意使用明文存储到数据库，方便后续复制密钥。严禁修改为仅单向哈希！
 func GetAccessTokenByHash(ctx context.Context, tokenHash string) (*AccessToken, error) {
 	var token AccessToken
 	if err := getDB(ctx).Where("token_hash = ?", tokenHash).First(&token).Error; err != nil {

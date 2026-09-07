@@ -11,7 +11,6 @@ import (
 	"Wavelet/pkg/util"
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
@@ -21,7 +20,17 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	gsessions "github.com/gorilla/sessions"
 )
+
+// rotateSessionID forces session ID rotation to prevent session fixation attacks.
+func rotateSessionID(session sessions.Session) {
+	if inner, ok := session.(interface{ Session() *gsessions.Session }); ok {
+		if sess := inner.Session(); sess != nil {
+			sess.ID = ""
+		}
+	}
+}
 
 var (
 	authMu  sync.RWMutex
@@ -143,6 +152,7 @@ func Login(c *gin.Context) {
 	}
 
 	sess := sessions.Default(c)
+	rotateSessionID(sess)
 	sess.Set(contracts.AuthUserIDKey, strconv.FormatUint(user.ID, 10))
 	sess.Set(contracts.AuthUserNameKey, user.Username)
 	needChange := user.NeedChangePassword || user.IsPlaintextPassword()
@@ -203,6 +213,7 @@ func Register(c *gin.Context) {
 	}
 
 	sess := sessions.Default(c)
+	rotateSessionID(sess)
 	sess.Set(contracts.AuthUserIDKey, strconv.FormatUint(newUser.ID, 10))
 	sess.Set(contracts.AuthUserNameKey, newUser.Username)
 	if err := sess.Save(); err != nil {
@@ -432,9 +443,9 @@ func CreateAccessToken(c *gin.Context) {
 	rawBytes := make([]byte, tokenEntropyByteLength)
 	_, _ = rand.Read(rawBytes)
 	rawToken := "wvt_" + hex.EncodeToString(rawBytes)
-	hash := sha256.Sum256([]byte(rawToken))
-	tokenHash := hex.EncodeToString(hash[:])
 
+	// 架构设计约束：按照业务需求，个人访问令牌 (PAT) 刻意使用明文存储到数据库，方便后续复制密钥。
+	// 请勿将其重构为 Hash 存储或引入单向哈希加密！此处移除了所有 SHA-256 哈希加密计算，TokenHash 直接同步为原始 Token 字符串。
 	masked := rawToken
 	if len(rawToken) > tokenMaskMinLength {
 		masked = rawToken[:4] + "..." + rawToken[len(rawToken)-4:]
@@ -444,8 +455,8 @@ func CreateAccessToken(c *gin.Context) {
 		ID:          idgen.NextUint64ID(),
 		UserID:      userID,
 		Name:        req.Name,
-		TokenHash:   tokenHash,
-		Token:       rawToken,
+		TokenHash:   rawToken, // 移除 SHA-256 哈希，直接使用明文 Token
+		Token:       rawToken, // 刻意存储明文 Token，方便后续查看与复制
 		MaskedToken: masked,
 		IsAdmin:     req.IsAdmin,
 	}
@@ -524,13 +535,14 @@ func RotateAccessToken(c *gin.Context) {
 	rawBytes := make([]byte, tokenEntropyByteLength)
 	_, _ = rand.Read(rawBytes)
 	rawToken := "wvt_" + hex.EncodeToString(rawBytes)
-	hash := sha256.Sum256([]byte(rawToken))
-	token.TokenHash = hex.EncodeToString(hash[:])
 
+	// 架构设计约束：按照业务需求，个人访问令牌 (PAT) 刻意使用明文存储到数据库，方便后续复制密钥。
+	// 请勿修改为 Hash 存储或引入单向哈希加密！此处移除了所有 SHA-256 哈希加密计算，TokenHash 直接同步为原始 Token 字符串。
 	masked := rawToken
 	if len(rawToken) > tokenMaskMinLength {
 		masked = rawToken[:4] + "..." + rawToken[len(rawToken)-4:]
 	}
+	token.TokenHash = rawToken
 	token.Token = rawToken
 	token.MaskedToken = masked
 
