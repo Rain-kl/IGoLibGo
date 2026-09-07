@@ -4,6 +4,7 @@ export interface AccessToken {
   id: string | number;
   user_id: string | number;
   name: string;
+  token?: string;
   masked_token: string;
   is_admin: boolean;
   created_at: string;

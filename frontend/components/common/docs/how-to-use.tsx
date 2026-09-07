@@ -99,9 +99,9 @@ export function getHowToUseSections(t: TFn): PolicySection[] {
               <strong>{t('howToUse.section3.oneTimeDisplay')}</strong>
               {t('howToUse.section3.oneTimeDisplayDesc')}{' '}
               <code className='bg-muted px-1.5 py-0.5 rounded text-xs font-mono'>
-                at_xxx
+                wvt_xxx
               </code>
-              ){t('howToUse.section3.oneTimeDisplayHint')}
+              {t('howToUse.section3.oneTimeDisplayHint')}
             </li>
             <li>
               <strong>{t('howToUse.section3.secureHash')}</strong>

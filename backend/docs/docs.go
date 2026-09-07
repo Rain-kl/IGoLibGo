@@ -5512,7 +5512,7 @@ const docTemplate = `{
                         "SessionCookie": []
                     }
                 ],
-                "description": "为当前用户新建一个 API 访问令牌，仅在此接口返回一次明文令牌值，请妥善保存。",
+                "description": "为当前用户新建一个 API 访问令牌",
                 "consumes": [
                     "application/json"
                 ],
@@ -8012,6 +8012,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 },
                 "updated_at": {

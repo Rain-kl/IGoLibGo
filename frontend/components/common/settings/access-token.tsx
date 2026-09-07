@@ -8,6 +8,8 @@ import {
   AlertTriangle,
   Check,
   Copy,
+  Eye,
+  EyeOff,
   Info,
   Key,
   Loader2,
@@ -85,6 +87,16 @@ export function AccessTokenMain() {
   const [rotateTarget, setRotateTarget] = React.useState<ConfirmTarget | null>(
     null,
   );
+  const [visibleTokenIds, setVisibleTokenIds] = React.useState<
+    Record<string | number, boolean>
+  >({});
+
+  const toggleTokenVisibility = (id: string | number) => {
+    setVisibleTokenIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   // 获取 Token 列表
   const accessTokensQuery = useQuery({
@@ -243,94 +255,126 @@ export function AccessTokenMain() {
             </div>
           ) : (accessTokensQuery.data ?? []).length > 0 ? (
             <div className='space-y-3'>
-              {(accessTokensQuery.data ?? []).map((token) => (
-                <div
-                  key={token.id}
-                  className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 transition-all duration-300 shadow-sm'
-                >
-                  <div className='space-y-1'>
-                    <div className='flex items-center gap-2'>
-                      <span className='font-semibold text-sm text-foreground'>
-                        {token.name}
-                      </span>
-                      {token.is_admin ? (
-                        <Badge
-                          variant='outline'
-                          className='text-[10px] px-1.5 py-0 h-4 border-rose-500/40 text-rose-500 bg-rose-500/5 font-semibold'
-                        >
-                          <Shield className='size-2.5 mr-0.5' />
-                          {ta('adminBadge')}
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant='outline'
-                          className='text-[10px] px-1.5 py-0 h-4 border-border/50 text-muted-foreground bg-muted/10 font-semibold'
-                        >
-                          {ta('userToken')}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className='flex flex-col gap-1 text-xs text-muted-foreground'>
-                      <div className='font-mono bg-muted/30 px-2 py-0.5 rounded border border-border/50 w-fit select-all'>
-                        {token.masked_token}
-                      </div>
-                      <div className='flex flex-wrap gap-x-4 gap-y-0.5 pt-1'>
-                        <span>
-                          {ta('createdAt', {
-                            date: formatDate(token.created_at),
-                          })}
+              {(accessTokensQuery.data ?? []).map((token) => {
+                const isVisible = Boolean(visibleTokenIds[token.id]);
+                const displayToken =
+                  isVisible && token.token ? token.token : token.masked_token;
+                const canView = Boolean(token.token);
+                return (
+                  <div
+                    key={token.id}
+                    className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 transition-all duration-300 shadow-sm'
+                  >
+                    <div className='space-y-1'>
+                      <div className='flex items-center gap-2'>
+                        <span className='font-semibold text-sm text-foreground'>
+                          {token.name}
                         </span>
+                        {token.is_admin ? (
+                          <Badge
+                            variant='outline'
+                            className='text-[10px] px-1.5 py-0 h-4 border-rose-500/40 text-rose-500 bg-rose-500/5 font-semibold'
+                          >
+                            <Shield className='size-2.5 mr-0.5' />
+                            {ta('adminBadge')}
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant='outline'
+                            className='text-[10px] px-1.5 py-0 h-4 border-border/50 text-muted-foreground bg-muted/10 font-semibold'
+                          >
+                            {ta('userToken')}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className='flex flex-col gap-1 text-xs text-muted-foreground'>
+                        <div className='flex items-center gap-1.5'>
+                          <div className='font-mono bg-muted/30 px-2 py-0.5 rounded border border-border/50 w-fit select-all'>
+                            {displayToken}
+                          </div>
+                          {canView && (
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='size-6 text-muted-foreground hover:text-foreground'
+                              onClick={() => toggleTokenVisibility(token.id)}
+                              aria-label={
+                                isVisible ? ta('hideToken') : ta('viewToken')
+                              }
+                              title={
+                                isVisible ? ta('hideToken') : ta('viewToken')
+                              }
+                            >
+                              {isVisible ? (
+                                <EyeOff className='size-3.5' />
+                              ) : (
+                                <Eye className='size-3.5' />
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                        <div className='flex flex-wrap gap-x-4 gap-y-0.5 pt-1'>
+                          <span>
+                            {ta('createdAt', {
+                              date: formatDate(token.created_at),
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    <div className='flex items-center gap-2 shrink-0 sm:self-center'>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        className='text-xs border-dashed text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg h-8 px-2.5'
+                        onClick={() =>
+                          handleCopyText(
+                            token.token || token.masked_token,
+                            token.id,
+                          )
+                        }
+                      >
+                        {copiedId === token.id ? (
+                          <Check className='size-3.5 mr-1 text-emerald-500' />
+                        ) : (
+                          <Copy className='size-3.5 mr-1' />
+                        )}
+                        {ta('copy')}
+                      </Button>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        className='text-xs border-dashed text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg h-8 px-2.5'
+                        onClick={() =>
+                          setRotateTarget({ id: token.id, name: token.name })
+                        }
+                        disabled={rotateTokenMutation.isPending}
+                      >
+                        <RefreshCw
+                          className={`size-3.5 mr-1 ${rotateTokenMutation.isPending && rotateTokenMutation.variables === token.id ? 'animate-spin' : ''}`}
+                        />
+                        {ta('rotate')}
+                      </Button>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        className='text-xs border-dashed text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 rounded-lg h-8 px-2.5'
+                        onClick={() =>
+                          setDeleteTarget({ id: token.id, name: token.name })
+                        }
+                        disabled={deleteTokenMutation.isPending}
+                      >
+                        <Trash2 className='size-3.5 mr-1' />
+                        {ta('revoke')}
+                      </Button>
+                    </div>
                   </div>
-                  <div className='flex items-center gap-2 shrink-0 sm:self-center'>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      className='text-xs border-dashed text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg h-8 px-2.5'
-                      onClick={() =>
-                        handleCopyText(token.masked_token, token.id)
-                      }
-                    >
-                      {copiedId === token.id ? (
-                        <Check className='size-3.5 mr-1 text-emerald-500' />
-                      ) : (
-                        <Copy className='size-3.5 mr-1' />
-                      )}
-                      {ta('copy')}
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      className='text-xs border-dashed text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg h-8 px-2.5'
-                      onClick={() =>
-                        setRotateTarget({ id: token.id, name: token.name })
-                      }
-                      disabled={rotateTokenMutation.isPending}
-                    >
-                      <RefreshCw
-                        className={`size-3.5 mr-1 ${rotateTokenMutation.isPending && rotateTokenMutation.variables === token.id ? 'animate-spin' : ''}`}
-                      />
-                      {ta('rotate')}
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      className='text-xs border-dashed text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/20 rounded-lg h-8 px-2.5'
-                      onClick={() =>
-                        setDeleteTarget({ id: token.id, name: token.name })
-                      }
-                      disabled={deleteTokenMutation.isPending}
-                    >
-                      <Trash2 className='size-3.5 mr-1' />
-                      {ta('revoke')}
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className='rounded-xl border border-dashed border-border/50 px-4 py-10 text-center text-xs text-muted-foreground bg-muted/5 flex flex-col items-center justify-center gap-3'>
@@ -477,8 +521,8 @@ export function AccessTokenMain() {
                 </Button>
               </div>
 
-              {/* 强提示 */}
-              <div className='rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 flex gap-3 text-rose-600 text-xs leading-relaxed'>
+              {/* 提示 */}
+              <div className='rounded-xl border border-primary/20 bg-primary/5 p-4 flex gap-3 text-primary text-xs leading-relaxed'>
                 <Info className='size-4 shrink-0 mt-0.5' />
                 <div className='space-y-1'>
                   <span className='font-bold'>{ta('importantTitle')}</span>

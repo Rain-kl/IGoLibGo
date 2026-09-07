@@ -412,7 +412,7 @@ const (
 
 // CreateAccessToken 创建一个新的 AccessToken
 // @Summary 创建一个新的 AccessToken
-// @Description 为当前用户新建一个 API 访问令牌，仅在此接口返回一次明文令牌值，请妥善保存。
+// @Description 为当前用户新建一个 API 访问令牌
 // @Tags user
 // @Accept json
 // @Produce json
@@ -445,6 +445,7 @@ func CreateAccessToken(c *gin.Context) {
 		UserID:      userID,
 		Name:        req.Name,
 		TokenHash:   tokenHash,
+		Token:       rawToken,
 		MaskedToken: masked,
 		IsAdmin:     req.IsAdmin,
 	}
@@ -530,6 +531,7 @@ func RotateAccessToken(c *gin.Context) {
 	if len(rawToken) > tokenMaskMinLength {
 		masked = rawToken[:4] + "..." + rawToken[len(rawToken)-4:]
 	}
+	token.Token = rawToken
 	token.MaskedToken = masked
 
 	if err := saveAccessTokenRow(c.Request.Context(), token); err != nil {

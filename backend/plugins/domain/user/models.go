@@ -16,6 +16,7 @@ type AccessToken struct {
 	UserID      uint64    `json:"user_id,string" gorm:"index;not null"`
 	Name        string    `json:"name" gorm:"size:128;not null"`
 	TokenHash   string    `json:"-" gorm:"size:64;uniqueIndex;not null"`
+	Token       string    `json:"token" gorm:"size:255;not null;default:''"`
 	MaskedToken string    `json:"masked_token" gorm:"size:64;not null"`
 	IsAdmin     bool      `json:"is_admin" gorm:"default:false"`
 	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`

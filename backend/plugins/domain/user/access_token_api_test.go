@@ -29,6 +29,7 @@ type tokenRecordDTO struct {
 	ID          string `json:"id"`
 	UserID      string `json:"user_id"`
 	Name        string `json:"name"`
+	Token       string `json:"token"`
 	MaskedToken string `json:"masked_token"`
 	IsAdmin     bool   `json:"is_admin"`
 }
@@ -69,6 +70,7 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 	require.NoError(t, json.Unmarshal(createEnv.Data.Record, &record))
 	require.NotEmpty(t, record.ID, "token ID must not be empty or 0")
 	require.NotEqual(t, "0", record.ID, "token ID must be a generated snowflake ID, not 0")
+	require.Equal(t, createEnv.Data.Token, record.Token, "record should contain full plaintext token")
 	tokenID := record.ID
 
 	// 2. List Access Tokens
@@ -89,6 +91,7 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 	require.Len(t, listEnv.Data, 1)
 	require.Equal(t, tokenID, listEnv.Data[0].ID)
 	require.Equal(t, "test-api-key", listEnv.Data[0].Name)
+	require.Equal(t, createEnv.Data.Token, listEnv.Data[0].Token, "list should return full plaintext token")
 
 	// 3. Rotate Access Token using the token ID
 	rotateReq := httptest.NewRequest(http.MethodPost, "/api/v1/user/access-tokens/"+tokenID+"/rotate", nil)
@@ -104,6 +107,27 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 	require.Empty(t, rotateEnv.ErrorMsg)
 	require.True(t, strings.HasPrefix(rotateEnv.Data.Token, "wvt_"))
 	require.NotEqual(t, createEnv.Data.Token, rotateEnv.Data.Token, "rotated token should generate a new secret")
+
+	var rotatedRecord tokenRecordDTO
+	require.NoError(t, json.Unmarshal(rotateEnv.Data.Record, &rotatedRecord))
+	require.Equal(t, rotateEnv.Data.Token, rotatedRecord.Token, "rotated record should contain new plaintext token")
+
+	// 3.1 Verify List returns updated rotated token
+	listReqRotated := httptest.NewRequest(http.MethodGet, "/api/v1/user/access-tokens", nil)
+	for _, c := range cookies {
+		listReqRotated.AddCookie(c)
+	}
+	listRecRotated := httptest.NewRecorder()
+	engine.ServeHTTP(listRecRotated, listReqRotated)
+	require.Equal(t, http.StatusOK, listRecRotated.Code)
+	var listEnvRotated struct {
+		ErrorMsg string           `json:"error_msg"`
+		Data     []tokenRecordDTO `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(listRecRotated.Body.Bytes(), &listEnvRotated))
+	require.Empty(t, listEnvRotated.ErrorMsg)
+	require.Len(t, listEnvRotated.Data, 1)
+	require.Equal(t, rotateEnv.Data.Token, listEnvRotated.Data[0].Token, "list should return rotated plaintext token")
 
 	// 4. Delete Access Token
 	deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/user/access-tokens/"+tokenID, nil)

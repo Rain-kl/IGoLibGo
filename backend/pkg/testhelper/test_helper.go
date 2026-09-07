@@ -60,6 +60,7 @@ type accessTokenHelper struct {
 	UserID      uint64    `gorm:"not null;index"`
 	Name        string    `gorm:"size:64;not null"`
 	TokenHash   string    `gorm:"size:64;uniqueIndex;not null"`
+	Token       string    `gorm:"size:255;not null;default:''"`
 	MaskedToken string    `gorm:"size:32;not null"`
 	IsAdmin     bool      `gorm:"default:false;not null"`
 	CreatedAt   time.Time `gorm:"autoCreateTime"`
