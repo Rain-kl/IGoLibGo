@@ -8,7 +8,7 @@ import (
 	"Wavelet/core/contracts"
 	"Wavelet/pkg/ginutil"
 	"Wavelet/pkg/idgen"
-	"Wavelet/pkg/response"
+	"Wavelet/pkg/logger"
 	"Wavelet/plugins/domain/risk_control/logstore"
 	"encoding/json"
 	"net/http"
@@ -18,14 +18,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// accessLogEnabled 表示访问日志记录是否启用（原子开关）
 var accessLogEnabled atomic.Bool
 
-// SetAccessLogEnabled enables or disables access log collection.
+// SetAccessLogEnabled 设置访问日志是否记录
 func SetAccessLogEnabled(enabled bool) {
 	accessLogEnabled.Store(enabled)
 }
 
-// IsAccessLogEnabled reports whether access log collection is enabled.
+// IsAccessLogEnabled 返回当前是否需要采集访问日志
 func IsAccessLogEnabled() bool {
 	return accessLogEnabled.Load()
 }
@@ -42,9 +43,10 @@ func RiskControlMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 1. 限流背压检测（检测本地缓冲队列是否已满）
+		// 1. 背压平滑降级检测：遥测数据属于旁路可观测性指标，缓冲队列满时降级丢弃日志，绝不熔断主站正常业务
 		if IsBufferFull() {
-			response.AbortTooManyRequests(c, errSystemBusy)
+			logger.WarnF(c.Request.Context(), "[RiskControl] Log buffer full, dropping telemetry log for %s %s", c.Request.Method, c.Request.URL.Path)
+			c.Next()
 			return
 		}
 

@@ -149,5 +149,5 @@ func scanUserAccessLogs(rows driver.Rows) ([]UserAccessLog, error) {
 		item.CreatedAt = item.CreatedAt.UTC()
 		result = append(result, item)
 	}
-	return result, nil
+	return result, rows.Err()
 }

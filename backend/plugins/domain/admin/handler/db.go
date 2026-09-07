@@ -97,7 +97,7 @@ func GetDBTableData(c *gin.Context) {
 func ExecuteSQL(c *gin.Context) {
 	var req model.ExecuteSQLRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.AbortBadRequest(c, err.Error())
+		response.AbortBadRequest(c, errs.InvalidParams)
 		return
 	}
 
@@ -109,11 +109,12 @@ func ExecuteSQL(c *gin.Context) {
 
 	resp, err := service.ExecuteCustomSQL(c.Request.Context(), trimmedSQL)
 	if err != nil {
+		logger.ErrorF(c.Request.Context(), "[AdminDB] ExecuteCustomSQL failed: %v", err)
 		if errors.Is(err, errs.ErrDatabaseUninitialized) {
-			response.AbortInternal(c, err.Error())
+			response.AbortInternal(c, errs.DatabaseNotInitialized)
 			return
 		}
-		response.AbortBadRequest(c, err.Error())
+		response.AbortBadRequest(c, errs.InvalidSQLStatement)
 		return
 	}
 

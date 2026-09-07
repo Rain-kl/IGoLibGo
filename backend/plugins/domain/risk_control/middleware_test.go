@@ -12,7 +12,6 @@ import (
 	"Wavelet/plugins/domain/risk_control"
 	"Wavelet/plugins/domain/risk_control/logstore"
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -165,7 +164,7 @@ func TestRiskControlMiddleware(t *testing.T) {
 		}
 	})
 
-	t.Run("ClickHouse enabled - Buffer Full Rate Limiting", func(t *testing.T) {
+	t.Run("ClickHouse enabled - Buffer Full Smooth Degradation", func(t *testing.T) {
 		risk_control.SetAccessLogEnabled(true)
 		defer risk_control.SetAccessLogEnabled(false)
 
@@ -217,11 +216,8 @@ func TestRiskControlMiddleware(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "/test", nil)
 		r.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusTooManyRequests, w.Code)
-
-		var resp map[string]interface{}
-		err = json.Unmarshal(w.Body.Bytes(), &resp)
-		assert.NoError(t, err)
-		assert.Contains(t, resp["error_msg"], "系统繁忙")
+		// 遥测缓冲满时降级放行正常业务请求，禁止返回 429
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "ok", w.Body.String())
 	})
 }

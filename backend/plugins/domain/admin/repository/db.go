@@ -270,17 +270,23 @@ func RunMutationSQL(ctx context.Context, sqlStr string) (int64, error) {
 	return tx.RowsAffected, nil
 }
 
+// maxScanTableRows limits the maximum number of rows loaded in memory to prevent OOM
+const maxScanTableRows = 1000
+
 // scanTableRows decodes every row of the result set into a column keyed map.
 func scanTableRows(rows *sql.Rows, cols []string) ([]map[string]any, error) {
 	results := make([]map[string]any, 0)
 	for rows.Next() {
+		if len(results) >= maxScanTableRows {
+			break
+		}
 		row, err := scanRowAsMap(rows, cols)
 		if err != nil {
 			return nil, err
 		}
 		results = append(results, row)
 	}
-	return results, nil
+	return results, rows.Err()
 }
 
 // scanRowAsMap decodes a single row, normalising driver byte slices to strings.

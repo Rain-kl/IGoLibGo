@@ -30,7 +30,7 @@ func TestStorageCache(t *testing.T) {
 	// 2. Set up cache manually
 	expectedConfig := Config{
 		Driver: DriverLocal,
-		Local:  LocalConfig{Root: "/tmp/wavelet-test"},
+		Local:  LocalConfig{Root: t.TempDir()},
 	}
 	cfgJSON, err := json.Marshal(expectedConfig)
 	if err != nil {
