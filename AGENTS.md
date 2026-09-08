@@ -13,6 +13,11 @@ Before implementing:
 - If multiple interpretations exist, present them - don't pick silently.
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
+- **遵循 `write-notes-like-deepseek`（像 DeepSeek 团队一样沉淀 Agent Notes）**：
+  - 动手前必须先检索既有 `.agents/notes/`，优先就地更新已有 Note 的事实（路径、参数、签名等）；
+  - 遇到非平凡改动（技术选型、架构重构、核心接口/行为变更、踩坑复盘、或裁撤特性），在动手编码前必须先遵循 `write-notes-like-deepseek` 规范并记录 `proposed` Note（明确 Problem、Proposal、放弃了什么 Alternatives 与风险）；
+  - 落地后转为 `implemented` 并与代码同一 Commit 原子提交，并在核心代码入口留反向注释（`// Note: ... 见 .agents/notes/...`）；
+  - 严禁盲目编码与破坏性重构。
 
 ## 2. Simplicity First
 
@@ -98,11 +103,13 @@ make code-check     # 静态分析
 
 每次完成一个功能点开发或修复一个问题后，务必提交 Git commit , 禁止推送远程仓库。
 遵循 Conventional Commits：`<type>(<scope>): <subject>`（例：`feat(auth): support email login`）。
+若涉及非琐碎改动（技术选型/架构重构/核心改动/踩坑复盘），必须将对应的 Agent Note（`.agents/notes/...`）与代码同批原子提交。
 
 ## 务必阅读匹配的 Skill
 
 | Skill | 何时使用 |
 | :--- | :--- |
+| `write-notes-like-deepseek` | 涉及技术选型、架构重构、核心接口/行为变更、修复非直觉缺陷/踩坑复盘，或裁撤冗余特性时；开发前必读既有 Note 并立项记录，与代码原子提交 |
 | `new-api` | 基于 Cordis 插件开发业务 HTTP API、通过 `ctx.Router()` 声明路由与挂载中间件 |
 | `new-async-task` | 基于 Cordis 插件通过 `ctx.Task()` 与 `ctx.Schedule()` 注册 Asynq 异步任务与定时调度 |
 | `new-setting` | 基于 Cordis 插件通过 `ctx.Settings()` 声明配置 Schema、绑定 YAML 配置或管理台热加载设置 |
