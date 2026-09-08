@@ -47,5 +47,7 @@ Wavelet 脚手架系统的现代化前端应用。
 
 - `bun dev`: 启动开发服务器 (使用 Turbopack)
 - `bun run build`: 构建生产版本
+- `bun run build:embed`: 构建静态导出资源（用于内嵌至 Go 二进制文件）
 - `bun start`: 启动生产服务器
-- `bun run lint`: 运行 ESLint
+- `bun run lint`: 运行 ESLint 代码检查
+- `bun run format`: 使用 Biome 格式化代码

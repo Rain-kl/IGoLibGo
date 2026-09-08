@@ -47,5 +47,7 @@ Modern frontend application for the Wavelet scaffold framework.
 
 - `bun dev`: Start development server with Turbopack
 - `bun run build`: Build the application for production
+- `bun run build:embed`: Build with static export for embedding into the Go binary
 - `bun start`: Start production server
 - `bun run lint`: Run ESLint
+- `bun run format`: Format code with Biome
