@@ -145,7 +145,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	ResetAsynqClient()
 	p.mu.Unlock()
 
-	ctx.Bind[contracts.DBService](setDBService)
+	ctx.Bind(setDBService)
 	ctx.OnDispose(func() error {
 		setDBService(nil)
 		return nil
@@ -184,7 +184,7 @@ func (p *Plugin) Start(_ context.Context) error {
 
 	mux := asynq.NewServeMux()
 
-	if p.coreCtx != nil && p.coreCtx.Tasks() != nil {
+	if p.coreCtx != nil {
 		appCtx := p.coreCtx.Root()
 		for _, td := range p.coreCtx.Tasks().Tasks() {
 			handler, err := toAsynqHandler(td.Pattern, td.Handler)

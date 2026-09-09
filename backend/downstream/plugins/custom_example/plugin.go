@@ -41,7 +41,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	ctx.Migrations().Register("custom_example", customMigrations)
 
 	// 2. 绑定平台基础设施（DBService 等）
-	ctx.Bind[contracts.DBService](dao.SetDBService)
+	ctx.Bind(dao.SetDBService)
 
 	// 3. 初始化服务层并示范注册到微内核 IoC 容器（示范原生泛型方法 ctx.Provide）
 	p.svc = service.NewHelloService()

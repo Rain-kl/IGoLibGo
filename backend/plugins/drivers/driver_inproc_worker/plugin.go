@@ -119,7 +119,7 @@ func (p *Plugin) ConfigEnabled(view core.ConfigView) bool {
 func (p *Plugin) Apply(ctx *core.Context) error {
 	p.coreCtx = ctx
 
-	ctx.Bind[contracts.DBService](setDBService)
+	ctx.Bind(setDBService)
 
 	taskSvc := newInprocTaskService(ctx.Tasks())
 	ctx.Provide[contracts.TaskService](taskSvc)

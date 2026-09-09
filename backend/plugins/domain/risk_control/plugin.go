@@ -96,7 +96,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	SetAccessLogEnabled(true)
 	logstore.SetDefaultDatabases(dbCfg.Enabled, chCfg.Enabled)
 
-	ctx.Bind[contracts.DBService](logstore.SetDBService)
+	ctx.Bind(logstore.SetDBService)
 	ctx.OnDispose(func() error {
 		logstore.SetDBService(nil)
 		return nil

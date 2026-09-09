@@ -57,11 +57,11 @@ func (p *Plugin) Manifest() core.Manifest {
 
 // Apply registers upload routes, tasks, and settings into the Context.
 func (p *Plugin) Apply(ctx *core.Context) error {
-	ctx.Bind[contracts.DBService](shared.SetDBService)
-	ctx.Bind[contracts.CacheService](shared.SetCacheService)
-	ctx.Bind[contracts.StorageService](shared.SetStorageService)
-	ctx.Bind[contracts.TaskService](shared.SetTaskService)
-	ctx.Bind[contracts.AuthService](shared.SetAuthService)
+	ctx.Bind(shared.SetDBService)
+	ctx.Bind(shared.SetCacheService)
+	ctx.Bind(shared.SetStorageService)
+	ctx.Bind(shared.SetTaskService)
+	ctx.Bind(shared.SetAuthService)
 	ctx.Provide[contracts.UploadService](&uploadServiceImpl{})
 
 	ctx.OnDispose(func() error {

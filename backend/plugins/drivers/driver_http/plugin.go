@@ -6,7 +6,6 @@ package driver_http
 
 import (
 	"Wavelet/core"
-	"Wavelet/core/contracts"
 	_ "Wavelet/docs" // swagger documentation registration
 	"Wavelet/pkg/util"
 	"context"
@@ -121,13 +120,13 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 	p.mu.Unlock()
 
-	ctx.Bind[contracts.DBService](setDBService)
+	ctx.Bind(setDBService)
 	ctx.OnDispose(func() error {
 		setDBService(nil)
 		return nil
 	})
 
-	ctx.Bind[contracts.CacheService](setCacheService)
+	ctx.Bind(setCacheService)
 	ctx.OnDispose(func() error {
 		setCacheService(nil)
 		return nil

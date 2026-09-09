@@ -101,7 +101,7 @@ func (p *Plugin) Name() string {
 func (p *Plugin) Apply(ctx *core.Context) error {
 	// 通过容器解析认证服务
 	var authSvc contracts.AuthService
-	if err := ctx.Using[contracts.AuthService](func(svc contracts.AuthService) { authSvc = svc }); err != nil {
+	if err := ctx.Using(func(svc contracts.AuthService) { authSvc = svc }); err != nil {
 		return err
 	}
 

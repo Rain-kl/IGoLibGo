@@ -6,7 +6,6 @@ package driver_asynq_cron
 
 import (
 	"Wavelet/core"
-	"Wavelet/core/contracts"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -120,8 +119,8 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 	p.mu.Unlock()
 
-	ctx.Bind[contracts.DBService](setDBService)
-	ctx.Bind[contracts.TaskService](setTaskService)
+	ctx.Bind(setDBService)
+	ctx.Bind(setTaskService)
 
 	ctx.OnDispose(func() error {
 		setDBService(nil)
@@ -154,7 +153,7 @@ func (p *Plugin) Start(_ context.Context) error {
 		p.scheduler = p.initScheduler()
 	}
 
-	if p.coreCtx != nil && p.coreCtx.Schedules() != nil {
+	if p.coreCtx != nil {
 		for _, sd := range p.coreCtx.Schedules().Schedules() {
 			payloadBytes, err := encodePayload(sd.Payload)
 			if err != nil {

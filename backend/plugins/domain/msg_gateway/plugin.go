@@ -96,13 +96,13 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	if err := ctx.Config().Bind("app", &cfg); err == nil && cfg.SessionSecret != "" {
 		service.SetCredentialSecret(cfg.SessionSecret)
 	}
-	ctx.Bind[contracts.DBService](dao.SetDBService)
-	ctx.Bind[contracts.CacheService](func(cache contracts.CacheService) {
+	ctx.Bind(dao.SetDBService)
+	ctx.Bind(func(cache contracts.CacheService) {
 		dao.SetCacheService(cache)
 		service.SetCacheService(cache)
 	})
-	ctx.Bind[contracts.TaskService](service.SetTaskService)
-	ctx.Bind[contracts.UserService](service.SetUserService)
+	ctx.Bind(service.SetTaskService)
+	ctx.Bind(service.SetUserService)
 	ctx.OnDispose(func() error {
 		dao.SetDBService(nil)
 		dao.SetCacheService(nil)
