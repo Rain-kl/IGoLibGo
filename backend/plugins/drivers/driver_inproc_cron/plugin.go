@@ -79,7 +79,7 @@ func (p *Plugin) Start(ctx context.Context) error {
 	defer p.mu.Unlock()
 
 	if p.scheduler == nil {
-		taskSvc, _ := core.Inject[contracts.TaskService](p.coreCtx)
+		taskSvc, _ := p.coreCtx.Inject[contracts.TaskService]()
 		p.scheduler = newInprocScheduler(p.coreCtx.Schedules(), p.coreCtx.Tasks(), taskSvc)
 	}
 

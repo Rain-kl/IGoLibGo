@@ -16,6 +16,8 @@ import (
 // Context is the central micro-kernel service bus and runtime lifecycle container.
 // It embeds Go standard context.Context compatibility, hierarchical scoping,
 // service resolution, and LIFO disposer teardown.
+//
+// Note: Go 1.27 特性与现代语法糖重构见 .agents/notes/implemented/simplification/2026-09-09-go127-modernization.md
 type Context struct {
 	goCtx     context.Context
 	cancel    context.CancelFunc

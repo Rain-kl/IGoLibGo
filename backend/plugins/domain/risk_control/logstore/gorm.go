@@ -6,10 +6,11 @@ package logstore
 import (
 	"Wavelet/pkg/idgen"
 	"Wavelet/pkg/util"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -221,7 +222,7 @@ func (s *userAccessLogGormStore) GetBrowserDistribution(ctx context.Context, sta
 	for label, count := range counts {
 		out = append(out, BrowserShare{Browser: label, Count: count})
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Count > out[j].Count })
+	slices.SortFunc(out, func(a, b BrowserShare) int { return cmp.Compare(b.Count, a.Count) })
 	return out, nil
 }
 

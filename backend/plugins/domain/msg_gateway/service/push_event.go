@@ -13,6 +13,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -41,9 +42,7 @@ func RegisterBuiltInEvent(meta do.EventMetadata) {
 func GetBuiltInEvents() []do.EventMetadata {
 	builtInEventsMu.RLock()
 	defer builtInEventsMu.RUnlock()
-	out := make([]do.EventMetadata, len(BuiltInEvents))
-	copy(out, BuiltInEvents)
-	return out
+	return slices.Clone(BuiltInEvents)
 }
 
 // FindBuiltInEvent finds a registered built-in event by key.

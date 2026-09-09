@@ -50,7 +50,7 @@ func TestListTaskTypesHandler(t *testing.T) {
 		}),
 	)
 
-	taskSvc, err := core.Inject[contracts.TaskService](ctx)
+	taskSvc, err := ctx.Inject[contracts.TaskService]()
 	require.NoError(t, err)
 	service.SetTaskService(taskSvc)
 

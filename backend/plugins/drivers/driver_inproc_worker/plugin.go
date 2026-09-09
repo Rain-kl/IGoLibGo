@@ -119,10 +119,10 @@ func (p *Plugin) ConfigEnabled(view core.ConfigView) bool {
 func (p *Plugin) Apply(ctx *core.Context) error {
 	p.coreCtx = ctx
 
-	core.Bind[contracts.DBService](ctx, setDBService)
+	ctx.Bind[contracts.DBService](setDBService)
 
 	taskSvc := newInprocTaskService(ctx.Tasks())
-	core.Provide[contracts.TaskService](ctx, taskSvc)
+	ctx.Provide[contracts.TaskService](taskSvc)
 
 	ctx.OnDispose(func() error {
 		setDBService(nil)

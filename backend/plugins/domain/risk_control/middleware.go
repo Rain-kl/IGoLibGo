@@ -75,12 +75,7 @@ func RiskControlMiddleware() gin.HandlerFunc {
 		}
 
 		const maxHTTPStatus = 999
-		status := c.Writer.Status()
-		if status < 0 {
-			status = 0
-		} else if status > maxHTTPStatus {
-			status = maxHTTPStatus
-		}
+		status := min(max(c.Writer.Status(), 0), maxHTTPStatus)
 
 		logItem := &logstore.UserAccessLog{
 			ID:        idgen.NextUint64ID(),

@@ -55,12 +55,12 @@ func mountUserAuthEngine(t *testing.T) (*gin.Engine, contracts.UserService) {
 	if err := user.New().Apply(ctx); err != nil {
 		t.Fatalf("user.Apply() error = %v", err)
 	}
-	core.Provide[contracts.StorageService](ctx, stubStorageService{})
+	ctx.Provide[contracts.StorageService](stubStorageService{})
 	if err := upload.New().Apply(ctx); err != nil {
 		t.Fatalf("upload.Apply() error = %v", err)
 	}
 
-	userSvc, err := core.Inject[contracts.UserService](ctx)
+	userSvc, err := ctx.Inject[contracts.UserService]()
 	if err != nil || userSvc == nil {
 		t.Fatalf("Inject UserService: svc=%v err=%v", userSvc, err)
 	}

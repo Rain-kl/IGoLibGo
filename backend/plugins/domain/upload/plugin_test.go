@@ -30,9 +30,9 @@ func (stubAuthService) RequireAdminMiddleware() any {
 func TestUserUploadRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctx := core.NewContext(context.Background())
-	core.Provide[contracts.DBService](ctx, stubDBService{})
-	core.Provide[contracts.StorageService](ctx, stubStorageService{})
-	core.Provide[contracts.AuthService](ctx, stubAuthService{})
+	ctx.Provide[contracts.DBService](stubDBService{})
+	ctx.Provide[contracts.StorageService](stubStorageService{})
+	ctx.Provide[contracts.AuthService](stubAuthService{})
 	if err := New().Apply(ctx); err != nil {
 		t.Fatal(err)
 	}

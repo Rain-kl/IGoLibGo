@@ -4,9 +4,10 @@
 package logstore
 
 import (
+	"cmp"
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 )
 
@@ -45,18 +46,15 @@ func GetDailyTrend(ctx context.Context, days int) ([]DailyTrend, error) {
 	}
 
 	trendMap := make(map[string]uint64, days)
-	for i := range days {
-		dateStr := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
-		trendMap[dateStr] = 0
-	}
 	for _, row := range rows {
 		dateStr := row.Date.Format("2006-01-02")
 		trendMap[dateStr] = row.Count
 	}
 
+	now := time.Now()
 	result := make([]DailyTrend, 0, days)
-	for i := days - 1; i >= 0; i-- {
-		dateStr := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
+	for i := range days {
+		dateStr := now.AddDate(0, 0, -(days - 1 - i)).Format("2006-01-02")
 		result = append(result, DailyTrend{
 			Date:  dateStr,
 			Count: trendMap[dateStr],
@@ -103,8 +101,8 @@ func GetBrowserDistribution(ctx context.Context, startTime time.Time) ([]Browser
 			Count:   count,
 		})
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Count > result[j].Count
+	slices.SortFunc(result, func(a, b BrowserShare) int {
+		return cmp.Compare(b.Count, a.Count)
 	})
 	return result, nil
 }

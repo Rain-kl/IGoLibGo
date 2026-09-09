@@ -19,10 +19,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"uuid"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 // OAuthHandler handles OAuth authentication endpoints.
@@ -101,7 +101,7 @@ func (h *OAuthHandler) GetLoginURL(c *gin.Context) {
 		return
 	}
 
-	state := uuid.NewString()
+	state := uuid.New().String()
 	payloadValue, err := (do.OAuthStatePayload{
 		SourceName:  source.Name,
 		Purpose:     consts.OAuthPurposeLogin,
@@ -182,7 +182,7 @@ func (h *OAuthHandler) Authorize(c *gin.Context) {
 		return
 	}
 
-	state := uuid.NewString()
+	state := uuid.New().String()
 	payloadValue, err := (do.OAuthStatePayload{
 		SourceName:  source.Name,
 		Purpose:     purpose,

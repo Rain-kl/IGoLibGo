@@ -53,11 +53,9 @@ func TestInitSQLiteConcurrentWrites(t *testing.T) {
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, writers*batches*2)
-	for w := 0; w < writers; w++ {
-		wg.Add(1)
-		go func(w int) {
-			defer wg.Done()
-			for b := 0; b < batches; b++ {
+	for w := range writers {
+		wg.Go(func() {
+			for b := range batches {
 				id := uint64(w*batches + b + 2)
 				if err := gdb.Create(&concurrentProbeRow{ID: id, Value: b}).Error; err != nil {
 					errCh <- fmt.Errorf("writer %d insert %d: %w", w, b, err)
@@ -66,7 +64,7 @@ func TestInitSQLiteConcurrentWrites(t *testing.T) {
 					errCh <- fmt.Errorf("writer %d progress update %d: %w", w, b, err)
 				}
 			}
-		}(w)
+		})
 	}
 	wg.Wait()
 	close(errCh)

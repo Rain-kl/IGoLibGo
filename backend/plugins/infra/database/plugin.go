@@ -106,7 +106,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		})
 	}
 
-	core.Provide[contracts.DBService](ctx, svc)
+	ctx.Provide[contracts.DBService](svc)
 	return nil
 }
 

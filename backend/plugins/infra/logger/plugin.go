@@ -29,7 +29,7 @@ func (p *Plugin) Name() string {
 // Apply mounts the logger service into the Context.
 func (p *Plugin) Apply(ctx *core.Context) error {
 	svc := &loggerServiceImpl{}
-	core.Provide[contracts.LoggerService](ctx, svc)
+	ctx.Provide[contracts.LoggerService](svc)
 	return nil
 }
 

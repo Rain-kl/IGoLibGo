@@ -33,7 +33,7 @@ func (s errPublic) PublicConfig(context.Context) (map[string]string, error) {
 func TestPublicConfigUsesProviderWhenPresent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctx := core.NewContext(context.Background())
-	core.Provide[contracts.PublicConfigProvider](ctx, stubPublic{payload: map[string]string{"k": "v"}})
+	ctx.Provide[contracts.PublicConfigProvider](stubPublic{payload: map[string]string{"k": "v"}})
 	if err := New().Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func TestPublicConfigUsesProviderRegisteredAfterApply(t *testing.T) {
 	if err := New().Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
-	core.Provide[contracts.PublicConfigProvider](ctx, stubPublic{payload: map[string]string{"k": "v"}})
+	ctx.Provide[contracts.PublicConfigProvider](stubPublic{payload: map[string]string{"k": "v"}})
 	body := invokePublicConfig(t, publicConfigHandler(t, ctx))
 	assertFlatKV(t, body)
 }
@@ -80,7 +80,7 @@ func TestPublicConfigDefaultWithoutProvider(t *testing.T) {
 func TestPublicConfigProviderErrorAbortsInternal(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctx := core.NewContext(context.Background())
-	core.Provide[contracts.PublicConfigProvider](ctx, errPublic{err: errors.New("secret boom")})
+	ctx.Provide[contracts.PublicConfigProvider](errPublic{err: errors.New("secret boom")})
 	if err := New().Apply(ctx); err != nil {
 		t.Fatal(err)
 	}

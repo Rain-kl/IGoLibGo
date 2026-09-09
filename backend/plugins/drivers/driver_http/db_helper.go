@@ -25,7 +25,7 @@ func setDBService(s contracts.DBService) {
 
 func getDB(ctx context.Context) *gorm.DB {
 	if c, ok := ctx.(*core.Context); ok && c != nil {
-		if s, err := core.Inject[contracts.DBService](c); err == nil && s != nil {
+		if s, err := c.Inject[contracts.DBService](); err == nil && s != nil {
 			return s.DB(ctx)
 		}
 	}

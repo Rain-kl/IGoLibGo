@@ -5,6 +5,7 @@ package risk_control_test
 
 import (
 	"Wavelet/core"
+	"Wavelet/core/contracts"
 	"Wavelet/plugins/domain/risk_control"
 	"context"
 	"testing"
@@ -26,6 +27,11 @@ func TestRiskControlPluginUnit(t *testing.T) {
 	assert.Equal(t, "risk_control", p.Name())
 	assert.Equal(t, "1.0.0", p.Manifest().Version)
 	require.NoError(t, p.Apply(ctx))
+
+	// Verify service registration via ctx.Inject
+	svc, err := ctx.Inject[contracts.RiskControlService]()
+	require.NoError(t, err)
+	assert.NotNil(t, svc)
 
 	// Verify middlewares registered
 	mws := ctx.Router().Middlewares()

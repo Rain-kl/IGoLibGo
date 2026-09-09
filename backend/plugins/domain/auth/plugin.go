@@ -113,15 +113,15 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 
 	if p.authSvc != nil {
 		// Custom injected auth service override
-		core.Provide[contracts.AuthService](ctx, p.authSvc)
+		ctx.Provide[contracts.AuthService](p.authSvc)
 	} else {
-		core.Provide[contracts.AuthService](ctx, svc.AuthSvc)
+		ctx.Provide[contracts.AuthService](svc.AuthSvc)
 	}
 
 	if p.authRegistry != nil {
-		core.Provide[contracts.AuthRegistry](ctx, p.authRegistry)
+		ctx.Provide[contracts.AuthRegistry](p.authRegistry)
 	} else {
-		core.Provide[contracts.AuthRegistry](ctx, svc.AuthRegistry)
+		ctx.Provide[contracts.AuthRegistry](svc.AuthRegistry)
 	}
 
 	ctrl := controller.New(svc)
@@ -134,7 +134,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		ctrl.Captcha.Challenge,
 		ctrl.Captcha.Redeem,
 	)
-	core.Provide[contracts.CaptchaService](ctx, captchaSvc)
+	ctx.Provide[contracts.CaptchaService](captchaSvc)
 
 	// 1. Register migrations
 	ctx.Migrations().Register("auth", authMigrations)

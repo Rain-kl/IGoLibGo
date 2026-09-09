@@ -71,7 +71,7 @@ func TestInprocWorkerDispatchByTypeTracksExecution(t *testing.T) {
 	defer cleanup()
 
 	ctx := core.NewContext(context.Background())
-	core.Provide[contracts.DBService](ctx, &testDBService{db: testDB})
+	ctx.Provide[contracts.DBService](&testDBService{db: testDB})
 
 	p := driver_inproc_worker.New(
 		driver_inproc_worker.WithConcurrency(2),
@@ -103,7 +103,7 @@ func TestInprocWorkerDispatchByTypeTracksExecution(t *testing.T) {
 		return executedCount.Load() == 1
 	}, 2*time.Second, 20*time.Millisecond, "inproc worker should execute task dispatched by admin type")
 
-	taskSvc, err := core.Inject[contracts.TaskService](ctx)
+	taskSvc, err := ctx.Inject[contracts.TaskService]()
 	require.NoError(t, err)
 
 	require.Eventually(t, func() bool {

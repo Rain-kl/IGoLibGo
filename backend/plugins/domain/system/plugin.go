@@ -74,7 +74,7 @@ func resolvePublicConfigProvider(reqCtx context.Context, appCtx *core.Context) c
 		return p
 	}
 	if appCtx != nil {
-		if p, err := core.Inject[contracts.PublicConfigProvider](appCtx); err == nil && p != nil {
+		if p, err := appCtx.Inject[contracts.PublicConfigProvider](); err == nil && p != nil {
 			return p
 		}
 	}

@@ -38,7 +38,7 @@ downstream/
 1. **`plugin.go` (插件装配入口)**：
    - 实现 `core.Plugin` 接口（`Name() string` 与 `Apply(ctx *core.Context) error`）。
    - 负责在 `Apply` 中注册路由组（`ctx.Router()`）、异步任务（`ctx.Task()`）、定时调度（`ctx.Schedule()`）与数据库迁移（`ctx.Migrations()`）。
-   - 依赖注入统一使用 `core.Inject` 或 `ctx.Using` 获取平台服务（如 `contracts.AuthService`、`contracts.DBService`、`contracts.CacheService`）。
+   - 依赖注入统一使用 `ctx.Inject` 或 `ctx.Using` 获取平台服务（如 `contracts.AuthService`、`contracts.DBService`、`contracts.CacheService`）。
 
 2. **`controller/` (控制器层 / Handler)**：
    - 负责 HTTP API 请求参数绑定（`c.ShouldBindJSON` / `c.ShouldBindQuery`）、用户会话获取（`oauth.GetCurrentUser`）。
@@ -101,7 +101,7 @@ func (p *Plugin) Name() string {
 func (p *Plugin) Apply(ctx *core.Context) error {
 	// 通过容器解析认证服务
 	var authSvc contracts.AuthService
-	if err := core.Using[contracts.AuthService](ctx, func(svc contracts.AuthService) { authSvc = svc }); err != nil {
+	if err := ctx.Using[contracts.AuthService](func(svc contracts.AuthService) { authSvc = svc }); err != nil {
 		return err
 	}
 

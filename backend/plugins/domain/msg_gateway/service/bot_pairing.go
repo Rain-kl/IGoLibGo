@@ -23,11 +23,10 @@ func GenerateCode() (string, error) {
 	if _, err := rand.Read(buf); err != nil {
 		return "", err
 	}
-	out := make([]byte, consts.CodeLength)
 	for i, b := range buf {
-		out[i] = consts.CodeAlphabet[int(b)%len(consts.CodeAlphabet)]
+		buf[i] = consts.CodeAlphabet[int(b)%len(consts.CodeAlphabet)]
 	}
-	return string(out), nil
+	return string(buf), nil
 }
 
 // NormalizeCode strips separators and uppercases.

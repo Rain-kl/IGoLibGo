@@ -56,7 +56,7 @@ func TestUserPluginUnit(t *testing.T) {
 	assert.Equal(t, "1.0.0", p.Manifest().Version)
 	require.NoError(t, p.Apply(ctx))
 
-	userSvc, err := core.Inject[contracts.UserService](ctx)
+	userSvc, err := ctx.Inject[contracts.UserService]()
 	require.NoError(t, err)
 	require.NotNil(t, userSvc)
 
@@ -130,7 +130,7 @@ func TestUserLoginHTTPHandler(t *testing.T) {
 	p := user.New()
 	require.NoError(t, p.Apply(ctx))
 
-	userSvc, err := core.Inject[contracts.UserService](ctx)
+	userSvc, err := ctx.Inject[contracts.UserService]()
 	require.NoError(t, err)
 
 	_, err = userSvc.CreateUser(context.Background(), contracts.CreateUserRequest{

@@ -106,8 +106,8 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	core.Bind[contracts.StorageService](ctx, service.SetStorageService)
 	core.Bind[contracts.RiskControlService](ctx, service.SetRiskControlService)
 	service.SetEventEmitter(ctx.Events().Emit)
-	core.Provide[contracts.PublicConfigProvider](ctx, service.PublicConfigAdapter{})
-	core.Provide[contracts.SystemConfigService](ctx, service.SystemConfigServiceImpl{})
+	ctx.Provide[contracts.PublicConfigProvider](service.PublicConfigAdapter{})
+	ctx.Provide[contracts.SystemConfigService](service.SystemConfigServiceImpl{})
 
 	ctx.OnDispose(func() error {
 		service.ResetServices()

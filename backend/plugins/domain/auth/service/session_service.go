@@ -15,9 +15,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"uuid"
 
 	"github.com/gin-contrib/sessions"
-	"github.com/google/uuid"
 	gsessions "github.com/gorilla/sessions"
 )
 
@@ -105,7 +105,7 @@ func (s *SessionService) StripCookieMaxAgeAndExpires(header http.Header, cookieN
 func (s *SessionService) EnsureSessionToken(session sessions.Session) (string, bool) {
 	token, ok := session.Get(consts.SessionTokenKey).(string)
 	if !ok || token == "" {
-		token = uuid.NewString()
+		token = uuid.New().String()
 		session.Set(consts.SessionTokenKey, token)
 		return token, true
 	}

@@ -41,14 +41,15 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	ctx.Migrations().Register("custom_example", customMigrations)
 
 	// 2. 绑定平台基础设施（DBService 等）
-	core.Bind[contracts.DBService](ctx, dao.SetDBService)
+	ctx.Bind[contracts.DBService](dao.SetDBService)
 
-	// 3. 初始化服务层
+	// 3. 初始化服务层并示范注册到微内核 IoC 容器（示范原生泛型方法 ctx.Provide）
 	p.svc = service.NewHelloService()
+	ctx.Provide[*service.HelloService](p.svc)
 
-	// 4. 解析认证服务并挂载中间件
+	// 4. 解析认证服务并挂载中间件（示范原生泛型方法 ctx.Inject）
 	var authMW gin.HandlerFunc
-	if authSvc, err := core.Inject[contracts.AuthService](ctx); err == nil && authSvc != nil {
+	if authSvc, err := ctx.Inject[contracts.AuthService](); err == nil && authSvc != nil {
 		if mw, ok := authSvc.RequireAuthMiddleware().(gin.HandlerFunc); ok {
 			authMW = mw
 		}

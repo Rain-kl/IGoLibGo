@@ -49,7 +49,7 @@ func newFlushLogTestCache(t *testing.T) (contracts.CacheService, *miniredis.Mini
 	}))
 	require.NoError(t, ctx.Config().Resolve())
 	require.NoError(t, p.Apply(ctx))
-	svc, err := core.Inject[contracts.CacheService](ctx)
+	svc, err := ctx.Inject[contracts.CacheService]()
 	require.NoError(t, err)
 
 	repository.SetCacheService(svc)

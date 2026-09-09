@@ -92,7 +92,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	denyAuth := ginutil.AuthUnavailable()
 	loginMW := denyAuth
 	noTokenMW := denyAuth
-	if authSvc, err := core.Inject[contracts.AuthService](ctx); err == nil && authSvc != nil {
+	if authSvc, err := ctx.Inject[contracts.AuthService](); err == nil && authSvc != nil {
 		SetAuthService(authSvc)
 		if mw, ok := authSvc.RequireAuthMiddleware().(gin.HandlerFunc); ok {
 			loginMW = mw
@@ -114,7 +114,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	if p.userSvc == nil {
 		p.userSvc = newUserService(ctx.Events())
 	}
-	core.Provide[contracts.UserService](ctx, p.userSvc)
+	ctx.Provide[contracts.UserService](p.userSvc)
 
 	// CAP middleware is resolved per request. user Apply runs before cap in
 	// the default plugin list; snapshotting CaptchaService here would leave
@@ -207,7 +207,7 @@ func resolveCaptchaService(reqCtx context.Context, appCtx *core.Context) contrac
 		return s
 	}
 	if appCtx != nil {
-		if s, err := core.Inject[contracts.CaptchaService](appCtx); err == nil && s != nil {
+		if s, err := appCtx.Inject[contracts.CaptchaService](); err == nil && s != nil {
 			return s
 		}
 	}

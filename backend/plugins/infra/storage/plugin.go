@@ -64,7 +64,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	svc := &storageServiceImpl{
 		backend: p.backend,
 	}
-	core.Provide[contracts.StorageService](ctx, svc)
+	ctx.Provide[contracts.StorageService](svc)
 	return nil
 }
 

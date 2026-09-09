@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -92,7 +93,7 @@ func EncodeExtra(extra map[string]string) string {
 func MaskCredentials(_ string, in map[string]string) map[string]string {
 	out := make(map[string]string, len(in))
 	for k, v := range in {
-		if k == "token" || k == "client_secret" || k == "app_secret" || k == "bot_token" {
+		if slices.Contains([]string{"token", "client_secret", "app_secret", "bot_token"}, k) {
 			out[k] = MaskSecret(v)
 		} else {
 			out[k] = v

@@ -289,8 +289,8 @@ func (s *userServiceImpl) UniqueUsername(ctx context.Context, base string) (stri
 		return base, nil
 	}
 
-	for i := 1; i <= 1000; i++ {
-		candidate := fmt.Sprintf("%s-%d", base, i)
+	for i := range 1000 {
+		candidate := fmt.Sprintf("%s-%d", base, i+1)
 		if !exists[strings.ToLower(candidate)] {
 			return candidate, nil
 		}

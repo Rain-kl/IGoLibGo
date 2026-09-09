@@ -39,7 +39,7 @@ func TestUserLoginRateLimiting(t *testing.T) {
 	require.NoError(t, user.New().Apply(ctx))
 
 	// Create a test user
-	userSvc, err := core.Inject[contracts.UserService](ctx)
+	userSvc, err := ctx.Inject[contracts.UserService]()
 	require.NoError(t, err)
 	createdUser, err := userSvc.CreateUser(context.Background(), contracts.CreateUserRequest{
 		Username: "ratelimit_user",
@@ -82,13 +82,13 @@ func TestUserLoginRateLimiting(t *testing.T) {
 	})
 
 	// Make 5 failed login attempts (Limit is 5)
-	for i := 1; i <= 5; i++ {
+	for i := range 5 {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/user/login", bytes.NewReader(loginBody))
 		req.Header.Set("Content-Type", "application/json")
 		req.RemoteAddr = "192.168.1.100:12345"
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
-		assert.Equal(t, http.StatusUnauthorized, w.Code, "attempt %d should be 401 Unauthorized", i)
+		assert.Equal(t, http.StatusUnauthorized, w.Code, "attempt %d should be 401 Unauthorized", i+1)
 	}
 
 	// 6th attempt from the same IP should be blocked with 429 Too Many Requests

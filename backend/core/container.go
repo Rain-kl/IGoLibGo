@@ -13,7 +13,7 @@ import (
 
 // Container manages service registration and resolution using Go reflection and generics.
 //
-// Note: Go 1.26 特性与现代语法糖重构见 .agents/notes/implemented/simplification/2026-09-09-go126-modernization.md
+// Note: Go 1.27 特性与现代语法糖重构见 .agents/notes/implemented/simplification/2026-09-09-go127-modernization.md
 type Container struct {
 	mu             sync.RWMutex
 	parent         *Container
@@ -264,4 +264,105 @@ func When[T any](ctx *Context, fn func(s T)) {
 // soon as the root container provides it.
 func Bind[T any](ctx *Context, fn func(s T)) {
 	When(ctx, fn)
+}
+
+// ============================================================================
+// Go 1.27 结构体泛型方法 (Generic Methods on *Context & *Container)
+// ============================================================================
+
+// Provide registers a typed service implementation into the Context hierarchy's root IoC container.
+func (c *Context) Provide[T any](service T) {
+	Provide[T](c, service)
+}
+
+// ProvideScoped registers a typed service implementation strictly in the local Context container.
+func (c *Context) ProvideScoped[T any](service T) {
+	ProvideScoped[T](c, service)
+}
+
+// Inject resolves a registered service of type T from this Context.
+func (c *Context) Inject[T any]() (T, error) {
+	return Inject[T](c)
+}
+
+// MustInject resolves a service of type T from this Context or panics if not found.
+func (c *Context) MustInject[T any]() T {
+	return MustInject[T](c)
+}
+
+// Has returns true if a service of type T is registered and resolvable in this Context.
+func (c *Context) Has[T any]() bool {
+	return Has[T](c)
+}
+
+// Using executes the given function synchronously if the required dependency is ready.
+func (c *Context) Using[T1 any](fn func(s1 T1)) error {
+	return Using[T1](c, fn)
+}
+
+// Using2 executes the given function synchronously if both required dependencies are ready.
+func (c *Context) Using2[T1, T2 any](fn func(s1 T1, s2 T2)) error {
+	return Using2[T1, T2](c, fn)
+}
+
+// Using3 executes the given function synchronously if all 3 required dependencies are ready.
+func (c *Context) Using3[T1, T2, T3 any](fn func(s1 T1, s2 T2, s3 T3)) error {
+	return Using3[T1, T2, T3](c, fn)
+}
+
+// When registers a reactive hook that is called immediately if T is already provided,
+// or called as soon as T is provided in the future.
+func (c *Context) When[T any](fn func(s T)) {
+	When[T](c, fn)
+}
+
+// Bind is When with a name that matches plugin wiring: fill a dependency as
+// soon as the root container provides it.
+func (c *Context) Bind[T any](fn func(s T)) {
+	Bind[T](c, fn)
+}
+
+// Provide registers a typed service implementation into this Container.
+func (c *Container) Provide[T any](service T) {
+	if c == nil {
+		panic("core: nil container provided to Provide")
+	}
+	if isNil(service) {
+		panic("core: cannot provide nil service")
+	}
+	targetType := reflect.TypeFor[T]()
+	c.provide(targetType, service)
+}
+
+// Inject resolves a registered service of type T from this Container.
+func (c *Container) Inject[T any]() (T, error) {
+	var zero T
+	if c == nil {
+		return zero, ErrNilContainer
+	}
+	targetType := reflect.TypeFor[T]()
+	val, err := c.resolve(targetType)
+	if err != nil {
+		return zero, err
+	}
+	typedVal, ok := val.(T)
+	if !ok {
+		return zero, fmt.Errorf("%w: cannot cast %T to %v", ErrServiceNotFound, val, targetType)
+	}
+	return typedVal, nil
+}
+
+// MustInject resolves a service of type T from this Container or panics if not found.
+func (c *Container) MustInject[T any]() T {
+	s, err := c.Inject[T]()
+	if err != nil {
+		panic(fmt.Sprintf("core: failed to inject service %v: %v", reflect.TypeFor[T](), err))
+	}
+	return s
+}
+
+// Has returns true if a service of type T is registered and resolvable in this Container.
+func (c *Container) Has[T any]() bool {
+	_, err := c.Inject[T]()
+	return err == nil
 }

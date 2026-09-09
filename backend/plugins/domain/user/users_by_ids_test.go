@@ -27,7 +27,7 @@ func TestGetUsersByIDsUsesSingleQuery(t *testing.T) {
 	require.NoError(t, database.New(database.WithDB(testDB)).Apply(ctx))
 	require.NoError(t, user.New().Apply(ctx))
 
-	userSvc, err := core.Inject[contracts.UserService](ctx)
+	userSvc, err := ctx.Inject[contracts.UserService]()
 	require.NoError(t, err)
 
 	bg := context.Background()

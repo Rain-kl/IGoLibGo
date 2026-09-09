@@ -54,7 +54,8 @@ func NextUint64ID() uint64 {
 		panic(ErrNotInitialized)
 	}
 
-	for attempt := 1; attempt <= maxNegativeIDRetries; attempt++ {
+	for i := range maxNegativeIDRetries {
+		attempt := i + 1
 		id := n.Generate().Int64()
 		if id >= 0 {
 			return uint64(id)

@@ -126,7 +126,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 
 	if redisClient != nil {
-		core.Provide[redis.UniversalClient](ctx, redisClient)
+		ctx.Provide[redis.UniversalClient](redisClient)
 		svc.startPubSubListener()
 		ctx.OnDispose(func() error {
 			svc.stopPubSubListener()
@@ -140,7 +140,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		})
 	}
 
-	core.Provide[contracts.CacheService](ctx, svc)
+	ctx.Provide[contracts.CacheService](svc)
 
 	var limiterSvc contracts.LimiterService
 	if redisClient != nil {
@@ -148,7 +148,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	} else {
 		limiterSvc = newMemoryLimiterFallback()
 	}
-	core.Provide[contracts.LimiterService](ctx, limiterSvc)
+	ctx.Provide[contracts.LimiterService](limiterSvc)
 
 	return nil
 }

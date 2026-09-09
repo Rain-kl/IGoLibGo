@@ -5,6 +5,7 @@ package logger
 
 import (
 	"io"
+	"slices"
 	"sync"
 )
 
@@ -129,8 +130,9 @@ func (r *LogRingBuffer) Query(cursor, limit int) ([]LogEntry, bool) {
 	// 查询 index < cursor 的更早日志
 	// 找到 index < cursor 的条目
 	var cut int
-	for cut = len(ordered); cut > 0; cut-- {
-		if ordered[cut-1].Index < cursor {
+	for i, entry := range slices.Backward(ordered) {
+		if entry.Index < cursor {
+			cut = i + 1
 			break
 		}
 	}

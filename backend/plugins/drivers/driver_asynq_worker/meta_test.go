@@ -22,11 +22,9 @@ func TestRegisterTaskMeta_ThreadSafe(t *testing.T) {
 	workers := 20
 	iterations := 100
 
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func(id int) {
-			defer wg.Done()
-			for j := 0; j < iterations; j++ {
+	for range workers {
+		wg.Go(func() {
+			for range iterations {
 				RegisterTaskMeta(TaskMeta{
 					Type:      "task_type_a",
 					AsynqTask: "asynq_task_a",
@@ -38,7 +36,7 @@ func TestRegisterTaskMeta_ThreadSafe(t *testing.T) {
 					Name:      "Task B",
 				})
 			}
-		}(i)
+		})
 	}
 
 	wg.Wait()

@@ -19,7 +19,7 @@ func TestPushRegistry(t *testing.T) {
 	ctx := core.NewContext(context.Background())
 	require.NoError(t, msg_gateway.New().Apply(ctx))
 
-	registry, err := core.Inject[contracts.PushRegistry](ctx)
+	registry, err := ctx.Inject[contracts.PushRegistry]()
 	require.NoError(t, err)
 	require.NotNil(t, registry)
 

@@ -96,7 +96,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	SetAccessLogEnabled(true)
 	logstore.SetDefaultDatabases(dbCfg.Enabled, chCfg.Enabled)
 
-	core.Bind[contracts.DBService](ctx, logstore.SetDBService)
+	ctx.Bind[contracts.DBService](logstore.SetDBService)
 	ctx.OnDispose(func() error {
 		logstore.SetDBService(nil)
 		return nil
@@ -132,7 +132,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	})
 
 	// 4. Register RiskControlService contract
-	core.Provide[contracts.RiskControlService](ctx, &riskControlServiceImpl{})
+	ctx.Provide[contracts.RiskControlService](&riskControlServiceImpl{})
 
 	// 5. Register lifecycle disposal cleanup
 	ctx.OnDispose(func() error {

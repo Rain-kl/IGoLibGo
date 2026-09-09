@@ -43,8 +43,8 @@ func SetCacheService(s contracts.CacheService) {
 
 // GetDB resolves the persistence handle for the current call.
 func GetDB(ctx context.Context) *gorm.DB {
-	if c, ok := ctx.(*core.Context); ok && c != nil {
-		if s, err := core.Inject[contracts.DBService](c); err == nil && s != nil {
+	if c := core.AppContext(ctx); c != nil {
+		if s, err := c.Inject[contracts.DBService](); err == nil && s != nil {
 			return s.DB(ctx)
 		}
 	}
@@ -59,8 +59,8 @@ func GetDB(ctx context.Context) *gorm.DB {
 
 // GetCache resolves the cache service for the current call.
 func GetCache(ctx context.Context) contracts.CacheService {
-	if c, ok := ctx.(*core.Context); ok && c != nil {
-		if s, err := core.Inject[contracts.CacheService](c); err == nil && s != nil {
+	if c := core.AppContext(ctx); c != nil {
+		if s, err := c.Inject[contracts.CacheService](); err == nil && s != nil {
 			return s
 		}
 	}

@@ -145,7 +145,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	ResetAsynqClient()
 	p.mu.Unlock()
 
-	core.Bind[contracts.DBService](ctx, setDBService)
+	ctx.Bind[contracts.DBService](setDBService)
 	ctx.OnDispose(func() error {
 		setDBService(nil)
 		return nil
@@ -153,7 +153,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 
 	// 1. Provide contracts.TaskService
 	p.taskSvc = &taskServiceImpl{}
-	core.Provide[contracts.TaskService](ctx, p.taskSvc)
+	ctx.Provide[contracts.TaskService](p.taskSvc)
 	SetActiveTaskExtension(ctx.Tasks())
 
 	ctx.OnDispose(func() error {

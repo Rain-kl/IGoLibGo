@@ -8,8 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // uniqueIDBytes 生成唯一 ID 所需的随机字节长度
@@ -20,7 +19,7 @@ func GenerateUniqueIDSimple() string {
 	randomBytes := make([]byte, uniqueIDBytes)
 	if _, err := io.ReadFull(rand.Reader, randomBytes); err != nil {
 		// 如果随机数生成失败，使用 UUID 作为后备
-		uuidBytes := []byte(uuid.NewString())
+		uuidBytes := []byte(uuid.New().String())
 		hash := sha256.Sum256(uuidBytes)
 		copy(randomBytes, hash[:])
 	}

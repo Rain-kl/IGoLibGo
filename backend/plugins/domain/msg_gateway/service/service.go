@@ -44,8 +44,10 @@ func SetUserService(s contracts.UserService) {
 
 // GetCache resolves the cache service for the context.
 func GetCache(ctx context.Context) contracts.CacheService {
-	if s, err := core.InjectFrom[contracts.CacheService](ctx); err == nil && s != nil {
-		return s
+	if c := core.AppContext(ctx); c != nil {
+		if s, err := c.Inject[contracts.CacheService](); err == nil && s != nil {
+			return s
+		}
 	}
 	cacheMu.RLock()
 	s := cacheSvc
@@ -55,8 +57,10 @@ func GetCache(ctx context.Context) contracts.CacheService {
 
 // GetTaskService resolves the task service for the context.
 func GetTaskService(ctx context.Context) contracts.TaskService {
-	if s, err := core.InjectFrom[contracts.TaskService](ctx); err == nil && s != nil {
-		return s
+	if c := core.AppContext(ctx); c != nil {
+		if s, err := c.Inject[contracts.TaskService](); err == nil && s != nil {
+			return s
+		}
 	}
 	taskMu.RLock()
 	defer taskMu.RUnlock()
@@ -65,8 +69,10 @@ func GetTaskService(ctx context.Context) contracts.TaskService {
 
 // GetUserService resolves the user service for the context.
 func GetUserService(ctx context.Context) contracts.UserService {
-	if s, err := core.InjectFrom[contracts.UserService](ctx); err == nil && s != nil {
-		return s
+	if c := core.AppContext(ctx); c != nil {
+		if s, err := c.Inject[contracts.UserService](); err == nil && s != nil {
+			return s
+		}
 	}
 	userMu.RLock()
 	s := userSvc

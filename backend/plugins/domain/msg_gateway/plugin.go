@@ -96,13 +96,13 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	if err := ctx.Config().Bind("app", &cfg); err == nil && cfg.SessionSecret != "" {
 		service.SetCredentialSecret(cfg.SessionSecret)
 	}
-	core.Bind[contracts.DBService](ctx, dao.SetDBService)
-	core.Bind[contracts.CacheService](ctx, func(cache contracts.CacheService) {
+	ctx.Bind[contracts.DBService](dao.SetDBService)
+	ctx.Bind[contracts.CacheService](func(cache contracts.CacheService) {
 		dao.SetCacheService(cache)
 		service.SetCacheService(cache)
 	})
-	core.Bind[contracts.TaskService](ctx, service.SetTaskService)
-	core.Bind[contracts.UserService](ctx, service.SetUserService)
+	ctx.Bind[contracts.TaskService](service.SetTaskService)
+	ctx.Bind[contracts.UserService](service.SetUserService)
 	ctx.OnDispose(func() error {
 		dao.SetDBService(nil)
 		dao.SetCacheService(nil)
@@ -116,7 +116,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	denyAuth := ginutil.AuthUnavailable()
 	loginMW := denyAuth
 	adminMW := denyAuth
-	if authSvc, err := core.Inject[contracts.AuthService](ctx); err == nil && authSvc != nil {
+	if authSvc, err := ctx.Inject[contracts.AuthService](); err == nil && authSvc != nil {
 		if mw, ok := authSvc.RequireAuthMiddleware().(gin.HandlerFunc); ok {
 			loginMW = mw
 		}
@@ -214,7 +214,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 
 	// 9. Register built-in domain events and provide PushRegistry
 	service.RegisterCustomEvents()
-	core.Provide[contracts.PushRegistry](ctx, service.PushRegistryAdapter{})
+	ctx.Provide[contracts.PushRegistry](service.PushRegistryAdapter{})
 
 	// 10. Register Settings Schemas
 	ctx.Settings().Register(extpoints.SettingSchema{

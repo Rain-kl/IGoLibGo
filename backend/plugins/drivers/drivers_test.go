@@ -271,7 +271,7 @@ func TestAsynqWorkerDispatchTracksExecution(t *testing.T) {
 	ctx := core.NewContext(context.Background())
 	ctx.Config().SetSource(core.NewMapSource(nil))
 	require.NoError(t, ctx.Config().Resolve())
-	core.Provide[contracts.DBService](ctx, &testDBService{db: testDB})
+	ctx.Provide[contracts.DBService](&testDBService{db: testDB})
 
 	var processed atomic.Bool
 	ctx.Tasks().Register("system:cleanup", func(_ context.Context, _ []byte) (*contracts.TaskResultDTO, error) {
@@ -296,7 +296,7 @@ func TestAsynqWorkerDispatchTracksExecution(t *testing.T) {
 		_ = workerPlugin.Stop(context.Background())
 	})
 
-	taskSvc, err := core.Inject[contracts.TaskService](ctx)
+	taskSvc, err := ctx.Inject[contracts.TaskService]()
 	require.NoError(t, err)
 
 	taskID, err := taskSvc.Dispatch(context.Background(), "system_cleanup", []byte(`{}`), "manual")

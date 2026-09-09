@@ -69,8 +69,10 @@ func ResetServices() {
 
 // GetDB resolves the GORM DB instance.
 func GetDB(ctx context.Context) *gorm.DB {
-	if s, err := core.InjectFrom[contracts.DBService](ctx); err == nil && s != nil {
-		return s.DB(ctx)
+	if app := core.AppContext(ctx); app != nil {
+		if s, err := app.Inject[contracts.DBService](); err == nil && s != nil {
+			return s.DB(ctx)
+		}
 	}
 	svcMu.RLock()
 	s := dbSvc
@@ -83,8 +85,10 @@ func GetDB(ctx context.Context) *gorm.DB {
 
 // GetCache resolves the CacheService instance.
 func GetCache(ctx context.Context) contracts.CacheService {
-	if s, err := core.InjectFrom[contracts.CacheService](ctx); err == nil && s != nil {
-		return s
+	if app := core.AppContext(ctx); app != nil {
+		if s, err := app.Inject[contracts.CacheService](); err == nil && s != nil {
+			return s
+		}
 	}
 	svcMu.RLock()
 	s := cacheSvc
@@ -94,8 +98,10 @@ func GetCache(ctx context.Context) contracts.CacheService {
 
 // GetStorage resolves the StorageService instance.
 func GetStorage(ctx context.Context) contracts.StorageService {
-	if s, err := core.InjectFrom[contracts.StorageService](ctx); err == nil && s != nil {
-		return s
+	if app := core.AppContext(ctx); app != nil {
+		if s, err := app.Inject[contracts.StorageService](); err == nil && s != nil {
+			return s
+		}
 	}
 	svcMu.RLock()
 	s := storageSvc
@@ -105,8 +111,10 @@ func GetStorage(ctx context.Context) contracts.StorageService {
 
 // GetTaskService resolves the TaskService instance.
 func GetTaskService(ctx context.Context) contracts.TaskService {
-	if s, err := core.InjectFrom[contracts.TaskService](ctx); err == nil && s != nil {
-		return s
+	if app := core.AppContext(ctx); app != nil {
+		if s, err := app.Inject[contracts.TaskService](); err == nil && s != nil {
+			return s
+		}
 	}
 	svcMu.RLock()
 	defer svcMu.RUnlock()
@@ -115,8 +123,10 @@ func GetTaskService(ctx context.Context) contracts.TaskService {
 
 // GetAuthService resolves the AuthService instance.
 func GetAuthService(ctx context.Context) contracts.AuthService {
-	if s, err := core.InjectFrom[contracts.AuthService](ctx); err == nil && s != nil {
-		return s
+	if app := core.AppContext(ctx); app != nil {
+		if s, err := app.Inject[contracts.AuthService](); err == nil && s != nil {
+			return s
+		}
 	}
 	svcMu.RLock()
 	s := authSvc

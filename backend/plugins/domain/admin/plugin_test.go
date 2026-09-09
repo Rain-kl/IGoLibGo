@@ -44,7 +44,7 @@ func TestAdminPluginUnit(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "0 3 * * *", setting.Default)
 
-	provider, err := core.Inject[contracts.PublicConfigProvider](ctx)
+	provider, err := ctx.Inject[contracts.PublicConfigProvider]()
 	require.NoError(t, err)
 	require.NotNil(t, provider)
 }

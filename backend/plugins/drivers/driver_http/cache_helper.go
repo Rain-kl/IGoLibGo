@@ -25,7 +25,7 @@ func setCacheService(s contracts.CacheService) {
 // to the instance bound during plugin registration.
 func getCache(ctx context.Context) contracts.CacheService {
 	if c, ok := ctx.(*core.Context); ok && c != nil {
-		if s, err := core.Inject[contracts.CacheService](c); err == nil && s != nil {
+		if s, err := c.Inject[contracts.CacheService](); err == nil && s != nil {
 			return s
 		}
 	}

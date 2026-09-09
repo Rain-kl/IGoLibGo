@@ -120,8 +120,8 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 	p.mu.Unlock()
 
-	core.Bind[contracts.DBService](ctx, setDBService)
-	core.Bind[contracts.TaskService](ctx, setTaskService)
+	ctx.Bind[contracts.DBService](setDBService)
+	ctx.Bind[contracts.TaskService](setTaskService)
 
 	ctx.OnDispose(func() error {
 		setDBService(nil)

@@ -60,7 +60,7 @@ func (fakeCaptchaService) RedeemHandler() any { return gin.HandlerFunc(func(c *g
 
 func TestApplyWithCaptchaServiceWrapsLogin(t *testing.T) {
 	ctx := core.NewContext(context.Background())
-	core.Provide[contracts.CaptchaService](ctx, fakeCaptchaService{})
+	ctx.Provide[contracts.CaptchaService](fakeCaptchaService{})
 	if err := user.New().Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestLoginCaptchaGuardResolvesServiceAfterApply(t *testing.T) {
 	if err := user.New().Apply(ctx); err != nil {
 		t.Fatal(err)
 	}
-	core.Provide[contracts.CaptchaService](ctx, denyCaptchaService{})
+	ctx.Provide[contracts.CaptchaService](denyCaptchaService{})
 
 	handler := loginCaptchaGuard(t, ctx)
 	w := httptest.NewRecorder()

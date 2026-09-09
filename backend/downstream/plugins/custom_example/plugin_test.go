@@ -33,13 +33,17 @@ func (m *mockAuthService) RequireAuthMiddleware() any {
 
 func TestCustomExamplePlugin_Apply(t *testing.T) {
 	ctx := core.NewContext(context.Background())
-	core.Provide[contracts.AuthService](ctx, &mockAuthService{})
+	ctx.Provide[contracts.AuthService](&mockAuthService{})
 
 	p := custom_example.New()
 	assert.Equal(t, "custom_example", p.Name())
 
 	err := p.Apply(ctx)
 	require.NoError(t, err)
+
+	svc, err := ctx.Inject[*service.HelloService]()
+	require.NoError(t, err)
+	assert.NotNil(t, svc)
 }
 
 func TestCustomExample_Controller(t *testing.T) {

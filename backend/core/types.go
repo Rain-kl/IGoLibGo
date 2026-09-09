@@ -21,6 +21,9 @@ var (
 	// ErrNilContext is returned when a nil Context is passed to an operation requiring a valid Context.
 	ErrNilContext = errors.New("core: context is nil")
 
+	// ErrNilContainer is returned when an operation is performed on a nil Container.
+	ErrNilContainer = errors.New("core: container is nil")
+
 	// ErrNilService is returned when attempting to provide a nil service implementation.
 	ErrNilService = errors.New("core: service is nil")
 

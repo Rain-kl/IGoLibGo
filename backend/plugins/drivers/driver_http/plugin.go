@@ -121,13 +121,13 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 	p.mu.Unlock()
 
-	core.Bind[contracts.DBService](ctx, setDBService)
+	ctx.Bind[contracts.DBService](setDBService)
 	ctx.OnDispose(func() error {
 		setDBService(nil)
 		return nil
 	})
 
-	core.Bind[contracts.CacheService](ctx, setCacheService)
+	ctx.Bind[contracts.CacheService](setCacheService)
 	ctx.OnDispose(func() error {
 		setCacheService(nil)
 		return nil
