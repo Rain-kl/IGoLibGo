@@ -1,12 +1,42 @@
 /**
+ * 结构化错误明细 (api-design 规范)
+ */
+export interface ApiErrorDetail {
+  field?: string;
+  issue: string;
+}
+
+/**
+ * 结构化错误体 (api-design 规范)
+ */
+export interface ApiErrorBody {
+  code: string;
+  message: string;
+  details?: ApiErrorDetail[];
+}
+
+/**
  * API 响应通用结构
  * @template T - 数据类型
  */
 export interface ApiResponse<T = unknown> {
   /** 响应数据 */
   data: T;
+  /** 集合分页与元数据 (api-design 规范) */
+  meta?: {
+    total?: number;
+    page?: number;
+    per_page?: number;
+    total_pages?: number;
+  };
+  /** 标准结构化错误体 (api-design 规范) */
+  error?: ApiErrorBody;
   /** 响应消息 */
   message?: string;
+  /** 兼容字段：旧版错误消息 */
+  error_msg?: string;
+  /** 兼容字段：旧版错误代码 */
+  error_code?: string;
   /** 响应状态码 */
   code?: number;
 }
@@ -15,11 +45,13 @@ export interface ApiResponse<T = unknown> {
  * API 错误响应结构
  */
 export interface ApiError {
-  /** 错误消息 */
-  error_msg: string;
-  /** 错误代码 */
+  /** 标准结构化错误体 (api-design 规范) */
+  error?: ApiErrorBody;
+  /** 兼容字段：错误消息 */
+  error_msg?: string;
+  /** 兼容字段：错误代码 */
   error_code?: string;
-  /** 错误详情 */
+  /** 兼容字段：错误详情 */
   details?: unknown;
 }
 

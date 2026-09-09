@@ -186,8 +186,13 @@ export async function proxy(request: NextRequest) {
       if (!allowed) {
         return NextResponse.json(
           {
+            error: {
+              code: 'rate_limited',
+              message: `请求过于频繁，请 ${waitTime} 秒后重试`,
+            },
             error_code: 'RATE_LIMITED',
             error_msg: `请求过于频繁，请 ${waitTime} 秒后重试`,
+            data: null,
           },
           { status: 429, headers: { 'Retry-After': String(waitTime) } },
         );
@@ -200,7 +205,14 @@ export async function proxy(request: NextRequest) {
       return await proxyApiToBackend(request);
     } catch {
       return NextResponse.json(
-        { error_msg: '无法连接到服务器', data: null },
+        {
+          error: {
+            code: 'bad_gateway',
+            message: '无法连接到服务器',
+          },
+          error_msg: '无法连接到服务器',
+          data: null,
+        },
         { status: 502 },
       );
     }

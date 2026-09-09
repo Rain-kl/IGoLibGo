@@ -78,7 +78,12 @@ const MENU_GROUPS: MenuGroup[] = [
       { key: 'push', path: '/admin/push', icon: Bell },
       { key: 'logs', path: '/admin/logs', icon: Terminal },
       { key: 'system', path: '/admin/system', icon: ShieldCheck },
-      { key: 'settings', path: '/admin/settings', icon: Settings, readOnly: true },
+      {
+        key: 'settings',
+        path: '/admin/settings',
+        icon: Settings,
+        readOnly: true,
+      },
     ],
   },
   {

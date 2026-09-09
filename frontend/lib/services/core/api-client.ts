@@ -155,6 +155,21 @@ function initiateLogin(currentPath: string): Promise<never> {
   return new Promise<never>(() => {});
 }
 
+/** 从响应体中安全提取错误信息，优先使用 api-design 标准错误体，回退至兼容字段 */
+function extractErrorMessage(data?: ApiError, fallback = '操作失败'): string {
+  return data?.error?.message || data?.error_msg || fallback;
+}
+
+/** 从响应体中安全提取错误代码 */
+function extractErrorCode(data?: ApiError): string | undefined {
+  return data?.error?.code || data?.error_code;
+}
+
+/** 从响应体中安全提取错误详情（如字段级校验错误） */
+function extractErrorDetails(data?: ApiError): unknown {
+  return data?.error?.details || data?.details;
+}
+
 /**
  * 响应拦截器
  * 处理 API 响应和统一错误处理
@@ -166,8 +181,10 @@ apiClient.interceptors.response.use(
     pendingRequests.delete(requestKey);
 
     const resData = response.data as ApiError & ApiResponse;
-    if (resData && resData.error_msg) {
-      return Promise.reject(new ApiErrorBase(resData.error_msg));
+    if (resData && (resData.error || resData.error_msg)) {
+      const errMsg = extractErrorMessage(resData);
+      const errCode = extractErrorCode(resData);
+      return Promise.reject(new ApiErrorBase(errMsg, errCode));
     }
 
     return response;
@@ -190,7 +207,7 @@ apiClient.interceptors.response.use(
 
     /* 401：未登录 → 登录页。登录/注册/人机校验接口把错误交给表单。 */
     if (error.response?.status === 401) {
-      const message = error.response.data?.error_msg || '未登录';
+      const message = extractErrorMessage(error.response.data, '未登录');
       if (isPublicAuthRequest(error.config?.url)) {
         return Promise.reject(new UnauthorizedError(message));
       }
@@ -199,45 +216,44 @@ apiClient.interceptors.response.use(
 
     /* 403：已登录但权限不足，进入独立 403 页，不清 cookie。 */
     if (error.response?.status === 403) {
-      const message = error.response.data?.error_msg || '权限不足';
+      const message = extractErrorMessage(error.response.data, '权限不足');
+      const errCode = extractErrorCode(error.response.data);
+      const details = extractErrorDetails(error.response.data);
       if (
         typeof window !== 'undefined' &&
         window.location.pathname !== '/403'
       ) {
         window.location.replace('/403');
       }
-      return Promise.reject(
-        new ForbiddenError(
-          message,
-          error.response.data?.error_code,
-          error.response.data?.details,
-        ),
-      );
+      return Promise.reject(new ForbiddenError(message, errCode, details));
     }
 
     /* 404 资源未找到错误 */
     if (error.response?.status === 404) {
-      return Promise.reject(
-        new NotFoundError(error.response.data?.error_msg || '请求的资源不存在'),
+      const message = extractErrorMessage(
+        error.response.data,
+        '请求的资源不存在',
       );
+      return Promise.reject(new NotFoundError(message));
     }
 
-    /* 400 验证错误 */
-    if (error.response?.status === 400) {
-      return Promise.reject(
-        new ValidationError(
-          error.response.data?.error_msg || '请求参数验证失败',
-          error.response.data?.details,
-        ),
+    /* 400 / 422 验证错误 */
+    if (error.response?.status === 400 || error.response?.status === 422) {
+      const message = extractErrorMessage(
+        error.response.data,
+        '请求参数验证失败',
       );
+      const details = extractErrorDetails(error.response.data);
+      return Promise.reject(new ValidationError(message, details));
     }
 
     /* 429 速率限制错误 */
     if (error.response?.status === 429) {
       const retryAfter = error.response.headers?.['retry-after'];
-      const message =
-        error.response.data?.error_msg ||
-        `请求过于频繁，请 ${retryAfter || '稍后'} 秒后重试`;
+      const message = extractErrorMessage(
+        error.response.data,
+        `请求过于频繁，请 ${retryAfter || '稍后'} 秒后重试`,
+      );
 
       toast.error('请求频率限制', {
         description: message,
@@ -249,12 +265,11 @@ apiClient.interceptors.response.use(
 
     /* 5xx 服务器错误 */
     if (error.response && error.response.status >= 500) {
-      return Promise.reject(
-        new ServerError(
-          error.response.data?.error_msg || '服务器内部错误，请稍后重试',
-          error.response.status,
-        ),
+      const message = extractErrorMessage(
+        error.response.data,
+        '服务器内部错误，请稍后重试',
       );
+      return Promise.reject(new ServerError(message, error.response.status));
     }
 
     /* 网络超时错误 */
@@ -275,15 +290,16 @@ apiClient.interceptors.response.use(
       );
     }
 
-    /* 其他后端返回的错误 */
-    if (error.response?.data?.error_msg) {
+    /* 其他后端返回的结构化错误 */
+    if (
+      error.response?.data &&
+      (error.response.data.error || error.response.data.error_msg)
+    ) {
+      const message = extractErrorMessage(error.response.data);
+      const errCode = extractErrorCode(error.response.data);
+      const details = extractErrorDetails(error.response.data);
       return Promise.reject(
-        new ApiErrorBase(
-          error.response.data.error_msg,
-          error.response.data.error_code,
-          error.response.status,
-          error.response.data.details,
-        ),
+        new ApiErrorBase(message, errCode, error.response.status, details),
       );
     }
 

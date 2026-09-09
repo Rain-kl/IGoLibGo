@@ -54,6 +54,9 @@ export class BaseService {
       this.getFullPath(path),
       requestConfig,
     );
+    if (response.status === 204 || !response.data) {
+      return undefined as T;
+    }
     return response.data.data;
   }
 
@@ -75,6 +78,9 @@ export class BaseService {
       data,
       config,
     );
+    if (response.status === 204 || !response.data) {
+      return undefined as T;
+    }
     return response.data.data;
   }
 
@@ -96,6 +102,9 @@ export class BaseService {
       data,
       config,
     );
+    if (response.status === 204 || !response.data) {
+      return undefined as T;
+    }
     return response.data.data;
   }
 
@@ -117,6 +126,9 @@ export class BaseService {
       data,
       config,
     );
+    if (response.status === 204 || !response.data) {
+      return undefined as T;
+    }
     return response.data.data;
   }
 
@@ -141,6 +153,9 @@ export class BaseService {
       this.getFullPath(path),
       requestConfig,
     );
+    if (response.status === 204 || !response.data) {
+      return undefined as T;
+    }
     return response.data.data;
   }
 

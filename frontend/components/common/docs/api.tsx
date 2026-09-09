@@ -48,17 +48,39 @@ export function getApiSections(t: TFn): PolicySection[] {
             <DocsTableBody>
               <DocsTableRow>
                 <DocsTableCell className='font-mono text-xs'>
-                  error_msg
-                </DocsTableCell>
-                <DocsTableCell>string</DocsTableCell>
-                <DocsTableCell>{t('api.section1.errorMsgDesc')}</DocsTableCell>
-              </DocsTableRow>
-              <DocsTableRow>
-                <DocsTableCell className='font-mono text-xs'>
                   data
                 </DocsTableCell>
                 <DocsTableCell>any</DocsTableCell>
                 <DocsTableCell>{t('api.section1.dataDesc')}</DocsTableCell>
+              </DocsTableRow>
+              <DocsTableRow>
+                <DocsTableCell className='font-mono text-xs'>
+                  error
+                </DocsTableCell>
+                <DocsTableCell>object</DocsTableCell>
+                <DocsTableCell>
+                  结构化错误对象，包含 code（错误标识）、message（可读信息）与
+                  details（错误明细）
+                </DocsTableCell>
+              </DocsTableRow>
+              <DocsTableRow>
+                <DocsTableCell className='font-mono text-xs'>
+                  meta
+                </DocsTableCell>
+                <DocsTableCell>object</DocsTableCell>
+                <DocsTableCell>
+                  分页与集合元数据（包含 total、page、per_page
+                  等，仅列表接口返回）
+                </DocsTableCell>
+              </DocsTableRow>
+              <DocsTableRow>
+                <DocsTableCell className='font-mono text-xs'>
+                  error_msg
+                </DocsTableCell>
+                <DocsTableCell>string</DocsTableCell>
+                <DocsTableCell>
+                  {t('api.section1.errorMsgDesc')}（向下兼容字段）
+                </DocsTableCell>
               </DocsTableRow>
             </DocsTableBody>
           </DocsTable>
@@ -66,7 +88,6 @@ export function getApiSections(t: TFn): PolicySection[] {
           <p className='mt-2'>{t('api.section1.successExample')}</p>
           <CodeBlock
             code={`{
-  "error_msg": "",
   "data": {
     "id": 1,
     "username": "ryan",
@@ -79,6 +100,10 @@ export function getApiSections(t: TFn): PolicySection[] {
           <p className='mt-2'>{t('api.section1.failExample')}</p>
           <CodeBlock
             code={`{
+  "error": {
+    "code": "bad_request",
+    "message": "${t('api.section1.failExampleErrorMsg')}"
+  },
   "error_msg": "${t('api.section1.failExampleErrorMsg')}",
   "data": null
 }`}
@@ -344,7 +369,6 @@ export function getApiSections(t: TFn): PolicySection[] {
           <p className='mt-2'>{t('api.section3.successResponseExample')}</p>
           <CodeBlock
             code={`{
-  "error_msg": "",
   "data": {
     "token": "at_628d022b7a95e26bcd8b29c9...",
     "record": {
@@ -426,7 +450,6 @@ export function getApiSections(t: TFn): PolicySection[] {
           <p className='mt-2'>{t('api.section4.responseExample')}</p>
           <CodeBlock
             code={`{
-  "error_msg": "",
   "data": {
     "site_name": "Wavelet",
     "registration_enabled": "true",

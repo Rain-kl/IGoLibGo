@@ -98,7 +98,9 @@ export function LoginPage() {
             setUser(result.user);
           }
           setLoginSuccess(true);
-          toast.success(result.status === 'bound' ? t('boundSuccess') : t('success'));
+          toast.success(
+            result.status === 'bound' ? t('boundSuccess') : t('success'),
+          );
 
           setTimeout(() => {
             if (!redirectedRef.current) {
@@ -108,9 +110,7 @@ export function LoginPage() {
           }, 1500);
         } catch (error) {
           console.error('OAuth callback error:', error);
-          toast.error(
-            error instanceof Error ? error.message : t('failed'),
-          );
+          toast.error(error instanceof Error ? error.message : t('failed'));
           setIsProcessingCallback(false);
           router.replace('/login');
         }
