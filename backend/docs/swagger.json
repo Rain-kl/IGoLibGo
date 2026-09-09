@@ -4552,6 +4552,103 @@
                 }
             }
         },
+        "/api/v1/custom/greetings": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "custom_example"
+                ],
+                "summary": "创建自定义问候",
+                "parameters": [
+                    {
+                        "description": "问候请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.CreateGreetingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.GreetingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/custom/greetings/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "custom_example"
+                ],
+                "summary": "获取问候详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "问候 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.GreetingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "未找到",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/message-gateway/bindings": {
             "get": {
                 "security": [
@@ -6283,6 +6380,25 @@
                 }
             }
         },
+        "do.CreateGreetingRequest": {
+            "type": "object",
+            "required": [
+                "message",
+                "recipient"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "recipient": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 1
+                }
+            }
+        },
         "do.CreatePushChannelRequest": {
             "type": "object",
             "required": [
@@ -6366,6 +6482,23 @@
                     "type": "boolean"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.GreetingResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "recipient": {
                     "type": "string"
                 }
             }
@@ -7964,6 +8097,42 @@
                 }
             }
         },
+        "response.AnyError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/response.ErrorBody"
+                }
+            }
+        },
+        "response.ErrorBody": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.ErrorDetail"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ErrorDetail": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "issue": {
+                    "type": "string"
+                }
+            }
+        },
         "time.Duration": {
             "type": "integer",
             "format": "int64",
@@ -8008,6 +8177,7 @@
                     "type": "string"
                 },
                 "token": {
+                    "description": "Token 架构设计约束：按照业务需求，个人访问令牌 (PAT) 刻意使用明文存储到数据库，方便后续复制密钥。\n严禁修改为 Hash 存储或引入单向哈希加密！",
                     "type": "string"
                 },
                 "updated_at": {

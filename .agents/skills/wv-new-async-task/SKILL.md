@@ -1,6 +1,8 @@
 ---
 name: "wv-new-async-task"
 description: "Wavelet 项目专用：新增或修改基于 Cordis 插件的 Asynq 异步任务、后台 Worker 消费处理器、Cron 定时调度任务与任务执行追踪时必须使用。"
+metadata:
+  origin: Wavelet
 ---
 
 # 异步任务与定时调度开发规范 (Cordis 插件化架构)
@@ -11,7 +13,7 @@ description: "Wavelet 项目专用：新增或修改基于 Cordis 插件的 Asyn
 
 ## 1. 核心架构：插件内自包含任务声明
 
-在 Cordis 架构中，后台 Worker 消费与定时调度**不再集中在中心化的注册表**，而是由各个业务插件在自身的 `Apply` 方法中通过微内核扩展点直接声明。
+在 Cordis 架构中，后台 Worker 消费与定时调度**不依赖全局硬编码注册表**，而是由各个业务插件在自身的 `Apply` 方法中通过微内核扩展点直接声明。
 
 ### 扩展点矩阵
 
@@ -24,26 +26,21 @@ description: "Wavelet 项目专用：新增或修改基于 Cordis 插件的 Asyn
 
 ## 2. 异步任务开发全流程
 
-### 步骤 1：定义任务 Payload 结构与类型常量
+### 步骤 1：在插件内定义任务 Payload 与常量
 
-在插件内（如 `backend/plugins/domain/order/tasks.go`）：
+根据物理子包分层规范，任务定义应放在 `consts/` 与 `service/` 或 `model/dto/` 中（严禁在插件根目录下平铺）：
 
 ```go
-package order
-
-import (
-	"context"
-	"encoding/json"
-	"time"
-
-	"github.com/hibiken/asynq"
-)
+// backend/plugins/domain/order/consts/tasks.go
+package consts
 
 const (
 	TaskTypeOrderTimeoutCancel = "order:timeout_cancel"
 )
 
-// OrderTimeoutPayload 定义任务入参
+// backend/plugins/domain/order/model/dto/task.go
+package dto
+
 type OrderTimeoutPayload struct {
 	OrderID   string `json:"order_id"`
 	Reason    string `json:"reason"`
@@ -51,107 +48,104 @@ type OrderTimeoutPayload struct {
 }
 ```
 
-### 步骤 2：实现任务执行处理器 (Handler)
+### 步骤 2：在 Service 中实现任务执行处理器 (Handler)
 
-Handler 必须接受 `ctx context.Context, t *asynq.Task`，返回 `error`：
+处理器可以是一个结构体方法或普通函数，接受 `context.Context` 和 `[]byte` payload：
 
 ```go
-func (p *Plugin) handleOrderTimeoutCancel(ctx context.Context, t *asynq.Task) error {
-	var payload OrderTimeoutPayload
-	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
-		return err // 反序列化失败，直接中断
-	}
+// backend/plugins/domain/order/service/order_task.go
+package service
 
-	// 记录任务日志
-	// task.AppendLog(ctx, "开始处理订单超时关单: order_id=%s", payload.OrderID)
+import (
+	"context"
+	"encoding/json"
+	"Wavelet/pkg/logger"
+	"Wavelet/plugins/domain/order/model/dto"
+)
 
-	// 执行业务逻辑
-	if err := p.svc.CancelTimeoutOrder(ctx, payload.OrderID, payload.Reason); err != nil {
-		// 返回 error 触发 Asynq 框架自动重试
+type OrderTaskHandler struct {
+	svc *OrderService
+}
+
+func NewOrderTaskHandler(svc *OrderService) *OrderTaskHandler {
+	return &OrderTaskHandler{svc: svc}
+}
+
+func (h *OrderTaskHandler) Execute(ctx context.Context, payload []byte) error {
+	var p dto.OrderTimeoutPayload
+	if err := json.Unmarshal(payload, &p); err != nil {
+		logger.ErrorF(ctx, "failed to unmarshal task payload: %v", err)
 		return err
 	}
 
-	return nil
+	return h.svc.CancelTimeoutOrder(ctx, p.OrderID, p.Reason)
 }
 ```
 
-### 步骤 3：在插件 `Apply` 中注册任务与定时调度
+### 步骤 3：在插件 `Apply` 中注册任务元数据
+
+在 `plugin.go` 中通过 `ctx.Task().Register` 声明消费，并附加元数据：
 
 ```go
 func (p *Plugin) Apply(ctx *core.Context) error {
-	// 1. 注册异步任务处理器
-	ctx.Task().Register(
-		TaskTypeOrderTimeoutCancel,
-		p.handleOrderTimeoutCancel,
-		extpoints.WithTaskRetry(3),
-		extpoints.WithTaskTimeout(5*time.Minute),
-	)
+	taskHandler := service.NewOrderTaskHandler(p.svc)
 
-	// 2. 注册定时调度任务 (例如每天凌晨 2 点执行汇总)
-	ctx.Schedule().RegisterCron(
-		"0 2 * * *",
-		"order:daily_settlement",
-		map[string]any{"scope": "all"},
+	ctx.Task().Register(
+		consts.TaskTypeOrderTimeoutCancel,
+		taskHandler.Execute,
+		extpoints.WithTaskType("order_timeout_cancel"),
+		extpoints.WithTaskName("订单超时自动取消"),
+		extpoints.WithTaskDescription("定时检测未支付订单并释放库存"),
+		extpoints.WithTaskCategory("order"),
+		extpoints.WithTaskRetry(3),
+		extpoints.WithTaskQueue("default"),
+		extpoints.WithTaskRetryable(true),
 	)
 
 	return nil
 }
 ```
 
-### 步骤 4：在业务逻辑中投递异步任务
+---
 
-当业务需要下发延迟或异步任务时：
+## 3. 定时调度 (Cron Schedule)
+
+若需要周期性执行（如每小时检查一次超时、每天凌晨统计数据）：
 
 ```go
-func (s *OrderService) EnqueueTimeoutCheck(ctx context.Context, orderID string) error {
-	payloadBytes, _ := json.Marshal(OrderTimeoutPayload{
-		OrderID:   orderID,
-		Reason:    "15分钟未支付自动关单",
-		CreatedAt: time.Now().Unix(),
-	})
-
-	task := asynq.NewTask(
-		TaskTypeOrderTimeoutCancel,
-		payloadBytes,
-		asynq.ProcessIn(15*time.Minute), // 延迟 15 分钟执行
-		asynq.MaxRetry(3),
+func (p *Plugin) Apply(ctx *core.Context) error {
+	// 每 10 分钟触发一次清理任务
+	ctx.Schedule().RegisterCron(
+		"*/10 * * * *",
+		consts.TaskTypeOrderTimeoutCancel,
+		map[string]any{"trigger": "cron_scheduler"},
 	)
-
-	// 投递到任务客户端
-	_, err := s.taskClient.EnqueueContext(ctx, task)
-	return err
+	return nil
 }
 ```
 
 ---
 
-## 3. 运行切面透明性 (Profile Transparency)
+## 4. 派发异步任务
 
-Cordis 微内核支持多种启动切面（`api`、`worker`、`schedule`、`all`）：
-- 插件开发者**无需在插件代码中编写 `if mode == "worker"` 分支**。
-- 插件只需在 `Apply` 中把任务与调度注册进 `Context`。
-- 当进程以 `worker` 切面启动时，微内核的 `driver_asynq_worker` 驱动会自动拾取并监听已注册的任务。
-- 当进程以 `schedule` 切面启动时，`driver_asynq_cron` 驱动会自动启动调度器引擎。
+在业务逻辑中，通过依赖注入获取 `contracts.TaskService`，向队列投递任务：
 
----
+```go
+import "Wavelet/core/contracts"
 
-## 4. 任务日志与重试规范
+type OrderService struct {
+	taskSvc contracts.TaskService
+}
 
-1. **日志记录**：
-   - 记录任务启动参数摘要、分批处理进度及最终完成统计。
-   - 大循环处理中应按批次记录日志，禁止每条数据单独打日志刷屏。
-2. **重试机制**：
-   - Handler 返回 error 即自动触发 Asynq 重试策略。
-   - 禁止在 Handler 内部编写裸 `for` 死循环重试。
-3. **幂等性保障**：
-   - 任务由于网络波动或超时可能被重复消费，业务操作必须实现幂等保护（如基于订单状态机检查或分布式锁 `ctx.DistLock()`）。
+func (s *OrderService) EnqueueOrderTimeout(ctx context.Context, orderID string) error {
+	payload, _ := json.Marshal(dto.OrderTimeoutPayload{
+		OrderID:   orderID,
+		Reason:    "auto_timeout_15m",
+		CreatedAt: time.Now().Unix(),
+	})
 
----
-
-## 5. 质量验证
-
-```bash
-make format
-make code-check
-go test ./plugins/...
+	return s.taskSvc.Enqueue(ctx, consts.TaskTypeOrderTimeoutCancel, payload, contracts.TaskOptions{
+		ProcessIn: 15 * time.Minute,
+	})
+}
 ```

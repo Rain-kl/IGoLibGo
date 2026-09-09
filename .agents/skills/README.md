@@ -37,7 +37,7 @@
 
 ---
 
-### 2. ECC 社区技能体系 (25 个)
+### 2. ECC 社区技能体系 (24 个)
 
 上游仓库统一为：[`https://github.com/affaan-m/ECC`](https://github.com/affaan-m/ECC)
 
@@ -96,7 +96,7 @@
 | `wv-logstore` | 日志与分析库架构：日志/分析用途表划分、`plugins/domain/risk_control/logstore` 接入与 PG/SQLite 回落。 | 随着审计时序日志与主分析库路由策略变动维护。 |
 | `wv-file-upload` | 统一文件摄取服务：通过 `upload.Ingest` / `contracts.StorageService` 进行文件存储，严禁旁路写表。 | 随着存储服务抽象和文件接入端点调整同步更新。 |
 | `wv-push-notification` | 系统通知推送机制：通过统一触发器投递消息，支持跨域解耦与动态推送配置。 | 随着通知服务与网关契约改动同步更新。 |
-| `go-logging` | 结构化日志规范：Go `log/slog` 日志方案选择、上下文 Trace 关联与日志级别判定。 | 随着后端日志中间件与 Trace 上下文调整维护。 |
+| `wv-logging` | 结构化日志与链路追踪：基于 `backend/pkg/logger`（Zap + otelzap + 5000 行环形缓冲区，支持 Admin WebSocket 日志流）及 `contracts.LoggerService`。 | 随着后端日志系统与 Trace 上下文调整维护。 |
 | `wv-release-guide` | 版本发布规范：从 Git 历史整理规范的 Version Bump 提交信息以自动触发双语 GitHub Release。 | 随着 CI/CD 自动化发版脚本逻辑调整维护。 |
 
 ---

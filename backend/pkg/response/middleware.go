@@ -31,10 +31,29 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 
 		var apiErr *APIError
 		if errors.As(err, &apiErr) {
-			c.JSON(apiErr.Code, Err(apiErr.Msg))
+			errCode := apiErr.ErrCode
+			if errCode == "" {
+				errCode = httpStatusToErrorCode(apiErr.Code)
+			}
+			c.JSON(apiErr.Code, ErrorResponse{
+				ErrorMsg: apiErr.Msg,
+				Error: ErrorBody{
+					Code:    errCode,
+					Message: apiErr.Msg,
+					Details: apiErr.Details,
+				},
+				Data: nil,
+			})
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, Err("内部系统错误"))
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			ErrorMsg: "内部系统错误",
+			Error: ErrorBody{
+				Code:    "internal_server_error",
+				Message: "内部系统错误",
+			},
+			Data: nil,
+		})
 	}
 }

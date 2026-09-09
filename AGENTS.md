@@ -21,7 +21,7 @@
 | `wv-logstore` | 日志/分析用途表、`plugins/domain/risk_control/logstore`、切换日志主库、PG/SQLite 回落 |
 | `wv-file-upload` | 业务上传文件、Worker 程序化摄取、`upload.Ingest` / `contracts.StorageService`、文件访问与统计 |
 | `wv-push-notification` | 系统通知推送事件、统一触发器投递、带消息推送的业务功能 |
-| `go-logging` | 选择日志方案、配置 slog、编写结构化日志语句、决定日志级别或为日志添加请求上下文 |
+| `wv-logging` | 结构化日志与链路追踪（`backend/pkg/logger` 基于 Zap + otelzap + 5000 行环形缓冲区，支持 Admin WebSocket 日志流）及 `contracts.LoggerService` |
 | `wv-release-guide` | 根据自上一正式版本 Tag 以来的提交整理 Version Bump 提交信息以触发双语 Release |
 | `code-review-skill` | 进行代码审查（Code Review）、PR 评审、代码质量与安全性审查、检查代码坏味道 |
 | `shadcn` | 添加、修改或组合 shadcn/ui 组件 |
@@ -98,9 +98,11 @@
   - **静态启动配置**：插件自包含在 `Apply` 中通过 `ctx.Config().Bind("<prefix>", &cfg)` 读取**自己声明**的配置，字段以 tag 表达来源：`config`（yaml 路径）、`env`（覆盖变量名）、`default`、`autoEnable`（该变量存在即置真）、`secret`（导出脱敏）。需要在 `Apply` 之前被门禁求值的键，必须在 `DeclareConfig()` 中提前声明并实现 `core.ConfigGatedPlugin`。新增基础设施 key 保持顶层命名（`redis.*`），插件私有配置归 `plugins.<name>.*`。**严禁**再造全局配置单例或在 `backend/pkg/` 读取配置。
   - **动态设置**：插件自包含在 `Apply` 中通过 `ctx.Settings().Register(core.SettingSchema{...})` 声明可热更新的管理台设置模式（与上面的静态启动配置分属两层）。
   - **数据迁移**：插件自包含在内部维护 `migrations/*.sql`，通过 `//go:embed` 打包并在 `Apply` 中通过 `ctx.Migrations().Register(pluginID, embedFS)` 注入。
-- **表单一所有者原则 (Single Owner Principle)**：
+- **表单一所有者原则与跨插件迁移边界 (Single Owner Principle & Cross-Plugin Migration Boundaries)**：
   - 每张数据表有且仅由一个所有者插件声明与维护（表名使用插件前缀如 `w_order_*`）。
-  - 严禁插件 B 跨过所有者插件 A 直接 DDL/DML 旁路读写表 A，必须调用插件 A 暴露的 `contracts` 接口或订阅事件。
+  - **严禁跨插件 DDL**：在业务插件（尤其是下游定制化插件）自身的 migrations 脚本中，绝对严禁执行针对非自身所属表的结构变更（禁止 `CREATE`、`ALTER`、`DROP TABLE`、`ADD/MODIFY COLUMN` 等）。修改共享表结构必须回到上游所有者插件中统一进行。
+  - **明确允许跨插件 DML 数据插入 (INSERT)**：当定制化下游业务插件需要预置业务初始化参数或设置项时（例如向平台共享的系统参数表 `w_settings` 插入定制插件所需的配置键值），允许且必须在业务插件自身的 migrations 中执行 `INSERT INTO` 脚本，并保证幂等性。严禁将下游定制项目的初始化数据反向塞入上游通用系统插件中。
+  - 严禁插件 B 跨过所有者插件 A 直接在运行时代码编写 SQL/GORM 读写表 A，必须调用插件 A 暴露的 `contracts` 接口或订阅事件。
 - **平台服务复用**：
   - 文件摄取统一使用 `upload.Ingest` / `contracts.StorageService`，禁止绕过存储域直接操作底层 Bucket 或直写文件表。
   - 业务缓存统一使用 `ctx.Cache()`（`contracts.CacheService`）或标准缓存框架，禁止自研不带失效广播的本地 map。
@@ -108,11 +110,19 @@
 
 ## 后端开发规范
 
-### API 响应规范
-- **统一信封**：`{ "error_msg": "", "data": ... }`
-- **成功**：HTTP 200，写出 `c.JSON(http.StatusOK, response.OK(data))` 或 `response.OKNil()`。
-- **失败**：使用 `backend/pkg/response` 的 `Abort*` 系列函数（如 `AbortBadRequest`、`AbortUnauthorized`、`AbortNotFound`、`AbortInternal`）中断请求。
-- **错误文案**：使用模块内 `errs.go` 中的 camelCase 字符串常量（如 `errBindParamsFailed`），禁止暴露底层数据库/系统错误细节给客户端。
+### API 响应规范 (以 `api-design` 规范为主)
+- **RESTful 状态码标准**：
+  - GET / PUT / PATCH：成功返回 HTTP 200，写出 `c.JSON(http.StatusOK, response.OK(data))`；分页写出 `c.JSON(http.StatusOK, response.Paged(items, meta))`。
+  - POST 创建资源：成功返回 HTTP 201，写出 `response.Created(c, location, data)` 并附带 Location 响应头。
+  - DELETE / 无返回体操作：成功返回 HTTP 204，写出 `response.NoContent(c)`。
+  - 客户端/校验错误：返回 HTTP 400/422，使用 `response.AbortBadRequest(c, msg)` 或 `response.AbortBadRequestWithCode(c, errCode, msg, details...)`。
+  - 未登录 / 权限不足 / 资源未找到 / 服务端异常：分别返回 HTTP 401 (`AbortUnauthorized`)、403 (`AbortForbidden`)、404 (`AbortNotFound`)、500 (`AbortInternal`)。
+- **标准信封**：
+  - 成功数据：`{ "data": ... }`
+  - 分页数据：`{ "data": [...], "meta": { "total": ..., "page": ..., "per_page": ... } }`
+  - 错误数据：`{ "error": { "code": "...", "message": "...", "details": [...] } }`
+  - 兼容字段：`error_msg` 会在错误响应中继续透出，无缝向下兼容老前端调用。
+- **错误文案**：使用语义化、清晰的错误文案或错误码（snake_case，如 `validation_error`, `user_not_found`），禁止暴露底层数据库/系统错误细节给客户端。
 - **Service/Logics 分工**：业务逻辑层只接受 `context.Context`，返回 `(result, error)`，严禁依赖 `*gin.Context` 或调用 `c.JSON`/`Abort*`。
 - **错误日志**：底层错误在 Handler/Logic 边界用 `backend/pkg/logger` 打印日志，禁止使用 `_ = ...` 静默吞掉关键错误。
 
@@ -131,6 +141,8 @@
 - **敏感端点限流**：登录尝试、OAuth 授权发起等敏感接口必须接入基于 Redis 的滑动窗口限流机制，防止暴力破解与缓存资源耗尽。
 
 ## 前端开发规范
+
+> **最高优先级规则说明**：通用前端技能（如 `frontend-patterns`、`shadcn`、`design-system` 等）中文档示例可能提及 npm/pnpm 或 Prettier，在本项目中**一律以本规范为最高准则**：**包管理器与运行环境严格锁定为 `bun`，代码格式化工具严格锁定为 `Biome`（`bun run format`），严禁使用 Prettier**。
 
 - 新特性开发前参考 Next.js 文档与 `frontend/app/(main)/admin/demo` 示例代码。
 - **页面容器与标题栏**：

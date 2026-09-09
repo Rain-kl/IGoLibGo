@@ -160,7 +160,12 @@ risk_control/logstore|          1 | 2026-08-28 10:00:00+00
 
 ### 4. 核心设计与防线原则 (Guardrails)
 
-1. **表单一所有者原则**：每张数据表归属且仅归属于一个所有者插件（如 `w_orders` 归 `order` 插件）。**严禁**插件 B 跨包编写 SQL 直接读写插件 A 拥有的表；必须通过插件 A 暴露的 `contracts` 接口或事件总线进行交互。
+1. **表单一所有者原则与跨插件迁移边界 (Single Owner DDL & DML Boundary)**：
+   - **表所有权唯一**：每张数据表归属且仅归属于一个所有者插件（如 `w_orders` 归 `order` 插件，`w_settings` 归 `system` 插件）。
+   - **严格禁止跨插件 DDL**：在业务插件（尤其是下游定制化插件）自身的 migrations 脚本中，**绝对严禁**执行针对非自身所属表的结构变更（禁止 `CREATE`、`ALTER`、`DROP TABLE`、`ADD/MODIFY COLUMN` 等）。修改共享表结构必须回到上游所有者插件中统一进行。
+   - **明确允许跨插件 DML 数据插入 (INSERT)**：当定制化下游业务插件需要预置业务初始化参数或设置项时（例如向平台共享的系统参数表 `w_settings` 插入定制插件所需的配置键值），**允许且必须在业务插件自身的 migrations 中执行 `INSERT INTO` 脚本**。严禁将下游定制项目的初始化数据反向塞入上游通用系统插件中。
+   - **插入幂等防线**：跨表插入数据时必须保证幂等性，PostgreSQL 使用 `ON CONFLICT (...) DO NOTHING`，SQLite 使用 `INSERT OR IGNORE INTO` 或 `INSERT ... ON CONFLICT DO NOTHING`。
+   - **运行时访问隔离**：在运行时代码中，严禁插件 B 跨包编写 GORM/SQL 直接 DML 读写插件 A 拥有的表，必须通过插件 A 暴露的 `contracts` 契约或事件总线进行交互。
 
 2. **表名前缀规范**：所有表名必须带有前缀（如 `w_orders`、`w_auth_users`），杜绝跨插件表名冲突。
 

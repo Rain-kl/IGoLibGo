@@ -159,6 +159,20 @@ definitions:
       type:
         type: string
     type: object
+  do.CreateGreetingRequest:
+    properties:
+      message:
+        maxLength: 255
+        minLength: 1
+        type: string
+      recipient:
+        maxLength: 64
+        minLength: 1
+        type: string
+    required:
+    - message
+    - recipient
+    type: object
   do.CreatePushChannelRequest:
     properties:
       description:
@@ -214,6 +228,17 @@ definitions:
       required:
         type: boolean
       type:
+        type: string
+    type: object
+  do.GreetingResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      message:
+        type: string
+      recipient:
         type: string
     type: object
   do.PublicChannelDTO:
@@ -1291,6 +1316,29 @@ definitions:
         example: ""
         type: string
     type: object
+  response.AnyError:
+    properties:
+      error:
+        $ref: '#/definitions/response.ErrorBody'
+    type: object
+  response.ErrorBody:
+    properties:
+      code:
+        type: string
+      details:
+        items:
+          $ref: '#/definitions/response.ErrorDetail'
+        type: array
+      message:
+        type: string
+    type: object
+  response.ErrorDetail:
+    properties:
+      field:
+        type: string
+      issue:
+        type: string
+    type: object
   time.Duration:
     enum:
     - -9223372036854775808
@@ -1326,6 +1374,9 @@ definitions:
       name:
         type: string
       token:
+        description: |-
+          Token 架构设计约束：按照业务需求，个人访问令牌 (PAT) 刻意使用明文存储到数据库，方便后续复制密钥。
+          严禁修改为 Hash 存储或引入单向哈希加密！
         type: string
       updated_at:
         type: string
@@ -4139,6 +4190,63 @@ paths:
       summary: 获取公共配置
       tags:
       - config
+  /api/v1/custom/greetings:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 问候请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.CreateGreetingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.GreetingResponse'
+              type: object
+        "400":
+          description: 参数校验失败
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 创建自定义问候
+      tags:
+      - custom_example
+  /api/v1/custom/greetings/{id}:
+    get:
+      parameters:
+      - description: 问候 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.GreetingResponse'
+              type: object
+        "404":
+          description: 未找到
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取问候详情
+      tags:
+      - custom_example
   /api/v1/message-gateway/bindings:
     get:
       description: Returns the current user's bound messaging channels

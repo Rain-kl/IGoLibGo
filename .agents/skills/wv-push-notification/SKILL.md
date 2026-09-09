@@ -1,171 +1,82 @@
 ---
 name: "wv-push-notification"
 description: "Wavelet 项目专用：当需要开发或接入新的系统通知推送事件、修改消息推送底层设计、调用统一触发器投递消息、或开发带消息推送功能的业务功能时必须使用。本技能指导元数据声明、触发流程、解耦防线和动态同步机制。"
+metadata:
+  origin: Wavelet
 ---
 
-# 新增消息推送与通知事件开发规范
+# 新增消息推送与通知事件开发规范 (Cordis 架构)
 
-本技能涵盖 Wavelet 的系统通知推送开发规范。开始开发前先阅读仓库根目录 [AGENTS.md](../../../AGENTS.md)，遵守项目级核心规则。
+本技能指导在 Wavelet 的 Cordis 微内核架构下，如何开发系统通知推送事件、扩展推送渠道以及跨插件触发通知。
 
 ---
 
-## 消息推送架构设计 (Architecture)
+## 1. 消息推送分层架构 (`backend/plugins/domain/msg_gateway`)
 
-Wavelet 的消息推送机制采用了**元数据驱动 + 统一触发器 + 异步任务派发**的解耦设计，其分层及职责划分如下：
+消息推送域以独立 Cordis 插件形式实现于 `backend/plugins/domain/msg_gateway`，严禁在业务插件中硬编码推送逻辑。
 
-| 目录/包名 | 职责定位 | 包含内容与设计细节 |
+| 子包路径 | 职责定位 | 核心细节与规范 |
 | :--- | :--- | :--- |
-| **`backend/plugins/domain/msg_gateway/push/`** | 推送基础设施层 | 静态定义、不依赖系统数据库和任何框架。定义了统一接口 `Pusher` 和多实现（Lark, Webhook, Email 等），提供配置验证及发送功能。 |
-| **`internal/apps/admin/push/`** | 通知服务与后台任务层 | 包含以下核心文件：<br>1. `events.go`：定义通知事件的结构模型（`NotificationMessage`, `EventMetadata`）、内置事件的动态注册中心（`BuiltInEvents` 及 `RegisterBuiltInEvent` 函数）以及统一触发器类 `EventTrigger`（包括其底层的派发引擎逻辑）。<br>2. `tasks.go`：定义 Asynq 后台异步发送任务、处理器 `PushHandler` 及其校验逻辑，并记录推送历史审计。<br>3. `routers.go`：管理端接口，负责获取事件配置列表和更新配置。 |
-| **`internal/apps/admin/push/custom_events/`** | 自定义通知事件包 | 事件元数据定义与 push 侧处理逻辑；**一个 Go 文件代表一个事件**。在 `register.go` 统一装配，禁止 `init()` 副作用。 |
-| **`internal/listener/`** | 域事件分发层 | 核心域发射事件（如 `EmitAdminLoggedIn`），push 在 bootstrap 阶段通过 `OnAdminLoggedIn` 订阅，避免 auth/user 直接依赖 push。 |
-| **`internal/platform/bootstrap/`** | 应用装配根 | `RegisterPushDomainEvents()` 调用 `custom_events.Register()`；`Init` 中执行 `SyncEvents` 将内置事件元数据同步到数据库。 |
-| **数据库审计表** | 状态与历史审计 | `w_push_events` 存放每个通知事件的启用状态、启用渠道、发送目标和自定义渲染模板。<br>`w_push_histories` 存放消息发送记录用于审计。 |
+| **`push/`** | 底层推送渠道抽象 | 纯基础设施。定义 `Pusher` 接口与具体渠道实现（Email、Lark、Webhook、Bark 等），不依赖数据库。 |
+| **`channels/`** | 双向 Bot 适配 | 平台 Bot 交互引擎（Telegram、QQ 等），处理指令配对与双向消息流。 |
+| **`controller/`** | HTTP 接口层 | 挂载于 `/api/v1/admin/push` 与 `/api/v1/admin/channels`，提供管理台配置、测试发送与历史查询。 |
+| **`service/`** | 业务逻辑与派发引擎 | `push_trigger.go`（统一触发器）、`push_worker.go`（Asynq 异步任务消费）、`push_event.go`（事件注册中心）。 |
+| **`dao/` & `model/`** | 数据访问与实体 | 管理 `w_push_events`（通知事件元数据与开关）、`w_push_histories`（推送审计日志）、`w_message_channels` 等。 |
 
 ---
 
-## 核心开发步骤 (Step-by-Step Flow)
+## 2. 跨插件推送通信模式（防线与解耦）
 
-如果某个新业务（如“新用户注册”或“订单创建”）需要带有消息推送功能，请严格按照以下步骤开发：
+根据 Cordis 微内核防线，**业务插件严禁直接 import `msg_gateway` 的内部实现**。跨插件触发通知必须采用以下两种受管模式之一：
 
-### 步骤 1：在 `custom_events/` 中声明事件元数据与处理函数
-在 `internal/apps/admin/push/custom_events/` 下新建一个 Go 文件（如 `user_registered.go`），声明 `EventMetadata` 和 push 侧处理函数（组装 body 并调用 `DefaultTrigger.Trigger`）。
+### 模式 A：事件总线异步解耦触发（推荐，强解耦）
+
+业务插件仅依赖 `Wavelet/core`，通过微内核事件总线广播：
 
 ```go
-package custom_events
+// 业务插件在用户注册成功、订单状态变更等处广播通知事件
+ctx.Events().Emit("notification:push", do.PushNotificationEvent{
+    UserID:   user.ID,
+    Channel:  "user_registered",
+    Title:    "新用户注册提醒",
+    Content:  fmt.Sprintf("用户 %s (%s) 已成功加入系统", user.Username, user.Email),
+    Metadata: map[string]any{"user_id": user.ID, "role": user.Role},
+})
+```
 
-import (
-	"context"
-	"time"
+`msg_gateway` 插件在 `Apply` 中已内置监听 `notification:push` 并自动驱动异步派发。
 
-	"github.com/Rain-kl/Wavelet/internal/apps/admin/push"
-	"github.com/Rain-kl/Wavelet/pkg/listener"
-)
+### 模式 B：通过契约注册内置事件 (`contracts.PushRegistry`)
 
-var NewUserRegistered = push.EventMetadata{
-	Key:  "user_registered",
-	Name: "新用户注册提醒",
-	DefaultTemplate: push.NotificationMessage{
-		Title:   "新用户注册通知",
-		Content: "新用户 {{user.username}} (邮箱: {{user.email}}) 于 {{time}} 成功注册。",
-		Level:   "INFO",
-	},
-	Description: "当系统有新用户注册成功时，向管理员或指定目标发送通知",
-}
+若插件需要在系统启动时声明自己的内置通知模板元数据（以便在管理后台展示并允许管理员自定义开关与渠道）：
 
-func handleUserRegistered(ctx context.Context, event listener.UserRegistered) {
-	if event.User == nil {
-		return
-	}
-	body := map[string]any{
-		"user": event.User,
-		"time": time.Now().Format("2006-01-02 15:04:05"),
-	}
-	push.DefaultTrigger.Trigger(ctx, NewUserRegistered, body)
+1. 在 `Apply` 中通过微内核获取 `contracts.PushRegistry`：
+
+```go
+import "Wavelet/core/contracts"
+
+func (p *Plugin) Apply(ctx *core.Context) error {
+    core.Bind[contracts.PushRegistry](ctx, func(registry contracts.PushRegistry) {
+        registry.RegisterBuiltInEvent(contracts.PushEventMeta{
+            Key:         "order_paid",
+            Name:        "订单支付成功通知",
+            Description: "当用户成功完成订单支付时向管理员或用户发送提醒",
+            DefaultTemplate: contracts.PushNotificationTemplate{
+                Title:   "订单支付通知",
+                Content: "订单 {{order.id}} 已支付成功，金额: ￥{{order.amount}}。",
+                Level:   "INFO",
+            },
+        })
+    })
+    return nil
 }
 ```
 
-> `EventTrigger.Trigger` 已内置异步 Goroutine 与 `context.WithoutCancel`；处理函数内直接调用即可，无需外层 `go func()`。
-
-### 步骤 2：在 `listener/` 定义域事件并在 `register.go` 装配
-1. 在 `internal/listener/` 新增域事件类型、`Emit*` 与 `On*` 注册函数（参考 `internal/listener/admin_login.go`）。
-2. 在 `register.go` 中注册元数据并订阅域事件：
-
-```go
-func Register() {
-	push.RegisterBuiltInEvent(NewUserRegistered)
-	listener.OnUserRegistered(handleUserRegistered)
-}
-```
-
-**禁止**在 `custom_events` 或 `router` 中使用 `init()` 注册；**禁止**在 `router.go` 空白导入 `custom_events`。
-
-### 步骤 3：在业务代码中发射域事件（不 import push）
-在业务逻辑完成处（如 `internal/apps/user/routers.go`）仅 import `internal/listener` 并发射事件：
-
-```go
-import "github.com/Rain-kl/Wavelet/pkg/listener"
-
-func Register(c *gin.Context) {
-	// ... 注册成功逻辑 ...
-	listener.EmitUserRegistered(ctx, user)
-}
-```
-
-### 步骤 4：在 bootstrap / cmd 入口显式装配
-新增事件后，确保 `custom_events.Register()` 已被 `bootstrap.RegisterPushDomainEvents()` 调用，且 API/`all` 进程在 `bootstrap.Init` 之前完成注册：
-
-| 进程 | cmd 入口调用 |
-| :--- | :--- |
-| `api` | `bootstrap.RegisterAPI()` → `bootstrap.Init(ctx, Options{API: true})` |
-| `all` | `bootstrap.RegisterAll()` → `bootstrap.Init(ctx, Options{API: true})` |
-| `worker` / `scheduler` | 不注册 push 域事件；仅 `bootstrap.Init` + 各自 `RegisterWorker`/`RegisterScheduler` |
-
-`Init` 中的 `SyncEvents` 会将 `user_registered` 元数据同步到 `w_push_events`，管理员即可在前端配置推送渠道。
-
-### 步骤 5：编写集成测试
-在 `custom_events/` 或 `listener/` 包内添加测试，验证 `Emit*` → handler → `DefaultTrigger.Trigger` 全链路。测试 setup 须显式调用 `custom_events.Register()`（或 `bootstrap.RegisterPushDomainEvents()`）和 `push.SyncEvents`，参考 `admin_login_test.go`。
+2. 触发通知时通过统一触发器或 EventBus 投递，系统将自动从 `w_push_events` 读取管理员定制的渠道与模板并渲染推送。
 
 ---
 
-## 模板渲染与支持的系统变量 (Template Rendering & Variables)
+## 3. 异步任务与历史审计
 
-消息的 `title`、`content` 以及 `ext` 字段中的字符串值都支持变量占位符替换，采用双花括号形式 `{{variable}}`。
-
-### 1. 通用事件参数 (Common Variables)
-在 Wavelet 系统中，`user` 是一个通用的、必传的事件参数。如果在触发通知事件时未提供 `user`（或为 `nil`），底层 `EventTrigger` 会自动注入一个系统的虚拟用户（ID 为 999，昵称为“系统”）。因此，以下变量是所有通知事件均支持的通用渲染参数：
-
-- `{{time}}`：事件发生/触发的具体时间（格式：`2006-01-02 15:04:05`）
-- `{{user.id}}`：触发用户/系统用户的 ID
-- `{{user.username}}`：触发用户/系统用户的用户名
-- `{{user.nickname}}`：触发用户/系统用户的昵称
-- `{{user.email}}`：触发用户/系统用户的电子邮箱
-- `{{user.phone}}`：触发用户/系统用户的手机号
-- `{{user.bio}}`：触发用户/系统用户的个人简介
-- `{{user.gender}}`：触发用户/系统用户的性别
-- `{{user.location}}`：触发用户/系统用户的所在地
-- `{{user.website}}`：触发用户/系统用户的个人网站
-
-*(注：系统中的任何自定义事件，若传入了对应的复杂结构体，其结构体 JSON 字段均可通过扁平化点路径方式直接在模板中进行引用。)*
-
-### 2. 特定事件携带的业务变量 (Event Specific Variables)
-除了通用的 `user` 和 `time` 外，特定事件在触发时还可以携带额外的上下文参数：
-
-- **管理员登录提醒 (`admin_login`)**
-  - `{{ip}}`：管理员登录来源的客户端 IP
-  - `{{time}}`：管理员登录成功时间
-
-### 3. 自定义消息通道的请求体变量说明 (Custom Channel JSON Variables)
-在配置“自定义消息通道”时，其请求体 (JSON Schema) 支持以 `$` 开头的变量替换。支持的替换变量如下：
-
-```json
-{
-  "title": "$title",
-  "description": "$description",
-  "content": "$content",
-  "url": "$url",
-  "to": "$to"
-}
-```
-
-- `$title`：通知的标题（如：“管理员登录提醒”）
-- `$description`：当前通知事件的描述
-- `$content`：通知的具体渲染后正文内容
-- `$url`：附加的操作或详情链接（若有）
-- `$to`：当前派发的推送目标（如邮箱、ID 或 Chat ID，即 resolved target）
-
----
-
-## 严格遵循事项与防线 (Guardrails)
-
-### 1. 禁止绕过统一触发器 (Always Use EventTrigger)
-- 所有推送请求必须经过 `EventTrigger.Trigger`，以确保进行“事件是否启用”、“目标渠道过滤”、“全局推送配置读取”及“发送日志审计”等流程。
-
-### 2. 禁止业务模块直接依赖 push (Decouple via listener)
-- `oauth`、`user` 等核心域 **不得** `import` `internal/apps/admin/push` 或 `custom_events`。
-- 跨模块通知必须通过 `internal/listener` 发射域事件；push 在 `custom_events.Register()` 中订阅。
-
-### 3. 禁止 init() 与 router 副作用注册 (Explicit Bootstrap)
-- 不得在 `init()` 中调用 `RegisterBuiltInEvent` 或订阅 listener。
-- 不得在 `router.go` 空白导入 `custom_events` 触发注册。
-- 统一在 `internal/platform/bootstrap` + `internal/cmd` 入口显式装配。
+1. **异步派发保护**：所有推送操作必须走 Asynq 队列（任务名为 `consts.TaskPushNotification`），禁止在 HTTP 请求生命周期内进行阻塞式远程 HTTP/SMTP 推送。
+2. **审计留痕**：每一次推送尝试无论成功或失败，均自动记录到 `w_push_histories` 表，包含耗时、HTTP 状态码、错误信息与渲染后的实际内容，供管理后台排查。

@@ -4,9 +4,9 @@
 package references
 
 import (
-	"net/http"
+	"fmt"
 
-	"github.com/Rain-kl/Wavelet/pkg/response"
+	"Wavelet/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,21 +21,21 @@ type createChannelResponse struct {
 	Name string `json:"name"`
 }
 
-// CreateChannel 示例：插件内 HTTP Handler（位于 plugins/domain/channel/handlers.go）
+// CreateChannel 示例：插件内 HTTP Handler（位于 plugins/domain/channel/controller/channel.go）
 // @Summary 创建频道
-// @Description 示例：语义路径下的业务接口
+// @Description 示例：符合 api-design 规范的 RESTful POST 接口
 // @Tags channel
 // @Accept json
 // @Produce json
 // @Param request body createChannelRequest true "业务请求参数"
-// @Success 200 {object} response.Any{data=createChannelResponse} "操作成功"
-// @Failure 400 {object} response.Any "参数错误"
-// @Failure 401 {object} response.Any "未登录"
+// @Success 201 {object} response.Any{data=createChannelResponse} "创建成功"
+// @Failure 400 {object} response.AnyError "参数校验失败"
+// @Failure 401 {object} response.AnyError "未登录"
 // @Router /api/v1/channels [post]
 func CreateChannel(c *gin.Context) {
 	var req createChannelRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.AbortBadRequest(c, "参数校验失败")
+		response.AbortBadRequestWithCode(c, "validation_error", "参数校验失败")
 		return
 	}
 
@@ -48,8 +48,9 @@ func CreateChannel(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, response.OK(createChannelResponse{
+	// POST 创建资源符合 api-design：返回 201 Created 与 Location 响应头
+	response.Created(c, fmt.Sprintf("/api/v1/channels/%d", result.ID), createChannelResponse{
 		ID:   result.ID,
 		Name: result.Name,
-	}))
+	})
 }

@@ -1,20 +1,29 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
-// Package custom_example demonstrates how to build a downstream Cordis plugin.
+// Package custom_example demonstrates how to build a downstream Cordis plugin
+// strictly adhering to the physical subpackage architecture and api-design RESTful standards.
 // Copy this directory to create your own plugin.
 package custom_example
 
 import (
 	"Wavelet/core"
 	"Wavelet/core/contracts"
-	"net/http"
+	"Wavelet/downstream/plugins/custom_example/controller/hello"
+	"Wavelet/downstream/plugins/custom_example/dao"
+	"Wavelet/downstream/plugins/custom_example/service"
+	"embed"
 
 	"github.com/gin-gonic/gin"
 )
 
+//go:embed migrations/*/*.sql
+var customMigrations embed.FS
+
 // Plugin implements core.Plugin for the custom_example downstream plugin.
-type Plugin struct{}
+type Plugin struct {
+	svc *service.HelloService
+}
 
 // New creates a new custom_example plugin.
 func New() *Plugin {
@@ -28,23 +37,31 @@ func (p *Plugin) Name() string {
 
 // Apply registers routes and services into the Cordis micro-kernel Context.
 func (p *Plugin) Apply(ctx *core.Context) error {
-	// Resolve platform services via IoC container (no direct imports of domain plugins).
-	var authSvc contracts.AuthService
-	if err := core.Using[contracts.AuthService](ctx, func(svc contracts.AuthService) { authSvc = svc }); err != nil {
-		return err
-	}
-	_ = authSvc
+	// 1. 注册 Goose 双方言嵌入式迁移
+	ctx.Migrations().Register("custom_example", customMigrations)
 
-	// Register routes using the auth middleware obtained through the contract.
-	g := ctx.Router().Group("/api/v1/custom", authSvc.RequireAuthMiddleware().(gin.HandlerFunc))
-	g.GET("/hello", func(c *gin.Context) {
-		user, err := authSvc.GetCurrentUser(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-			return
+	// 2. 绑定平台基础设施（DBService 等）
+	core.Bind[contracts.DBService](ctx, dao.SetDBService)
+
+	// 3. 初始化服务层
+	p.svc = service.NewHelloService()
+
+	// 4. 解析认证服务并挂载中间件
+	var authMW gin.HandlerFunc
+	if authSvc, err := core.Inject[contracts.AuthService](ctx); err == nil && authSvc != nil {
+		if mw, ok := authSvc.RequireAuthMiddleware().(gin.HandlerFunc); ok {
+			authMW = mw
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "Hello " + user.Username})
-	})
+	}
+
+	// 5. 挂载路由组（遵循物理子包分层与 api-design 规范）
+	ctrl := hello.NewController(p.svc)
+	group := ctx.Router().Group("/api/v1/custom/greetings")
+	if authMW != nil {
+		group.Use(authMW)
+	}
+	group.POST("", ctrl.CreateGreeting)
+	group.GET("/:id", ctrl.GetGreeting)
 
 	return nil
 }
