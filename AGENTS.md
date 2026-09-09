@@ -107,21 +107,54 @@ make code-check     # 静态分析
 
 ## 务必阅读匹配的 Skill
 
+> 完整 Skills 上游仓库索引、作用职责说明与离线拷贝更新指南详见 [.agents/skills/README.md](file:///.agents/skills/README.md)。
+
 | Skill | 何时使用 |
 | :--- | :--- |
 | `write-notes-like-deepseek` | 涉及技术选型、架构重构、核心接口/行为变更、修复非直觉缺陷/踩坑复盘，或裁撤冗余特性时；开发前必读既有 Note 并立项记录，与代码原子提交 |
-| `new-api` | 基于 Cordis 插件开发业务 HTTP API、通过 `ctx.Router()` 声明路由与挂载中间件 |
-| `new-async-task` | 基于 Cordis 插件通过 `ctx.Task()` 与 `ctx.Schedule()` 注册 Asynq 异步任务与定时调度 |
-| `new-setting` | 基于 Cordis 插件通过 `ctx.Settings()` 声明配置 Schema、绑定 YAML 配置或管理台热加载设置 |
-| `database-guide` | 插件自包含 `embed.FS` 独立 Goose SQL 迁移（PG/SQLite 双方言、ClickHouse 分析库）；以及 ClickHouse 批量写入、`pkg/batchwriter` 接入、分析表异步 flush 与背压策略 |
-| `cache-framework` | 基于 `ctx.Cache()` 与 `contracts.CacheService` 访问三层缓存（RAM L1 + Redis L2 + Pub/Sub 同步） |
-| `logstore` | 日志/分析用途表、`plugins/domain/risk_control/logstore`、切换日志主库、PG/SQLite 回落 |
-| `file-upload` | 业务上传文件、Worker 程序化摄取、`upload.Ingest` / `contracts.StorageService`、文件访问与统计 |
-| `push-notification` | 系统通知推送事件、统一触发器投递、带消息推送的业务功能 |
+| `wv-new-api` | 基于 Cordis 插件开发业务 HTTP API、通过 `ctx.Router()` 声明路由与挂载中间件 |
+| `wv-new-async-task` | 基于 Cordis 插件通过 `ctx.Task()` 与 `ctx.Schedule()` 注册 Asynq 异步任务与定时调度 |
+| `wv-new-setting` | 基于 Cordis 插件通过 `ctx.Settings()` 声明配置 Schema、绑定 YAML 配置或管理台热加载设置 |
+| `wv-database-guide` | 插件自包含 `embed.FS` 独立 Goose SQL 迁移（PG/SQLite 双方言、ClickHouse 分析库）；以及 ClickHouse 批量写入、`pkg/batchwriter` 接入、分析表异步 flush 与背压策略 |
+| `wv-cache-framework` | 基于 `ctx.Cache()` 与 `contracts.CacheService` 访问三层缓存（RAM L1 + Redis L2 + Pub/Sub 同步） |
+| `wv-logstore` | 日志/分析用途表、`plugins/domain/risk_control/logstore`、切换日志主库、PG/SQLite 回落 |
+| `wv-file-upload` | 业务上传文件、Worker 程序化摄取、`upload.Ingest` / `contracts.StorageService`、文件访问与统计 |
+| `wv-push-notification` | 系统通知推送事件、统一触发器投递、带消息推送的业务功能 |
 | `go-logging` | 选择日志方案、配置 slog、编写结构化日志语句、决定日志级别或为日志添加请求上下文 |
-| `release-guide` | 根据自上一正式版本 Tag 以来的提交整理 Version Bump 提交信息以触发双语 Release |
+| `wv-release-guide` | 根据自上一正式版本 Tag 以来的提交整理 Version Bump 提交信息以触发双语 Release |
 | `code-review-skill` | 进行代码审查（Code Review）、PR 评审、代码质量与安全性审查、检查代码坏味道 |
 | `shadcn` | 添加、修改或组合 shadcn/ui 组件 |
+| `golang-patterns` | 编写或重构 Go 核心代码、设计接口与并发结构、优化内存与 Goroutine 治理时 |
+| `golang-testing` | 编写 Go 测试、表驱动测试、Benchmark 基准测试或 Fuzzing 模糊测试时 |
+| `api-design` | 设计 RESTful API 路径、HTTP 状态码、分页规范、错误 Envelope 结构时 |
+| `hexagonal-architecture` | 领域模型边界设计、Ports & Adapters 契约抽象与依赖反转时 |
+| `frontend-patterns` | React 与 Next.js 组件架构、状态拆分与前端开发模式时 |
+| `react-performance` | 针对 Next.js / React 进行性能优化、消除重渲染、消除请求瀑布、打包压缩时 |
+| `react-patterns` | 抽象复杂 React 组件复用、Compound Components、Hooks 组合时 |
+| `react-testing` | 编写 React / Next.js 组件测试、MSW 网络 Mock 与 a11y 断言时 |
+| `nextjs-turbopack` | 配置或优化 Next.js Turbopack 增量编译与构建性能时 |
+| `design-system` | 声明或规范 Design Tokens、语义色彩变量、组件变体设计时 |
+| `accessibility` | 前端无障碍规范（WCAG 2.2 AA）、键盘导航与无障碍语义审查时 |
+| `motion-ui` | 在 Next.js / React 页面中添加 UI 动效、页面转场、微交互动画时 |
+| `motion-patterns` | 按钮、Modal、Toast、Stagger 等常用 UI 动效标准化实现时 |
+| `clickhouse-io` | ClickHouse 分析库 DDL 设计、分区主键优化、批量导入与分析查询优化时 |
+| `data-throughput-accelerator` | 大数据摄取、批量写入、异步 ETL 与高吞吐量数据管道设计时 |
+| `content-hash-cache-pattern` | 基于内容哈希（SHA-256）实现跨路径与精确缓存控制时 |
+| `security-review` | 处理敏感输入、鉴权授权、Secrets 处理、API 端点安全审查（OWASP）时 |
+| `security-bounty-hunter` | 排查严重越权、远程代码执行、注入漏洞与高危安全隐患时 |
+| `production-audit` | 生产就绪度检查、单点故障排查、探针与高可用容灾配置时 |
+| `docker-patterns` | 编写或优化 Dockerfile、多阶段构建、Docker Compose 编排时 |
+| `deployment-patterns` | CI/CD Pipeline 设计、发布流程、金丝雀与回滚策略时 |
+| `e2e-testing` | 编写 Playwright 端到端测试、Page Object Model 与回归套件时 |
+| `tdd-workflow` | 执行测试驱动开发（TDD）完整 Red-Green-Refactor 流程与高覆盖率保证时 |
+| `using-superpowers` | 每次对话开始、面临任何开发任务前，优先检索与匹配可用 Skills 并规范执行 |
+| `brainstorming` | 接到新需求、做新特性/组件设计前，深入探索用户意图、技术权衡与架构边界 |
+| `systematic-debugging` | 遭遇代码缺陷、测试失败或意外行为时，强制按“重现-分析-假说证伪-修复”四步科学排错 |
+| `writing-plans` | 收到多步骤复杂任务时，动手写代码前先撰写带检查点与可验证步骤的结构化执行计划 |
+| `executing-plans` | 配合执行实现计划，分步验证，并在关键检查点与用户对齐确认 |
+| `verification-before-completion` | 声称修复/完成或 Git 提交前，强制运行验证命令并检查控制台真实输出证据 |
+| `receiving-code-review` | 收到 Code Review 反馈时，进行理性技术推导与实际验证，杜绝盲目认同或机械盲改 |
+| `using-git-worktrees` | 开启需要高度隔离的特性开发或执行多任务计划时，使用 Git Worktree 创建干净工作区 |
 
 ## 严格遵循事项 (Guardrails)
 
