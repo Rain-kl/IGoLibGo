@@ -5,6 +5,10 @@ export type { ImageQuality } from './utils';
 export type {
   UploadImageResponse,
   Upload,
+  UploadMetadata,
+  ListUploadsQuery,
   ListUploadsResponse,
   FileStatsResponse,
+  TrendItem,
+  DistributionItem,
 } from './types';

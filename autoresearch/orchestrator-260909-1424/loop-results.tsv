@@ -1,0 +1,53 @@
+# metric_direction: lower_is_better
+cycle	timestamp	commit	units	delta	guard	status	description
+0	2026-09-09T14:24:55+08:00	baseline	53	0	PASS	baseline	Initial project baseline
+1	2026-09-09T06:25:39Z	5fb0ed4	48	-5	PASS	keep	modernize logger and ringbuffer
+2	2026-09-09T06:26:05Z	569dbba	47	-1	PASS	keep	modernize custom_types Scan to any
+3	2026-09-09T06:26:35Z	f754232	45	-2	PASS	keep	modernize admin user error lookup to slices.Contains
+4	2026-09-09T06:26:55Z	d80fa6a	43	-2	PASS	keep	modernize map[string]interface{} in admin dto
+5	2026-09-09T06:27:19Z	1d358e7	41	-2	PASS	keep	modernize db file size calculation with max
+6	2026-09-09T06:27:44Z	a641531	40	-1	PASS	keep	simplify pagination offset with max
+7	2026-09-09T06:28:07Z	f35a71a	39	-1	PASS	keep	modernize Split to SplitSeq in admin log service
+8	2026-09-09T06:28:43Z	b985c42	37	-2	PASS	keep	modernize updater asset name lookup with slices.Contains
+9	2026-09-09T06:29:03Z	62658ed	35	-2	PASS	keep	modernize cap solver loops using range over integer
+10	2026-09-09T06:29:31Z	2d6e5a0	34	-1	PASS	keep	simplify nonce TTL calculation with max
+11	2026-09-09T06:29:56Z	d553e9a	33	-1	PASS	keep	simplify scope inclusion check with slices.Contains
+12	2026-09-09T06:30:28Z	3df70b2	32	-1	PASS	keep	simplify memory store getLocked helper signature
+13	2026-09-09T06:31:02Z	bb2c974	31	-1	PASS	keep	modernize NotificationMessage.Flatten with maps.Copy
+14	2026-09-09T06:31:30Z	765f127	30	-1	PASS	keep	modernize credentials map copy with maps.Copy
+15	2026-09-09T06:32:21Z	d640df3	29	-1	PASS	keep	simplify ID param parsing in msg_gateway controller
+16	2026-09-09T06:33:17Z	8e66811	28	-1	PASS	keep	use Header.Clone in risk_control middleware
+17	2026-09-09T06:33:44Z	aef3c9c	27	-1	PASS	keep	modernize Split to SplitSeq in upload ingest helpers
+18	2026-09-09T06:34:20Z	1eca346	26	-1	PASS	keep	modernize CutPrefix in upload test_helpers
+19	2026-09-09T06:34:42Z	53f1ddd	25	-1	PASS	keep	modernize migrated counter with atomic.Int64
+20	2026-09-09T06:35:11Z	80f3754	22	-3	PASS	keep	modernize extension matching with slices.Contains
+21	2026-09-09T06:35:33Z	73a0dcf	21	-1	PASS	keep	modernize AppendLog variadic args to any
+22	2026-09-09T06:36:01Z	bbf54a2	17	-4	PASS	keep	modernize MakeRedisClient interface to any in asynq_worker
+23	2026-09-09T06:36:23Z	758dd54	16	-1	PASS	keep	modernize Split to SplitSeq in driver_http middlewares
+24	2026-09-09T06:36:47Z	7dfefa1	12	-4	PASS	keep	modernize gorm logger arguments to any
+25	2026-09-09T06:37:29Z	3ce9563	10	-2	PASS	keep	simplify OSS and WebDAV backend constructors
+26	2026-09-09T06:38:03Z	4409b52	9	-1	PASS	keep	modernize memory limiter loop using range over int
+27	2026-09-09T06:38:36Z	fc8c000	8	-1	PASS	keep	modernize map copy with maps.Copy in ram manager
+28	2026-09-09T06:39:04Z	5c35765	6	-2	PASS	keep	modernize pattern suffix trimming with strings.CutSuffix
+29	2026-09-09T06:39:38Z	d265d07	5	-1	PASS	keep	modernize MapSource map initialization with maps.Copy
+30	2026-09-09T06:40:12Z	6e810fb	3	-2	PASS	keep	modernize reverse iteration with slices.Backward in Context.Dispose
+31	2026-09-09T06:40:50Z	4ab665e	0	-3	PASS	keep	modernize reverse driver and fiber shutdown loops with slices.Backward
+32	2026-09-09T06:41:47Z	c77a68a	0	0	PASS	keep	use standard http.MethodOptions in cors middleware
+33	2026-09-09T06:42:31Z	7725c7b	0	0	PASS	keep	fix duplicate words in logstore and inproc worker
+34	2026-09-09T06:43:28Z	8eeac78	0	0	PASS	keep	replace fmt.Sprintf with strconv.Itoa in redis tracing
+35	2026-09-09T06:43:56Z	4c7f618	0	0	PASS	keep	replace fmt.Errorf with errors.New in batchwriter config
+36	2026-09-09T06:44:39Z	ab7e720	0	0	PASS	keep	define ErrCacheMiss sentinel error in auth dao
+37	2026-09-09T06:45:37Z	a789205	0	0	PASS	keep	replace fmt.Sprintf with strconv integer formatting in admin db
+38	2026-09-09T06:46:44Z	1089822	0	0	PASS	keep	replace fmt.Errorf with errors.New in qq and telegram adapters
+39	2026-09-09T06:48:00Z	8817f29	0	0	PASS	keep	use ErrClickHouseNotInitialized and ErrClickHouseGormNotInitialized in logstore
+40	2026-09-09T06:48:21Z	90f1504	0	0	PASS	keep	use ErrClickHouseNotInitialized in clickhouse user access log store
+41	2026-09-09T06:48:49Z	7f2817b	0	0	PASS	keep	replace fmt.Errorf with errors.New in ClickHouse initialization
+42	2026-09-09T06:49:26Z	e83d12c	0	0	PASS	keep	replace fmt.Errorf with errors.New in local objectstore backend
+43	2026-09-09T06:49:49Z	ada19f8	0	0	PASS	keep	replace fmt.Errorf with errors.New in storage migration task
+44	2026-09-09T06:50:28Z	4f4ca88	0	0	PASS	keep	optimize duplicate filename formatting in batch download handler
+45	2026-09-09T06:50:54Z	a4182df	0	0	PASS	keep	simplify banner string formatting and eliminate redundant fmt.Sprintf
+46	2026-09-09T06:51:38Z	c127677	0	0	PASS	keep	optimize email notification task message formatting
+47	2026-09-09T06:52:08Z	2cc4356	0	0	PASS	keep	use slices.Clone for batch slicing in flush
+48	2026-09-09T06:52:44Z	4c2a837	0	0	PASS	keep	use integer range loops in config and config_value extpoints
+49	2026-09-09T06:53:10Z	778b12c	0	0	PASS	keep	use integer range loop in Start
+50	2026-09-09T06:53:35Z	6564efc	0	0	PASS	keep	use integer range loops in LogRingBuffer Write and QueryBefore

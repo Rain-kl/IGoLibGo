@@ -11,6 +11,7 @@ import (
 	"Wavelet/plugins/domain/msg_gateway/model/do"
 	"Wavelet/plugins/domain/msg_gateway/service"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,7 +32,7 @@ type Adapter struct {
 // New constructs a Telegram adapter. Call service.Register from the runner.
 func New(cfg do.ChannelConfig, onInbound service.Handler) (service.Channel, error) {
 	if strings.TrimSpace(cfg.Credentials["bot_token"]) == "" {
-		return nil, fmt.Errorf("telegram: bot_token is required")
+		return nil, errors.New("telegram: bot_token is required")
 	}
 	return &Adapter{cfg: cfg, onInbound: onInbound}, nil
 }
@@ -102,7 +103,7 @@ func (a *Adapter) Disconnect(_ context.Context) error {
 // Send replies to a private chat.
 func (a *Adapter) Send(_ context.Context, to do.Recipient, msg do.OutboundMessage) error {
 	if a.bot == nil {
-		return fmt.Errorf("telegram: not connected")
+		return errors.New("telegram: not connected")
 	}
 	chatID, err := strconv.ParseInt(to.ChatID, 10, 64)
 	if err != nil {

@@ -5,6 +5,7 @@ package core
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 
 	"Wavelet/core/extpoints"
@@ -40,9 +41,7 @@ type MapSource struct {
 // NewMapSource creates a new MapSource with the provided key-value mappings.
 func NewMapSource(values map[string]any) *MapSource {
 	vals := make(map[string]any, len(values))
-	for k, v := range values {
-		vals[k] = v
-	}
+	maps.Copy(vals, values)
 	return &MapSource{
 		values: vals,
 		env:    make(map[string]string),

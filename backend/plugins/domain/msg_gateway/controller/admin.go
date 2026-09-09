@@ -43,7 +43,7 @@ func ListAdminChannels(c *gin.Context) {
 }
 
 func parseAdminChannelID(c *gin.Context) (uint64, bool) {
-	return parseUint64Param(c, "id", consts.ErrInvalidChannelID)
+	return parseUint64ID(c, consts.ErrInvalidChannelID)
 }
 
 func handleAdminChannelError(c *gin.Context, err error, fallback func(c *gin.Context, msg string)) {

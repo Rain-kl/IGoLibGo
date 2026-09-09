@@ -15,7 +15,7 @@ func BatchInsert(ctx context.Context, logs []UserAccessLog) error {
 	}
 	conn := getChConn()
 	if conn == nil {
-		return fmt.Errorf("clickhouse connection is not initialized")
+		return ErrClickHouseNotInitialized
 	}
 
 	batch, err := conn.PrepareBatch(ctx, UserAccessLog{}.BatchInsertSQL())

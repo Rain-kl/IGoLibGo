@@ -4,7 +4,8 @@
 package util
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 	"time"
 )
@@ -64,13 +65,16 @@ func SortAndLimitRecords[T IdentifiableTimeRecord](rows []T, limit int) []T {
 	if len(rows) == 0 {
 		return rows
 	}
-	sort.Slice(rows, func(i, j int) bool {
-		ti := rows[i].GetTime()
-		tj := rows[j].GetTime()
-		if ti.Equal(tj) {
-			return rows[i].GetID() > rows[j].GetID()
+	slices.SortFunc(rows, func(a, b T) int {
+		ta := a.GetTime()
+		tb := b.GetTime()
+		if ta.Equal(tb) {
+			return cmp.Compare(b.GetID(), a.GetID())
 		}
-		return ti.After(tj)
+		if ta.After(tb) {
+			return -1
+		}
+		return 1
 	})
 	if limit > 0 && len(rows) > limit {
 		rows = rows[:limit]

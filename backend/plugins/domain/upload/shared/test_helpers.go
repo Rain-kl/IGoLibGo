@@ -193,8 +193,7 @@ func (a *MockAuthService) DisallowTokenAuthMiddleware() any {
 func (a *MockAuthService) GetCurrentUser(ctx context.Context) (*contracts.UserDTO, error) {
 	if c, ok := ctx.(*gin.Context); ok {
 		authHeader := c.GetHeader("Authorization")
-		if strings.HasPrefix(authHeader, "Bearer ") {
-			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenStr, ok := strings.CutPrefix(authHeader, "Bearer "); ok {
 			tokenHash := fmt.Sprintf("%x", sha256.Sum256([]byte(tokenStr)))
 			var tokenRecord struct {
 				UserID uint64
@@ -281,6 +280,7 @@ func (a *MockAuthService) ToggleAuthSource(_ context.Context, _ uint64) (*contra
 
 // SetupTestEnv initializes test helper environment and binds DB, Cache, Storage, Auth mocks to shared services.
 func SetupTestEnv(t *testing.T) (*gorm.DB, func()) {
+	t.Helper()
 	dbConn, _, cleanup := testhelper.SetupTestEnvironment(t)
 	dbSvc := &MockDBService{DBInstance: dbConn}
 	cacheSvc := NewMockCacheService()

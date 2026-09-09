@@ -204,5 +204,3 @@ export const NewYearDecorations = {
   Fu: FuCharacter,
   FireworksEffect,
 };
-
-export default NewYearDecorations;

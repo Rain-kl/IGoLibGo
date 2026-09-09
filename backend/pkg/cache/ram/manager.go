@@ -7,6 +7,7 @@ import (
 	"Wavelet/pkg/util"
 	"context"
 	"errors"
+	"maps"
 	"sync"
 	"time"
 )
@@ -118,11 +119,9 @@ func Set(item CacheItem) {
 	defer lock.Unlock()
 
 	currentMap, ok := managerCache.GetIfPresent(item.Type)
-	newMap := make(map[string]cacheEntry)
+	newMap := make(map[string]cacheEntry, len(currentMap)+1)
 	if ok {
-		for k, v := range currentMap {
-			newMap[k] = v
-		}
+		maps.Copy(newMap, currentMap)
 	}
 
 	var expireAt time.Time

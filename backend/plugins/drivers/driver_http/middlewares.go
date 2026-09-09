@@ -149,8 +149,7 @@ func isOriginAllowed(ctx context.Context, origin string) bool {
 	if err != nil || val == "" {
 		return false
 	}
-	allowedOrigins := strings.Split(val, ",")
-	for _, allowed := range allowedOrigins {
+	for allowed := range strings.SplitSeq(val, ",") {
 		allowed = strings.TrimRight(strings.TrimSpace(allowed), "/")
 		if allowed != "" && strings.EqualFold(allowed, origin) {
 			return true
@@ -169,7 +168,7 @@ func corsMiddleware() gin.HandlerFunc {
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 		}
 
-		if c.Request.Method == "OPTIONS" {
+		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}

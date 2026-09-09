@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"sync"
 	"time"
 
@@ -382,8 +382,8 @@ func (c *Cache) loadTracker() error {
 	}
 
 	// Sort by ModTime ascending (oldest first) so we rebuild LRU correctly
-	sort.Slice(loadedItems, func(i, j int) bool {
-		return loadedItems[i].modTime.Before(loadedItems[j].modTime)
+	slices.SortFunc(loadedItems, func(a, b loadedItem) int {
+		return a.modTime.Compare(b.modTime)
 	})
 
 	// Populate LRU (PushFront so that newest items are at the front, oldest at the back)

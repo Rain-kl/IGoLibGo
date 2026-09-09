@@ -11,7 +11,11 @@ import (
 )
 
 // ErrMigrating 表示日志数据库正在迁移，当前禁止写入。
-var ErrMigrating = errors.New("log database is migrating, writes are disabled")
+var (
+	ErrMigrating                    = errors.New("log database is migrating, writes are disabled")
+	ErrClickHouseNotInitialized     = errors.New("clickhouse connection is not initialized")
+	ErrClickHouseGormNotInitialized = errors.New("clickhouse gorm connection is not initialized")
+)
 
 // UserAccessLogStore 用户访问日志（w_user_access_logs）。
 type UserAccessLogStore interface {

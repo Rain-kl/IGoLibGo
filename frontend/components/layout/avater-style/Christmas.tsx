@@ -114,5 +114,3 @@ export const ChristmasDecorations = {
   Hat: ChristmasHat,
   SnowEffect: SnowEffect,
 };
-
-export default ChristmasDecorations;

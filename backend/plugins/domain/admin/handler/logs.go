@@ -99,9 +99,15 @@ func HandleLogWebSocket(c *gin.Context) {
 			if !ok {
 				return
 			}
-			data, _ := json.Marshal(entry)
+			data, err := json.Marshal(entry)
+			if err != nil {
+				continue
+			}
 			msg := wsMessage{Type: "log", Data: data}
-			payload, _ := json.Marshal(msg)
+			payload, err := json.Marshal(msg)
+			if err != nil {
+				continue
+			}
 			if err := conn.WriteMessage(1, payload); err != nil {
 				return
 			}

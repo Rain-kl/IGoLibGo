@@ -124,7 +124,7 @@ func (q *InprocQueue) Start(ctx context.Context) {
 	if q.baseCtx == nil {
 		q.baseCtx = ctx
 	}
-	for i := 0; i < q.concurrency; i++ {
+	for range q.concurrency {
 		q.wg.Add(1)
 		util.Go(func() {
 			defer q.wg.Done()
@@ -336,7 +336,7 @@ func (q *InprocQueue) failExecution(ctx context.Context, msg TaskMessage, execEr
 		"duration":             duration.Milliseconds(),
 	}
 	if err := db.Model(&taskExecution{}).Where("task_id = ?", msg.ID).Updates(updates).Error; err != nil {
-		logger.ErrorF(ctx, "driver_inproc_worker: mark failed failed taskID=%s: %v", msg.ID, err)
+		logger.ErrorF(ctx, "driver_inproc_worker: mark execution failed error taskID=%s: %v", msg.ID, err)
 		return
 	}
 	q.appendExecutionLog(ctx, msg.ID, fmt.Sprintf("[系统] 任务执行失败，耗时: %d ms，错误原因: %v", duration.Milliseconds(), execErr))

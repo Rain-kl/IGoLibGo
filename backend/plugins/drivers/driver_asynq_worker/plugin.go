@@ -204,7 +204,7 @@ func (p *Plugin) Start(_ context.Context) error {
 	RedisOpt = opt
 
 	if getRedisClient() == nil {
-		if mk, ok := opt.(interface{ MakeRedisClient() interface{} }); ok {
+		if mk, ok := opt.(interface{ MakeRedisClient() any }); ok {
 			if client, ok := mk.MakeRedisClient().(redis.UniversalClient); ok {
 				SetRedisClient(client)
 			}

@@ -79,9 +79,9 @@ type GetTableDataRequest struct {
 
 // TableDataResponse 动态数据表响应结构体
 type TableDataResponse struct {
-	Columns []string                 `json:"columns"`
-	Total   int64                    `json:"total"`
-	Results []map[string]interface{} `json:"results"`
+	Columns []string         `json:"columns"`
+	Total   int64            `json:"total"`
+	Results []map[string]any `json:"results"`
 }
 
 // ExecuteSQLRequest 执行自定义 SQL 请求结构体
@@ -91,11 +91,11 @@ type ExecuteSQLRequest struct {
 
 // ExecuteSQLResponse 执行自定义 SQL 响应结构体
 type ExecuteSQLResponse struct {
-	Type            string                   `json:"type"` // "select" 或 "exec"
-	Columns         []string                 `json:"columns,omitempty"`
-	Results         []map[string]interface{} `json:"results,omitempty"`
-	AffectedRows    int64                    `json:"affected_rows"`
-	ExecutionTimeMs int64                    `json:"execution_time_ms"`
+	Type            string           `json:"type"` // "select" 或 "exec"
+	Columns         []string         `json:"columns,omitempty"`
+	Results         []map[string]any `json:"results,omitempty"`
+	AffectedRows    int64            `json:"affected_rows"`
+	ExecutionTimeMs int64            `json:"execution_time_ms"`
 }
 
 // DatabaseInfoResponse 数据库信息响应结构体

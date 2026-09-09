@@ -197,3 +197,61 @@ func TestDiskCacheLRUEviction(t *testing.T) {
 		t.Errorf("k3 should exist: %v", err)
 	}
 }
+
+func TestDiskCacheStatusAndPolicy(t *testing.T) {
+	testDir := t.TempDir()
+
+	c := New(testDir)
+	defer func() { _ = c.Clear() }()
+
+	_ = c.Set("item1", []byte("data1"), DefaultExpiration)
+	_ = c.Set("item2", []byte("data2"), DefaultExpiration)
+
+	st := c.Status()
+	if st.KeysCount != 2 {
+		t.Errorf("expected KeysCount = 2, got %d", st.KeysCount)
+	}
+	if st.BasePath != testDir {
+		t.Errorf("expected BasePath = %q, got %q", testDir, st.BasePath)
+	}
+
+	// Update policy to smaller size and disable LRU
+	c.UpdatePolicy(50, 30, false)
+	st = c.Status()
+	if st.MaxSizeMB != 50 {
+		t.Errorf("expected MaxSizeMB = 50, got %d", st.MaxSizeMB)
+	}
+	if st.TTLMinutes != 30 {
+		t.Errorf("expected TTLMinutes = 30, got %d", st.TTLMinutes)
+	}
+	if st.LRUEnabled != false {
+		t.Errorf("expected LRUEnabled = false, got %v", st.LRUEnabled)
+	}
+}
+
+func TestDiskCacheCleanExpired(t *testing.T) {
+	testDir := t.TempDir()
+
+	c := New(testDir)
+	defer func() { _ = c.Clear() }()
+
+	// Set short TTL item and long TTL item
+	_ = c.Set("short", []byte("short-val"), 50*time.Millisecond)
+	_ = c.Set("long", []byte("long-val"), 10*time.Minute)
+
+	time.Sleep(80 * time.Millisecond)
+
+	// Call cleanExpired directly
+	c.cleanExpired()
+
+	st := c.Status()
+	if st.KeysCount != 1 {
+		t.Errorf("expected KeysCount = 1 after cleanExpired, got %d", st.KeysCount)
+	}
+	if _, err := c.Get("short"); err != ErrCacheMiss {
+		t.Errorf("expected short to be evicted, got err = %v", err)
+	}
+	if _, err := c.Get("long"); err != nil {
+		t.Errorf("expected long to remain, got err = %v", err)
+	}
+}

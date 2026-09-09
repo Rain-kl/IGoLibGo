@@ -31,13 +31,13 @@ type webDAVBackend struct {
 	basePath string
 }
 
-func newWebDAVBackend(cfg WebDAVConfig) (*webDAVBackend, error) {
+func newWebDAVBackend(cfg WebDAVConfig) *webDAVBackend {
 	return &webDAVBackend{
 		endpoint: strings.TrimRight(cfg.Endpoint, "/"),
 		username: cfg.Username,
 		password: cfg.Password,
 		basePath: strings.Trim(cfg.BasePath, "/"),
-	}, nil
+	}
 }
 
 func (b *webDAVBackend) newClient(ctx context.Context) *gowebdav.Client {

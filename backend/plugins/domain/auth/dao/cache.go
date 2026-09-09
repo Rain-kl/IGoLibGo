@@ -10,10 +10,14 @@ import (
 	"Wavelet/plugins/domain/auth/consts"
 	"Wavelet/plugins/domain/auth/model/do"
 	"context"
+	"errors"
 	"fmt"
 )
 
 var (
+	// ErrCacheMiss indicates the requested item was not in RAM or L2 cache.
+	ErrCacheMiss = errors.New("cache miss")
+
 	tokenRAM = ram.MustNew[string, *do.CachedToken](ram.Options{MaximumSize: 2048})
 	userRAM  = ram.MustNew[uint64, *contracts.UserDTO](ram.Options{MaximumSize: 2048})
 )
@@ -42,7 +46,7 @@ func (d *DAO) GetCachedToken(ctx context.Context, tokenHash string) (*do.CachedT
 			return &token, nil
 		}
 	}
-	return nil, fmt.Errorf("cache miss")
+	return nil, ErrCacheMiss
 }
 
 // SetCachedToken 设置 Token 缓存
@@ -79,7 +83,7 @@ func (d *DAO) GetCachedUser(ctx context.Context, userID uint64) (*contracts.User
 			return &u, nil
 		}
 	}
-	return nil, fmt.Errorf("cache miss")
+	return nil, ErrCacheMiss
 }
 
 // SetCachedUser 设置 UserDTO 缓存

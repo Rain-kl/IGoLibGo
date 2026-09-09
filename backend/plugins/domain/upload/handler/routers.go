@@ -192,7 +192,7 @@ func DownloadFile(c *gin.Context) {
 		}
 	}
 
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename*=UTF-8''%s", url.PathEscape(fileName)))
+	c.Header("Content-Disposition", "attachment; filename*=UTF-8''"+url.PathEscape(fileName))
 	filesrv.ServeUpload(c, upload)
 }
 
@@ -261,7 +261,7 @@ func BatchDownloadFiles(c *gin.Context) {
 			usedNames[fileName] = count + 1
 			ext := filepath.Ext(fileName)
 			base := strings.TrimSuffix(fileName, ext)
-			fileName = fmt.Sprintf("%s_%d%s", base, count, ext)
+			fileName = base + "_" + strconv.Itoa(count) + ext
 		} else {
 			usedNames[fileName] = 1
 		}

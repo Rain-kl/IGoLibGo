@@ -20,7 +20,7 @@ type ossBackend struct {
 	cdnURL    string
 }
 
-func newOSSBackend(cfg ObjectConfig) (*ossBackend, error) {
+func newOSSBackend(cfg ObjectConfig) *ossBackend {
 	options := oss.LoadDefaultConfig().
 		WithCredentialsProvider(credentials.NewStaticCredentialsProvider(cfg.AccessKeyID, cfg.SecretAccessKey)).
 		WithRegion(cfg.Region)
@@ -32,7 +32,7 @@ func newOSSBackend(cfg ObjectConfig) (*ossBackend, error) {
 		bucket:    cfg.Bucket,
 		keyPrefix: strings.Trim(cfg.KeyPrefix, "/"),
 		cdnURL:    strings.TrimRight(cfg.CDNURL, "/"),
-	}, nil
+	}
 }
 
 func (b *ossBackend) Put(ctx context.Context, key string, body io.Reader, _ int64, _ string) (PutResult, error) {

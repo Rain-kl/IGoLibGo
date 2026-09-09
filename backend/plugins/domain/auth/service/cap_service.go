@@ -69,10 +69,7 @@ func (m *CaptchaManager) Redeem(ctx context.Context, token string, solutions []i
 	}
 
 	now := time.Now().UnixNano() / int64(time.Millisecond)
-	nonceTTL := time.Duration(payload.Expires-now) * time.Millisecond
-	if nonceTTL < time.Second {
-		nonceTTL = time.Second
-	}
+	nonceTTL := max(time.Second, time.Duration(payload.Expires-now)*time.Millisecond)
 
 	set, err := m.store.SetNX(ctx, nonceKey, "1", nonceTTL)
 	if err != nil {

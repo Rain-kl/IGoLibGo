@@ -65,12 +65,12 @@ func logStoreMigrating(ctx context.Context) bool {
 }
 
 // loadMigrationStores 解析迁移源（当前生效库）与目标引擎库。
-func loadMigrationStores(ctx context.Context, targetEngine string) (src, dst *logstore.Store, err error) {
-	src, err = logstore.Active(ctx)
+func loadMigrationStores(ctx context.Context, targetEngine string) (*logstore.Store, *logstore.Store, error) {
+	src, err := logstore.Active(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	dst, err = logstore.BuildForMigration(ctx, targetEngine)
+	dst, err := logstore.BuildForMigration(ctx, targetEngine)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -30,19 +30,19 @@ func (l *gormZapLogger) LogMode(level gormLogger.LogLevel) gormLogger.Interface 
 	return &clone
 }
 
-func (l *gormZapLogger) Info(ctx context.Context, fmt string, args ...interface{}) {
+func (l *gormZapLogger) Info(ctx context.Context, fmt string, args ...any) {
 	if l.logLevel >= gormLogger.Info {
 		logger.InfoF(ctx, fmt, args...)
 	}
 }
 
-func (l *gormZapLogger) Warn(ctx context.Context, fmt string, args ...interface{}) {
+func (l *gormZapLogger) Warn(ctx context.Context, fmt string, args ...any) {
 	if l.logLevel >= gormLogger.Warn {
 		logger.WarnF(ctx, fmt, args...)
 	}
 }
 
-func (l *gormZapLogger) Error(ctx context.Context, fmt string, args ...interface{}) {
+func (l *gormZapLogger) Error(ctx context.Context, fmt string, args ...any) {
 	if l.logLevel >= gormLogger.Error {
 		logger.ErrorF(ctx, fmt, args...)
 	}
@@ -64,7 +64,7 @@ func (l *gormZapLogger) Trace(ctx context.Context, begin time.Time, fc func() (s
 	}
 }
 
-func formatRows(rows int64) interface{} {
+func formatRows(rows int64) any {
 	if rows == -1 {
 		return "-"
 	}

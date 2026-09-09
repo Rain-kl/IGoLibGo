@@ -11,7 +11,6 @@ import (
 	"Wavelet/pkg/logger"
 	"Wavelet/plugins/domain/risk_control/logstore"
 	"encoding/json"
-	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -67,10 +66,7 @@ func RiskControlMiddleware() gin.HandlerFunc {
 		var headersStr string
 		if c.Request.Header != nil {
 			// 克隆 Header，避免污染原 HTTP 请求的 Header 对象
-			clonedHeaders := make(http.Header)
-			for k, v := range c.Request.Header {
-				clonedHeaders[k] = v
-			}
+			clonedHeaders := c.Request.Header.Clone()
 			clonedHeaders.Del("Cookie")
 
 			if headersBytes, err := json.Marshal(clonedHeaders); err == nil {

@@ -75,8 +75,7 @@ func validateAllowedExtension(ctx context.Context, ext string) error {
 		return errors.New(shared.ErrUnsupportedFormat)
 	}
 
-	allowedExts := strings.Split(strings.ToLower(val), ",")
-	for _, allowedExt := range allowedExts {
+	for allowedExt := range strings.SplitSeq(strings.ToLower(val), ",") {
 		if strings.TrimSpace(allowedExt) == ext {
 			return nil
 		}

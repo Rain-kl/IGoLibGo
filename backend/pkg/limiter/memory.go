@@ -109,7 +109,7 @@ func (m *MemoryLimiter) AllowN(_ context.Context, key string, rate Rate, n int) 
 		return entry.calcBlockedResult(rate.Limit, rate.Period, now), nil
 	}
 
-	for i := 0; i < n; i++ {
+	for range n {
 		entry.timestamps = append(entry.timestamps, now)
 	}
 

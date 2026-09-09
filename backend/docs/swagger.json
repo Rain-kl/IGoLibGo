@@ -7315,7 +7315,7 @@
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "additionalProperties": true
+                        "additionalProperties": {}
                     }
                 },
                 "type": {

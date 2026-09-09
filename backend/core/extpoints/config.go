@@ -221,7 +221,7 @@ func bindingStruct(target any, prefix string) (reflect.Value, error) {
 func walkConfigFields(t reflect.Type, prefix string) ([]configField, error) {
 	var out []configField
 
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		sf := t.Field(i)
 		if sf.PkgPath != "" {
 			continue

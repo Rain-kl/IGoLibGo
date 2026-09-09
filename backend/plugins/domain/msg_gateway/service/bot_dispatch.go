@@ -118,7 +118,7 @@ func parseBotDispatchPayload(payload []byte) (botDispatchPayload, error) {
 	return p, nil
 }
 
-func dispatchOnChannel(ctx context.Context, row *entity.MessageChannel, userID uint64, text string) (sent, failed int) {
+func dispatchOnChannel(ctx context.Context, row *entity.MessageChannel, userID uint64, text string) (int, int) {
 	factory, ok := Lookup(row.Type)
 	if !ok {
 		logger.ErrorF(ctx, "bot dispatch: %s type=%s", consts.ErrBotChannelNotRegistered, row.Type)
@@ -145,6 +145,7 @@ func dispatchOnChannel(ctx context.Context, row *entity.MessageChannel, userID u
 		logger.ErrorF(ctx, "bot dispatch: list bindings %d: %v", row.ID, err)
 		return 0, 1
 	}
+	var sent, failed int
 	for i := range bindings {
 		if userID != 0 && bindings[i].UserID != userID {
 			continue

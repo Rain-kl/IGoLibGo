@@ -9,6 +9,7 @@ package batchwriter
 import (
 	"Wavelet/pkg/util"
 	"context"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -206,7 +207,7 @@ func (w *Writer[T]) run() {
 		if len(batch) == 0 {
 			return
 		}
-		items := append([]T(nil), batch...)
+		items := slices.Clone(batch)
 		if err := w.flush(w.workerCtx, items); err != nil {
 			w.flushErrors.Add(1)
 			if w.onFlushError != nil {

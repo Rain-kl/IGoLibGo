@@ -257,7 +257,7 @@ func asStringMap(raw any) (map[string]any, bool) {
 
 // fieldNameForPath maps a declared config path back to the Go struct field carrying it.
 func fieldNameForPath(t reflect.Type, path string) string {
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		if t.Field(i).Tag.Get("config") == path {
 			return t.Field(i).Name
 		}

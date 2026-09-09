@@ -1,0 +1,51 @@
+cycle	commit	status	description
+51	031e1ff	PASS	refactor(auth,msg_gateway): use integer range loops in pow cap, prng, and push template
+52	241a53e	PASS	refactor(risk_control): use integer range loops in access_log_stats and gorm logstore
+53	3b149cf	PASS	perf(cmd): preallocate appOpts slice in newWaveletApp
+54	3a04ca7	PASS	perf(cmd): optimize sql formatting and use errors.New in gooseEngine
+55	a9c8b85	PASS	perf(upload): use string concatenation for Content-Disposition in DownloadFile
+56	0ec43b9	PASS	refactor(admin): use canonical header name X-Github-Api-Version in updater
+57	de2ac5e	PASS	refactor(util): eliminate named return in GetIP
+58	662c603	PASS	refactor(util): eliminate named return in Seconds2Time
+59	62b73cd	PASS	refactor(msg_gateway): eliminate named return in dispatchOnChannel
+60	19707f2	PASS	refactor(risk_control): eliminate named return in loadMigrationStores
+61	cd3d032	PASS	refactor(driver_asynq_cron): eliminate named return in resolveTaskScheduleMeta
+62	4c72b1f	PASS	refactor(core): eliminate named return in App.evaluateGateLocked
+63	476c1ef	PASS	fix(admin): check json.Marshal errors in admin logs WebSocket streaming
+64	6ad4a63	PASS	fix(msg_gateway): check json.Marshal error in EscapeJSONString
+65	e2c5ae7	PASS	fix(driver_inproc_cron): check json.Marshal error when serializing schedule payload
+66	097081b	PASS	test(testhelper,upload): mark test helper functions with t.Helper()
+67	4466436	PASS	refactor(frontend): remove duplicate default exports in Christmas and NewYear decorations
+68	eb51e98	PASS	test(batchwriter): modernize test iteration loops with integer range
+69	ec0334e	PASS	perf(cache/disk): modernize LRU slice sort with slices.SortFunc and time.Compare
+70	79e32b6	PASS	refactor(admin): standardize Template TableName method receiver to pointer
+71	3f13073	PASS	refactor(auth): standardize AuthSource TableName method receiver to pointer
+72	097fb37	PASS	refactor(msg_gateway): standardize PushChannel and PushEvent TableName method receivers to pointer
+73	22377ac	PASS	refactor(user): standardize User TableName method receiver to pointer
+74	3283ec5	PASS	refactor(frontend): export missing upload types in service index
+75	fe40075	PASS	refactor(frontend): export missing push types in services index
+76	3e45668	PASS	refactor(frontend): export MessageChannelType and MessageChannelField in services index
+77	d513dd1	PASS	refactor(user): rename appendTaskLog to appendTaskLogf to conform to printf naming conventions
+78	c95e6c9	PASS	refactor(storage): wrap filesystem errors with context in local backend Put
+79	6cbe70d	PASS	refactor(storage): wrap stat and deletion errors with context in local backend
+80	2d24ee0	PASS	refactor(storage): wrap absolute path resolution errors in local backend
+81	7dbca07	PASS	test(storage/objectstore): add unit tests for getHTTPObject
+82	89cc8cc	PASS	test(storage/objectstore): add unit tests for S3 backend key resolution
+83	2d6629e	PASS	test(storage/objectstore): add unit tests for WebDAV backend key resolution
+84	a808511	PASS	test(storage/objectstore): add unit tests for config validation and secret masking
+85	1a56c6c	PASS	test(cache/disk): add unit tests for Status, UpdatePolicy, and cleanExpired
+86	a5f2093	PASS	perf(util): modernize SortAndLimitRecords with slices.SortFunc and add unit tests
+87	2ed4788	PASS	test(util): add unit tests for version parsing and comparison
+88	8ae3a32	PASS	test(util): add unit tests for string deref, email masking, trimming, unique ID, and interface conversion
+89	880fc58	PASS	test(util): add unit tests for IsLocalhost and Request HTTP utility
+90	e3efd34	PASS	test(util): add unit tests for StringArray Value and Scan
+91	4de5b26	PASS	test(contracts): add unit tests for UploadMetadataDTO Value and Scan
+92	024a8d4	PASS	test(httppool): add unit test for NewTransport with TraceFilter option
+93	ae8f04b	PASS	test(batchwriter): add unit test for unstarted Writer Running, TryEnqueue, and Stop
+94	7c23385	PASS	test(contracts): add unit tests for TaskExecutionDTO and TaskMetaDTO serialization
+95	2a27582	PASS	test(contracts): add unit tests for UserDTO and CreateUserRequest JSON serialization
+96	0825380	PASS	test(contracts): add unit tests for AuthSourceDTO and OAuthUserInfoDTO JSON serialization
+97	ac83926	PASS	test(contracts): add unit tests for domain events serialization
+98	0fefcd8	PASS	test(contracts): add unit tests for Rate and RateLimitResult serialization
+99	0b98c8b	PASS	test(contracts): add unit tests for StorageConfigDTO serialization
+100	b102177	PASS	test(contracts): add unit tests for SystemConfigDTO JSON serialization

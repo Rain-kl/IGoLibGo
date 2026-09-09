@@ -783,7 +783,7 @@ definitions:
         type: integer
       results:
         items:
-          additionalProperties: true
+          additionalProperties: {}
           type: object
         type: array
       type:

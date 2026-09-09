@@ -54,7 +54,10 @@ func RenderCustomPayload(template string, req do.CustomPushRequest) string {
 
 // EscapeJSONString renders s as a JSON string body without the surrounding quotes.
 func EscapeJSONString(s string) string {
-	b, _ := json.Marshal(s)
+	b, err := json.Marshal(s)
+	if err != nil {
+		return s
+	}
 	const minJSONLen = 2
 	if len(b) >= minJSONLen {
 		return string(b[1 : len(b)-1])

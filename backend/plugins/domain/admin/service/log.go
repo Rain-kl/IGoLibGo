@@ -67,7 +67,7 @@ func IsAllowedLogOrigin(ctx context.Context, origin, host string, extraHosts ...
 		return false
 	}
 	originToCheck := strings.TrimRight(strings.TrimSpace(origin), "/")
-	for _, allowed := range strings.Split(sc.Value, ",") {
+	for allowed := range strings.SplitSeq(sc.Value, ",") {
 		allowed = strings.TrimRight(strings.TrimSpace(allowed), "/")
 		if allowed != "" && strings.EqualFold(allowed, originToCheck) {
 			return true

@@ -45,7 +45,7 @@ func ListPushChannels(c *gin.Context) {
 
 // parsePushChannelID reads the path identifier of a push channel.
 func parsePushChannelID(c *gin.Context) (uint64, bool) {
-	return parseUint64Param(c, "id", consts.ErrInvalidChannelID)
+	return parseUint64ID(c, consts.ErrInvalidChannelID)
 }
 
 // handlePushChannelNotFoundError maps a missing channel row to 404, others to fallback.

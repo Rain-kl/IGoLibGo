@@ -6,6 +6,7 @@ package do
 import (
 	"Wavelet/plugins/domain/msg_gateway/consts"
 	pkgpush "Wavelet/plugins/domain/msg_gateway/push"
+	"maps"
 	"time"
 )
 
@@ -115,9 +116,7 @@ func (m NotificationMessage) Flatten() map[string]any {
 		consts.KeyContent: m.Content,
 		consts.KeyLevel:   m.Level,
 	}
-	for k, v := range m.Ext {
-		res[k] = v
-	}
+	maps.Copy(res, m.Ext)
 	return res
 }
 

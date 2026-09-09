@@ -10,8 +10,8 @@ import (
 	"Wavelet/plugins/domain/admin/model"
 	"Wavelet/plugins/domain/admin/service"
 	"errors"
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -166,7 +166,7 @@ func exportSQLite(c *gin.Context) {
 
 	c.Header("Content-Disposition", `attachment; filename="wavelet.db"`)
 	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Length", fmt.Sprintf("%d", fi.Size()))
+	c.Header("Content-Length", strconv.FormatInt(fi.Size(), 10))
 	c.Status(http.StatusOK)
 	http.ServeContent(c.Writer, c.Request, "wavelet.db", fi.ModTime(), f)
 }

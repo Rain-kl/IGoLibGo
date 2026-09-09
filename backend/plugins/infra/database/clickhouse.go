@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -40,7 +41,7 @@ func InitClickHouseWithConfig(cfg ClickHouseConfig) error {
 	}
 
 	if cfg.Database == "" {
-		return fmt.Errorf("[ClickHouse] database name is required (expected: wavelet)")
+		return errors.New("[ClickHouse] database name is required (expected: wavelet)")
 	}
 
 	opts := buildClickHouseOptions(cfg)

@@ -193,7 +193,7 @@ func (s *userAccessLogGormStore) GetDailyTrend(ctx context.Context, days int) ([
 		counts[r.Date] = r.Cnt
 	}
 	out := make([]DailyTrend, 0, days)
-	for i := 0; i < days; i++ {
+	for i := range days {
 		d := start.AddDate(0, 0, i).Format("2006-01-02")
 		out = append(out, DailyTrend{Date: d, Count: counts[d]})
 	}

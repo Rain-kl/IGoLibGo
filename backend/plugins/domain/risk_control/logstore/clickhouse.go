@@ -94,7 +94,7 @@ func (s *clickhouseUserAccessLogStore) DropExpiredPartitions(_ context.Context, 
 func (s *clickhouseUserAccessLogStore) MigrationRange(ctx context.Context) (time.Time, time.Time, error) {
 	conn := getChConn()
 	if conn == nil {
-		return time.Time{}, time.Time{}, fmt.Errorf("clickhouse connection is not initialized")
+		return time.Time{}, time.Time{}, ErrClickHouseNotInitialized
 	}
 	table := UserAccessLog{}.TableName()
 	var minTime, maxTime *time.Time
@@ -110,7 +110,7 @@ func (s *clickhouseUserAccessLogStore) MigrationRange(ctx context.Context) (time
 func (s *clickhouseUserAccessLogStore) ListForMigration(ctx context.Context, afterID uint64, limit int) ([]UserAccessLog, error) {
 	conn := getChConn()
 	if conn == nil {
-		return nil, fmt.Errorf("clickhouse connection is not initialized")
+		return nil, ErrClickHouseNotInitialized
 	}
 	if limit <= 0 {
 		limit = migrationPageSize

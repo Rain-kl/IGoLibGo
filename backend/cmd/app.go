@@ -24,6 +24,7 @@ import (
 	"Wavelet/plugins/infra/storage"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io/fs"
 	"log"
@@ -39,6 +40,7 @@ import (
 const (
 	defaultShutdownTimeout = 15 * time.Second
 	defaultHTTPAddr        = "127.0.0.1:8000"
+	baseAppOptionCount     = 3
 
 	// migrationAdvisoryLockKey serializes baseline + plugin Up across Postgres
 	// sessions (ASCII "wave"). SQLite is single-writer and needs no extra lock.
@@ -72,11 +74,12 @@ func newWaveletApp(profile core.Profile, opts ...core.AppOption) *core.App {
 		log.Fatalf("[App] load config source failed: %v\n", err)
 	}
 
-	appOpts := []core.AppOption{
+	appOpts := make([]core.AppOption, 0, baseAppOptionCount+len(opts))
+	appOpts = append(appOpts,
 		core.WithProfile(profile),
 		core.WithConfigSource(src),
 		core.WithShutdownTimeout(defaultShutdownTimeout),
-	}
+	)
 	appOpts = append(appOpts, opts...)
 
 	app := core.NewApp(appOpts...)
@@ -196,7 +199,7 @@ func (s *sharedStore) GetLatestVersion(ctx context.Context, db goosedb.DBTxConn)
 	p := s.placeholder
 	var version int64
 	err := db.QueryRowContext(ctx,
-		fmt.Sprintf("SELECT COALESCE(MAX(version_id), 0) FROM w_schema_versions WHERE plugin_id = %s", p(1)),
+		"SELECT COALESCE(MAX(version_id), 0) FROM w_schema_versions WHERE plugin_id = "+p(1),
 		s.pluginID).Scan(&version)
 	if err != nil {
 		return 0, err
@@ -207,7 +210,7 @@ func (s *sharedStore) GetLatestVersion(ctx context.Context, db goosedb.DBTxConn)
 func (s *sharedStore) ListMigrations(ctx context.Context, db goosedb.DBTxConn) ([]*goosedb.ListMigrationsResult, error) {
 	p := s.placeholder
 	rows, err := db.QueryContext(ctx,
-		fmt.Sprintf("SELECT version_id, TRUE FROM w_schema_versions WHERE plugin_id = %s ORDER BY version_id DESC", p(1)),
+		"SELECT version_id, TRUE FROM w_schema_versions WHERE plugin_id = "+p(1)+" ORDER BY version_id DESC",
 		s.pluginID)
 	if err != nil {
 		return nil, err
@@ -260,7 +263,7 @@ func (e *gooseEngine) Migrate(ctx *core.Context, entries []core.MigrationEntry) 
 
 	gormDB := dbSvc.GORM()
 	if gormDB == nil {
-		return fmt.Errorf("migration: DBService.GORM() returned nil")
+		return errors.New("migration: DBService.GORM() returned nil")
 	}
 
 	sqlDB, err := gormDB.DB()

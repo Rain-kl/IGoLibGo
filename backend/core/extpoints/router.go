@@ -433,8 +433,7 @@ func MatchPathPattern(pattern, path string) bool {
 	}
 
 	// Suffix wildcard: /api/v1/oauth/* matches /api/v1/oauth and /api/v1/oauth/...
-	if strings.HasSuffix(pattern, "/*") {
-		prefix := strings.TrimSuffix(pattern, "/*")
+	if prefix, ok := strings.CutSuffix(pattern, "/*"); ok {
 		if path == prefix || strings.HasPrefix(path, prefix+"/") {
 			return true
 		}
@@ -492,8 +491,8 @@ func compilePatterns(patterns []string) []compiledPattern {
 	for _, p := range patterns {
 		clean := cleanPath(p)
 		cp := compiledPattern{raw: clean, parts: strings.Split(clean, "/")}
-		if strings.HasSuffix(clean, "/*") {
-			cp.prefix = strings.TrimSuffix(clean, "/*")
+		if prefix, ok := strings.CutSuffix(clean, "/*"); ok {
+			cp.prefix = prefix
 		}
 		compiled = append(compiled, cp)
 	}

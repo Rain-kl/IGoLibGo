@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -76,10 +77,7 @@ func GetSQLiteOverview(ctx context.Context) (model.DBOverviewResponse, error) {
 
 	var sizeStr string
 	if fi, err := os.Stat(name); err == nil {
-		size := fi.Size()
-		if size < 0 {
-			size = 0
-		}
+		size := max(0, fi.Size())
 		sizeStr = model.FormatBytes(uint64(size))
 	} else {
 		sizeStr = "0 B"
@@ -127,10 +125,7 @@ func GetPostgresOverview(ctx context.Context) (model.DBOverviewResponse, error) 
 	var sizeStr string
 	var sizeBytes sql.NullInt64
 	if err := gormDB.Raw("SELECT pg_database_size(current_database())").Scan(&sizeBytes).Error; err == nil && sizeBytes.Valid {
-		size := sizeBytes.Int64
-		if size < 0 {
-			size = 0
-		}
+		size := max(0, sizeBytes.Int64)
 		sizeStr = model.FormatBytes(uint64(size))
 	} else {
 		sizeStr = "0 B"
@@ -382,7 +377,7 @@ func NewPgDumpCommand(ctx context.Context) (*exec.Cmd, string, error) {
 	args := []string{
 		"--no-password",
 		"-h", dbCfg.Host,
-		"-p", fmt.Sprintf("%d", dbCfg.Port),
+		"-p", strconv.Itoa(dbCfg.Port),
 		"-U", dbCfg.Username,
 		dbCfg.Database,
 	}

@@ -203,9 +203,9 @@ func NewBackend(ctx context.Context, cfg Config, driver Driver) (Backend, error)
 	case DriverMinIO:
 		return newS3Backend(ctx, cfg.MinIO)
 	case DriverOSS:
-		return newOSSBackend(cfg.OSS)
+		return newOSSBackend(cfg.OSS), nil
 	case DriverWebDAV:
-		return newWebDAVBackend(cfg.WebDAV)
+		return newWebDAVBackend(cfg.WebDAV), nil
 	default:
 		return nil, fmt.Errorf("unsupported storage driver %q", driver)
 	}

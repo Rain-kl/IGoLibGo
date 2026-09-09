@@ -32,7 +32,7 @@ type AuthSource struct {
 }
 
 // TableName 表名
-func (AuthSource) TableName() string {
+func (*AuthSource) TableName() string {
 	return "w_auth_sources"
 }
 

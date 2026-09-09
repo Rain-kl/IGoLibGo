@@ -13,7 +13,7 @@ import (
 // FNV-1a 算法位移常量
 func fnv1a(str string) uint32 {
 	var hash uint32 = 2166136261
-	for i := 0; i < len(str); i++ {
+	for i := range len(str) {
 		hash ^= uint32(str[i])
 		hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24)
 	}
@@ -25,7 +25,7 @@ func fnv1a(str string) uint32 {
 // FNV-1a 算法位移常量
 func fnv1aResume(state uint32, str string) uint32 {
 	h := state
-	for i := 0; i < len(str); i++ {
+	for i := range len(str) {
 		h ^= uint32(str[i])
 		h += (hashShift(h))
 	}

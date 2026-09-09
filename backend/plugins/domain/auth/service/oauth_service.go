@@ -14,6 +14,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -182,12 +183,7 @@ func (s *OAuthService) BuildOAuthConfig(ctx context.Context, source *entity.Auth
 }
 
 func containsScope(scopes []string, scope string) bool {
-	for _, item := range scopes {
-		if item == scope {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(scopes, scope)
 }
 
 // BuildAuthorizeURL generates the redirect authorize URL for the source and state.

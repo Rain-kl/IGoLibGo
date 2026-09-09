@@ -147,16 +147,16 @@ func waitForStop(done, signals <-chan struct{}) bool {
 	}
 }
 
-func resolveTaskScheduleMeta(taskSvc contracts.TaskService, taskType string) (name string, maxRetry int, queue string) {
-	name = taskType
-	maxRetry = 3
-	queue = "default"
+func resolveTaskScheduleMeta(taskSvc contracts.TaskService, taskType string) (string, int, string) {
+	name := taskType
+	maxRetry := 3
+	queue := "default"
 	if taskSvc == nil {
-		return
+		return name, maxRetry, queue
 	}
 	meta, ok := taskSvc.GetTaskMeta(taskType)
 	if !ok {
-		return
+		return name, maxRetry, queue
 	}
 	name = meta.Name
 	if meta.MaxRetry > 0 {
@@ -165,5 +165,5 @@ func resolveTaskScheduleMeta(taskSvc contracts.TaskService, taskType string) (na
 	if meta.Queue != "" {
 		queue = meta.Queue
 	}
-	return
+	return name, maxRetry, queue
 }

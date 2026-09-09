@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 )
@@ -321,15 +322,15 @@ func (c *Context) Dispose() error {
 	var errs []error
 
 	// 1. Dispose all child contexts in reverse order
-	for i := len(children) - 1; i >= 0; i-- {
-		if err := children[i].Dispose(); err != nil {
+	for _, child := range slices.Backward(children) {
+		if err := child.Dispose(); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	// 2. Run local disposers in LIFO order
-	for i := len(disposers) - 1; i >= 0; i-- {
-		if err := disposers[i](); err != nil {
+	for _, disposer := range slices.Backward(disposers) {
+		if err := disposer(); err != nil {
 			errs = append(errs, err)
 		}
 	}

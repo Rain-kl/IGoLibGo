@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -101,7 +102,7 @@ func InitRedisWithConfig(cfg RedisConfig) (redis.UniversalClient, error) {
 	if err := redisotel.InstrumentTracing(
 		client,
 		redisotel.WithAttributes(
-			attribute.String("db.instance", fmt.Sprintf("%v", cfg.DB)),
+			attribute.String("db.instance", strconv.Itoa(cfg.DB)),
 			attribute.String("db.ip", strings.Join(cfg.Addrs, ",")),
 			attribute.String("db.system", "Redis"),
 		),

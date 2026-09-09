@@ -5,6 +5,7 @@ package objectstore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -20,7 +21,7 @@ type localBackend struct {
 func newLocalBackend(cfg LocalConfig) (*localBackend, error) {
 	root := filepath.Clean(cfg.Root)
 	if root == "" {
-		return nil, fmt.Errorf("local root is required")
+		return nil, errors.New("local root is required")
 	}
 	return &localBackend{root: root}, nil
 }
@@ -31,7 +32,7 @@ func (b *localBackend) Put(_ context.Context, key string, body io.Reader, _ int6
 		return PutResult{}, err
 	}
 	if err := os.MkdirAll(filepath.Dir(path), storageDirPerm); err != nil {
-		return PutResult{}, err
+		return PutResult{}, fmt.Errorf("failed to create directory for %s: %w", path, err)
 	}
 	file, err := os.OpenFile( //nolint:gosec // path is constrained to the configured storage root.
 		path,
@@ -39,16 +40,16 @@ func (b *localBackend) Put(_ context.Context, key string, body io.Reader, _ int6
 		storageFilePerm,
 	)
 	if err != nil {
-		return PutResult{}, err
+		return PutResult{}, fmt.Errorf("failed to open file %s: %w", path, err)
 	}
 	if _, err := io.Copy(file, body); err != nil {
 		_ = file.Close()
 		_ = os.Remove(path)
-		return PutResult{}, err
+		return PutResult{}, fmt.Errorf("failed to write content to %s: %w", path, err)
 	}
 	if err := file.Close(); err != nil {
 		_ = os.Remove(path)
-		return PutResult{}, err
+		return PutResult{}, fmt.Errorf("failed to close file %s: %w", path, err)
 	}
 	return PutResult{Key: filepath.ToSlash(key)}, nil
 }
@@ -60,12 +61,12 @@ func (b *localBackend) Get(_ context.Context, key string) (*Object, error) {
 	}
 	file, err := os.Open(path) //nolint:gosec // path is constrained to the configured storage root.
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open file %s: %w", path, err)
 	}
 	info, err := file.Stat()
 	if err != nil {
 		_ = file.Close()
-		return nil, err
+		return nil, fmt.Errorf("failed to stat file %s: %w", path, err)
 	}
 	contentType := mime.TypeByExtension(filepath.Ext(path))
 	if contentType == "" {
@@ -83,7 +84,10 @@ func (b *localBackend) Delete(_ context.Context, key string) error {
 	if os.IsNotExist(err) {
 		return nil
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete file %s: %w", path, err)
+	}
+	return nil
 }
 
 func (b *localBackend) Test(_ context.Context) error {
@@ -95,15 +99,15 @@ func (b *localBackend) path(key string) (string, error) {
 		cleanPath := filepath.Clean(key)
 		absRoot, err := filepath.Abs(b.root)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to resolve absolute root path: %w", err)
 		}
 		absPath, err := filepath.Abs(cleanPath)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to resolve absolute file path: %w", err)
 		}
 		rel, err := filepath.Rel(absRoot, absPath)
 		if err != nil || strings.HasPrefix(rel, "..") {
-			return "", fmt.Errorf("storage key escapes local root")
+			return "", errors.New("storage key escapes local root")
 		}
 		return cleanPath, nil
 	}
@@ -114,7 +118,7 @@ func (b *localBackend) path(key string) (string, error) {
 	path := filepath.Join(b.root, cleanKey)
 	rel, err := filepath.Rel(b.root, path)
 	if err != nil || strings.HasPrefix(rel, "..") {
-		return "", fmt.Errorf("storage key escapes local root")
+		return "", errors.New("storage key escapes local root")
 	}
 	return path, nil
 }

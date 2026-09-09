@@ -111,7 +111,7 @@ func UnbindBinding(c *gin.Context) {
 		response.AbortUnauthorized(c, consts.ErrLoginRequired)
 		return
 	}
-	id, ok := parseUint64Param(c, "id", consts.ErrInvalidBindingID)
+	id, ok := parseUint64ID(c, consts.ErrInvalidBindingID)
 	if !ok {
 		return
 	}

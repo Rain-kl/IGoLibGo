@@ -44,27 +44,28 @@ func Bytes2Size(num int64) string {
 }
 
 // Seconds2Time converts a number of seconds to a human-readable Chinese duration string.
-func Seconds2Time(num int) (time string) {
+func Seconds2Time(num int) string {
+	var res string
 	if num/secondsPerYear > 0 {
-		time += strconv.Itoa(num/secondsPerYear) + " 年 "
+		res += strconv.Itoa(num/secondsPerYear) + " 年 "
 		num %= secondsPerYear
 	}
 	if num/secondsPerMonth > 0 {
-		time += strconv.Itoa(num/secondsPerMonth) + " 个月 "
+		res += strconv.Itoa(num/secondsPerMonth) + " 个月 "
 		num %= secondsPerMonth
 	}
 	if num/secondsPerDay > 0 {
-		time += strconv.Itoa(num/secondsPerDay) + " 天 "
+		res += strconv.Itoa(num/secondsPerDay) + " 天 "
 		num %= secondsPerDay
 	}
 	if num/secondsPerHour > 0 {
-		time += strconv.Itoa(num/secondsPerHour) + " 小时 "
+		res += strconv.Itoa(num/secondsPerHour) + " 小时 "
 		num %= secondsPerHour
 	}
 	if num/secondsPerMinute > 0 {
-		time += strconv.Itoa(num/secondsPerMinute) + " 分钟 "
+		res += strconv.Itoa(num/secondsPerMinute) + " 分钟 "
 		num %= secondsPerMinute
 	}
-	time += strconv.Itoa(num) + " 秒"
-	return
+	res += strconv.Itoa(num) + " 秒"
+	return res
 }

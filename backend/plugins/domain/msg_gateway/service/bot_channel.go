@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"strings"
 	"time"
@@ -110,10 +111,8 @@ func UpdateChannel(ctx context.Context, id uint64, req do.UpdateChannelRequest) 
 		extra = req.Extra
 	}
 	if len(req.Credentials) > 0 {
-		merged := make(map[string]string, len(creds))
-		for k, v := range creds {
-			merged[k] = v
-		}
+		merged := make(map[string]string, len(creds)+len(req.Credentials))
+		maps.Copy(merged, creds)
 		for k, v := range req.Credentials {
 			if strings.TrimSpace(v) == "" {
 				continue

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"slices"
 	"strings"
 	"sync"
 	"syscall"
@@ -325,7 +326,7 @@ func (a *App) reconcileLocked() error {
 
 // evaluateGateLocked reports whether a configuration-gated plugin is excluded by the
 // resolved values. Plugins that do not implement the gate interface are never skipped.
-func (a *App) evaluateGateLocked(f *Fiber) (gated bool, skip bool, err error) {
+func (a *App) evaluateGateLocked(f *Fiber) (bool, bool, error) {
 	gatedPlugin, ok := f.plugin.(ConfigGatedPlugin)
 	if !ok {
 		return false, false, nil
@@ -512,8 +513,8 @@ func (a *App) Start(ctx ...context.Context) error {
 			a.running = false
 			a.mu.Unlock()
 
-			for i := len(started) - 1; i >= 0; i-- {
-				_ = started[i].Stop(context.Background())
+			for _, d := range slices.Backward(started) {
+				_ = d.Stop(context.Background())
 			}
 
 			return fmt.Errorf("core: start driver %s failed: %w", d.Type(), err)
@@ -561,8 +562,7 @@ func (a *App) Stop(ctx ...context.Context) error {
 	var errs []error
 
 	// 1. Stop drivers in reverse order
-	for i := len(started) - 1; i >= 0; i-- {
-		d := started[i]
+	for _, d := range slices.Backward(started) {
 		if err := d.Stop(shutdownCtx); err != nil {
 			errs = append(errs, fmt.Errorf("core: stop driver %s failed: %w", d.Type(), err))
 		}
@@ -574,9 +574,9 @@ func (a *App) Stop(ctx ...context.Context) error {
 	copy(fibers, a.fibers)
 	a.mu.RUnlock()
 
-	for i := len(fibers) - 1; i >= 0; i-- {
-		if err := fibers[i].Unload(); err != nil {
-			errs = append(errs, fmt.Errorf("core: unload fiber %s failed: %w", fibers[i].Name(), err))
+	for _, f := range slices.Backward(fibers) {
+		if err := f.Unload(); err != nil {
+			errs = append(errs, fmt.Errorf("core: unload fiber %s failed: %w", f.Name(), err))
 		}
 	}
 

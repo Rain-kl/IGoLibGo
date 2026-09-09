@@ -54,8 +54,8 @@ func TestWriter_BatchSizeFlush(t *testing.T) {
 	w.Start(context.Background())
 	defer func() { _ = w.Stop(context.Background()) }()
 
-	for i := 1; i <= 5; i++ {
-		ok := w.TryEnqueue(testEvent{ID: i, Data: "payload"})
+	for i := range 5 {
+		ok := w.TryEnqueue(testEvent{ID: i + 1, Data: "payload"})
 		assert.True(t, ok)
 	}
 
@@ -191,8 +191,8 @@ func TestWriter_StopDrainsRemaining(t *testing.T) {
 	require.NoError(t, err)
 
 	w.Start(context.Background())
-	for i := 1; i <= 3; i++ {
-		assert.True(t, w.TryEnqueue(testEvent{ID: i}))
+	for i := range 3 {
+		assert.True(t, w.TryEnqueue(testEvent{ID: i + 1}))
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -314,4 +314,16 @@ func TestWriter_ValidateConfig(t *testing.T) {
 func TestWriter_NilFlushFunc(t *testing.T) {
 	_, err := New[testEvent](DefaultConfig(), nil)
 	assert.ErrorIs(t, err, errNilFlushFunc)
+}
+
+func TestWriter_UnstartedStopAndRunning(t *testing.T) {
+	w, err := New(testConfig(), func(_ context.Context, _ []testEvent) error { return nil })
+	require.NoError(t, err)
+
+	// Before Start: Running should be false
+	assert.False(t, w.Running())
+	// TryEnqueue before Start should return false
+	assert.False(t, w.TryEnqueue(testEvent{ID: 1}))
+	// Stop before Start should return nil without error or panic
+	assert.NoError(t, w.Stop(context.Background()))
 }

@@ -186,7 +186,7 @@ func prepareContext(body map[string]any) jsonMap {
 		if strings.Contains(k, ".") {
 			parts := strings.Split(k, ".")
 			cur := ctx
-			for i := 0; i < len(parts)-1; i++ {
+			for i := range len(parts) - 1 {
 				sub, ok := cur[parts[i]].(jsonMap)
 				if !ok {
 					sub = make(jsonMap)

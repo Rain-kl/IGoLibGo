@@ -12,7 +12,7 @@ import (
 
 const hoursInDay = 24
 
-// GetDailyTrend returns per-day access counts for the last days days (inclusive of today).
+// GetDailyTrend returns per-day access counts for the last days (inclusive of today).
 func GetDailyTrend(ctx context.Context, days int) ([]DailyTrend, error) {
 	if days < 1 {
 		days = 7
@@ -20,7 +20,7 @@ func GetDailyTrend(ctx context.Context, days int) ([]DailyTrend, error) {
 
 	ch := getChDB(ctx)
 	if ch == nil {
-		return nil, fmt.Errorf("clickhouse gorm connection is not initialized")
+		return nil, ErrClickHouseGormNotInitialized
 	}
 
 	startTime := time.Now().AddDate(0, 0, -(days - 1)).Truncate(hoursInDay * time.Hour)
@@ -45,7 +45,7 @@ func GetDailyTrend(ctx context.Context, days int) ([]DailyTrend, error) {
 	}
 
 	trendMap := make(map[string]uint64, days)
-	for i := 0; i < days; i++ {
+	for i := range days {
 		dateStr := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
 		trendMap[dateStr] = 0
 	}
@@ -69,7 +69,7 @@ func GetDailyTrend(ctx context.Context, days int) ([]DailyTrend, error) {
 func GetBrowserDistribution(ctx context.Context, startTime time.Time) ([]BrowserShare, error) {
 	ch := getChDB(ctx)
 	if ch == nil {
-		return nil, fmt.Errorf("clickhouse gorm connection is not initialized")
+		return nil, ErrClickHouseGormNotInitialized
 	}
 
 	tableName := UserAccessLog{}.TableName()
@@ -117,7 +117,7 @@ func GetTopActiveUsers(ctx context.Context, startTime time.Time, limit int) ([]T
 
 	ch := getChDB(ctx)
 	if ch == nil {
-		return nil, fmt.Errorf("clickhouse gorm connection is not initialized")
+		return nil, ErrClickHouseGormNotInitialized
 	}
 
 	tableName := UserAccessLog{}.TableName()

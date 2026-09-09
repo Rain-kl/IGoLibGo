@@ -93,7 +93,11 @@ func (s *inprocScheduler) registerJob(ctx context.Context, def extpoints.Schedul
 		case string:
 			payloadBytes = []byte(p)
 		default:
-			payloadBytes, _ = json.Marshal(p)
+			var err error
+			payloadBytes, err = json.Marshal(p)
+			if err != nil {
+				logger.WarnF(ctx, "driver_inproc_cron: marshal payload for %q failed: %v", taskType, err)
+			}
 		}
 	}
 

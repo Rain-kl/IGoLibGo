@@ -47,7 +47,7 @@ func ListBuiltInPushEvents(c *gin.Context) {
 
 // parsePushEventID reads the path identifier of a push event.
 func parsePushEventID(c *gin.Context) (uint64, bool) {
-	return parseUint64Param(c, "id", consts.ErrInvalidEventID)
+	return parseUint64ID(c, consts.ErrInvalidEventID)
 }
 
 // handlePushEventNotFoundError maps a missing event row to 404, others to fallback.

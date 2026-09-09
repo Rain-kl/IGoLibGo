@@ -160,8 +160,12 @@ export {
 export type {
   UploadImageResponse,
   Upload,
+  UploadMetadata,
+  ListUploadsQuery,
   ListUploadsResponse,
   FileStatsResponse,
+  TrendItem,
+  DistributionItem,
   ImageQuality,
 } from './upload';
 
@@ -179,6 +183,8 @@ export {
 } from './message-gateway';
 export type {
   MessageChannel,
+  MessageChannelType,
+  MessageChannelField,
   MessageChannelDefinition,
   CreateMessageChannelRequest,
   UpdateMessageChannelRequest,
@@ -189,9 +195,17 @@ export type {
 export type {
   PushEvent,
   PushHistory,
+  PushChannel,
   PushChannelConfig,
+  ChannelDefinition,
+  ChannelFieldDef,
+  EventMetadata,
+  CreatePushEventRequest,
+  UpdatePushEventRequest,
+  CreateChannelRequest,
+  UpdateChannelRequest,
+  TestChannelRequest,
+  TestPushRequest,
   ListPushHistoriesRequest,
   ListPushHistoriesResponse,
-  UpdatePushEventRequest,
-  TestPushRequest,
 } from './push';

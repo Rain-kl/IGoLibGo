@@ -46,7 +46,7 @@ func (r *LogRingBuffer) Write(p []byte) (int, error) {
 
 	data := string(p)
 	start := 0
-	for i := 0; i < len(data); i++ {
+	for i := range len(data) {
 		if data[i] == '\n' {
 			line := data[start:i]
 			start = i + 1
@@ -113,7 +113,7 @@ func (r *LogRingBuffer) Query(cursor, limit int) ([]LogEntry, bool) {
 
 	// 将 ring buffer 中的有效条目按顺序收集
 	ordered := make([]LogEntry, 0, r.count)
-	for i := 0; i < r.count; i++ {
+	for i := range r.count {
 		pos := (oldestPos + i) % r.cap
 		ordered = append(ordered, r.entries[pos])
 	}
@@ -140,10 +140,7 @@ func (r *LogRingBuffer) Query(cursor, limit int) ([]LogEntry, bool) {
 	}
 
 	// 返回 cut 之前的最后 limit 条
-	start := cut - limit
-	if start < 0 {
-		start = 0
-	}
+	start := max(0, cut-limit)
 
 	hasMore := start > 0
 	return ordered[start:cut], hasMore

@@ -19,9 +19,9 @@ func currentUser(c *gin.Context) (*contracts.UserDTO, bool) {
 	return ginutil.GetFromContext[*contracts.UserDTO](c, contracts.AuthUserObjKey)
 }
 
-// parseUint64Param parses a uint64 URL path parameter.
-func parseUint64Param(c *gin.Context, paramName, errInvalid string) (uint64, bool) {
-	id, err := strconv.ParseUint(c.Param(paramName), 10, 64)
+// parseUint64ID parses a uint64 URL "id" path parameter.
+func parseUint64ID(c *gin.Context, errInvalid string) (uint64, bool) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.AbortBadRequest(c, errInvalid)
 		return 0, false

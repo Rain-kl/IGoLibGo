@@ -38,16 +38,16 @@ func formatStartupBanner(state startupState) string {
 		" \\ \\ /\\ / / _` \\ \\ / / _ \\ | |/ _ \\ __|",
 		"  \\ V  V / (_| |\\ V /  __/ | |  __/ |_ ",
 		"   \\_/\\_/ \\__,_| \\_/ \\___|_|\\___|\\__|",
-		fmt.Sprintf(" Wavelet %s", buildinfo.Version),
+		" Wavelet " + buildinfo.Version,
 		"",
-		fmt.Sprintf(" Environment: %s", env),
+		" Environment: " + env,
 		fmt.Sprintf(" Runtime:     %s/%s (%s)", runtime.GOOS, runtime.GOARCH, runtime.Version()),
-		fmt.Sprintf(" Build time:  %s", buildTime()),
+		" Build time:  " + buildTime(),
 	}
 	if state.listensForHTTP {
-		lines = append(lines, fmt.Sprintf(" Listening:   http://%s", addr))
+		lines = append(lines, " Listening:   http://"+addr)
 	}
-	lines = append(lines, fmt.Sprintf(" Mode:        %s", state.mode), "")
+	lines = append(lines, " Mode:        "+state.mode, "")
 	return strings.Join(lines, "\n")
 }
 

@@ -14,7 +14,7 @@ import (
 type StringArray []string
 
 // Scan 实现 sql.Scanner 接口，从数据库读取 JSON 数组
-func (sa *StringArray) Scan(value interface{}) error {
+func (sa *StringArray) Scan(value any) error {
 	bytesValue, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf(errInvalidCustomValue, value)

@@ -53,20 +53,21 @@ func NewMemoryStore(cleanupInterval time.Duration) *MemoryStore {
 func (s *MemoryStore) Get(_ context.Context, key string) (string, bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.getLocked(key)
+	val, ok := s.getLocked(key)
+	return val, ok, nil
 }
 
 // getLocked is the internal helper – caller must hold s.mu.
-func (s *MemoryStore) getLocked(key string) (string, bool, error) {
+func (s *MemoryStore) getLocked(key string) (string, bool) {
 	item, found := s.items[key]
 	if !found {
-		return "", false, nil
+		return "", false
 	}
 	if time.Now().After(item.expiresAt) {
 		delete(s.items, key)
-		return "", false, nil
+		return "", false
 	}
-	return item.value, true, nil
+	return item.value, true
 }
 
 // Set 向 MemoryStore 写入指定 key 的值
@@ -94,7 +95,7 @@ func (s *MemoryStore) SetNX(_ context.Context, key, val string, ttl time.Duratio
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, exists, _ := s.getLocked(key)
+	_, exists := s.getLocked(key)
 	if exists {
 		return false, nil
 	}
@@ -110,9 +111,9 @@ func (s *MemoryStore) GetAndDelete(_ context.Context, key string) (string, bool,
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	val, exists, err := s.getLocked(key)
-	if err != nil || !exists {
-		return "", false, err
+	val, exists := s.getLocked(key)
+	if !exists {
+		return "", false, nil
 	}
 	delete(s.items, key)
 	return val, true, nil

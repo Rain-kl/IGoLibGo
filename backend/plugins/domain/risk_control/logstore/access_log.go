@@ -17,7 +17,7 @@ import (
 func CountAccessLogs(ctx context.Context, filter AccessLogFilter) (uint64, error) {
 	ch := getChDB(ctx)
 	if ch == nil {
-		return 0, fmt.Errorf("clickhouse gorm connection is not initialized")
+		return 0, ErrClickHouseGormNotInitialized
 	}
 
 	var count int64
@@ -32,7 +32,7 @@ func CountAccessLogs(ctx context.Context, filter AccessLogFilter) (uint64, error
 func ListAccessLogs(ctx context.Context, filter AccessLogFilter, page, pageSize int) ([]UserAccessLog, uint64, error) {
 	ch := getChDB(ctx)
 	if ch == nil {
-		return nil, 0, fmt.Errorf("clickhouse gorm connection is not initialized")
+		return nil, 0, ErrClickHouseGormNotInitialized
 	}
 
 	if filter.UserIDs != nil && len(filter.UserIDs) == 0 {
@@ -58,7 +58,7 @@ func ListAccessLogs(ctx context.Context, filter AccessLogFilter, page, pageSize 
 func DeleteAllUserAccessLogs(ctx context.Context) (int64, error) {
 	conn := getChConn()
 	if conn == nil {
-		return 0, fmt.Errorf("clickhouse connection is not initialized")
+		return 0, ErrClickHouseNotInitialized
 	}
 	if err := conn.Exec(ctx, "TRUNCATE TABLE "+UserAccessLog{}.TableName()); err != nil {
 		return 0, fmt.Errorf("truncate user access logs: %w", err)
@@ -70,7 +70,7 @@ func DeleteAllUserAccessLogs(ctx context.Context) (int64, error) {
 func DeleteUserAccessLogsBefore(ctx context.Context, cutoff time.Time) (int64, error) {
 	conn := getChConn()
 	if conn == nil {
-		return 0, fmt.Errorf("clickhouse connection is not initialized")
+		return 0, ErrClickHouseNotInitialized
 	}
 	if err := conn.Exec(ctx, "ALTER TABLE "+UserAccessLog{}.TableName()+" DELETE WHERE created_at < ?", cutoff); err != nil {
 		return 0, fmt.Errorf("delete expired user access logs: %w", err)

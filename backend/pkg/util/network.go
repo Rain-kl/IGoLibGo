@@ -9,11 +9,11 @@ import (
 )
 
 // GetIP returns the first private IPv4 address found on the local network interfaces.
-func GetIP() (ip string) {
+func GetIP() string {
 	ips, err := net.InterfaceAddrs()
 	if err != nil {
 		slog.Error("get interface addresses failed", "error", err)
-		return ip
+		return ""
 	}
 
 	for _, a := range ips {
@@ -21,7 +21,7 @@ func GetIP() (ip string) {
 			return candidate
 		}
 	}
-	return
+	return ""
 }
 
 func privateIPv4FromAddr(addr net.Addr) (string, bool) {

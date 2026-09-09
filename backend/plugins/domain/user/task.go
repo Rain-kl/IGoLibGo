@@ -98,7 +98,7 @@ func getTaskService(ctx context.Context) contracts.TaskService {
 	return taskSvc
 }
 
-func appendTaskLog(ctx context.Context, format string, args ...any) {
+func appendTaskLogf(ctx context.Context, format string, args ...any) {
 	if svc := getTaskService(ctx); svc != nil {
 		svc.AppendLog(ctx, format, args...)
 	}
@@ -222,12 +222,12 @@ func (h *SendEmailCodeHandler) Execute(ctx context.Context, payload []byte) (*co
 	}
 	subject := "邮箱验证码"
 	body := fmt.Sprintf("<p>您的验证码是 <b>%s</b>，%d 分钟内有效。</p>", p.Code, int(emailCodeTTL.Minutes()))
-	appendTaskLog(ctx, "发送邮箱验证码到 %s", maskEmail(p.Email))
+	appendTaskLogf(ctx, "发送邮箱验证码到 %s", maskEmail(p.Email))
 	if err := pkgmail.SendMail(ctx, cfg, p.Email, subject, body); err != nil {
 		logger.ErrorF(ctx, "send email code failed: %v", err)
 		return nil, errors.New(errSendEmailFailed)
 	}
-	return &contracts.TaskResultDTO{Message: fmt.Sprintf("验证码已发送至 %s", maskEmail(p.Email))}, nil
+	return &contracts.TaskResultDTO{Message: "验证码已发送至 " + maskEmail(p.Email)}, nil
 }
 
 // SendMailHandler sends a generic HTML email through the configured SMTP server.
@@ -252,12 +252,12 @@ func (h *SendMailHandler) Execute(ctx context.Context, payload []byte) (*contrac
 	if err != nil {
 		return nil, err
 	}
-	appendTaskLog(ctx, "发送邮件到 %s，主题: %s", maskEmail(p.To), p.Subject)
+	appendTaskLogf(ctx, "发送邮件到 %s，主题: %s", maskEmail(p.To), p.Subject)
 	if err := pkgmail.SendMail(ctx, cfg, p.To, p.Subject, p.Body); err != nil {
 		logger.ErrorF(ctx, "send mail failed: %v", err)
 		return nil, errors.New(errSendEmailFailed)
 	}
-	return &contracts.TaskResultDTO{Message: fmt.Sprintf("邮件已发送至 %s", maskEmail(p.To))}, nil
+	return &contracts.TaskResultDTO{Message: "邮件已发送至 " + maskEmail(p.To)}, nil
 }
 
 // CleanupInactiveHandler deletes users who registered long ago and never logged in.
@@ -270,7 +270,7 @@ func (h *CleanupInactiveHandler) Execute(ctx context.Context, _ []byte) (*contra
 	if err != nil {
 		return nil, err
 	}
-	appendTaskLog(ctx, "扫描到 %d 个超过 %d 天未登录的注册用户", len(ids), int(inactiveRetention.Hours()/float64(hoursPerDay)))
+	appendTaskLogf(ctx, "扫描到 %d 个超过 %d 天未登录的注册用户", len(ids), int(inactiveRetention.Hours()/float64(hoursPerDay)))
 	deleted := 0
 	for _, id := range ids {
 		if err := DeleteUserWithRelations(ctx, id); err != nil {
@@ -280,7 +280,7 @@ func (h *CleanupInactiveHandler) Execute(ctx context.Context, _ []byte) (*contra
 		deleted++
 	}
 	msg := fmt.Sprintf("已清理 %d 个长期未登录用户及其访问令牌", deleted)
-	appendTaskLog(ctx, "%s", msg)
+	appendTaskLogf(ctx, "%s", msg)
 	return &contracts.TaskResultDTO{Message: msg}, nil
 }
 

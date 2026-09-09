@@ -11,6 +11,7 @@ import (
 	"Wavelet/plugins/domain/msg_gateway/model/do"
 	"Wavelet/plugins/domain/msg_gateway/service"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -46,7 +47,7 @@ type Adapter struct {
 // New constructs a QQ adapter.
 func New(cfg do.ChannelConfig, onInbound service.Handler) (service.Channel, error) {
 	if strings.TrimSpace(cfg.Credentials["app_id"]) == "" || strings.TrimSpace(cfg.Credentials["app_secret"]) == "" {
-		return nil, fmt.Errorf("qq: app_id and app_secret are required")
+		return nil, errors.New("qq: app_id and app_secret are required")
 	}
 	return &Adapter{cfg: cfg, onInbound: onInbound}, nil
 }
@@ -134,7 +135,7 @@ func (a *Adapter) Send(ctx context.Context, to do.Recipient, msg do.OutboundMess
 	api := a.api
 	a.mu.Unlock()
 	if api == nil {
-		return fmt.Errorf("qq: not connected")
+		return errors.New("qq: not connected")
 	}
 	_, err := api.PostC2CMessage(ctx, to.PlatformUserID, &dto.MessageToCreate{
 		Content: msg.Text,

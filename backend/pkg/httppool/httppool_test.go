@@ -98,3 +98,34 @@ func TestNewTransportClonesTLSConfig(t *testing.T) {
 	}
 	_ = response.Body.Close()
 }
+
+func TestNewTransportWithTraceFilter(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	filterCalled := false
+	transport := NewTransport(TransportOptions{
+		TraceFilter: func(r *http.Request) bool {
+			filterCalled = true
+			return true
+		},
+	})
+	client := &http.Client{Transport: transport}
+	defer client.CloseIdleConnections()
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("NewRequestWithContext() error = %v", err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("client.Do() error = %v", err)
+	}
+	_ = resp.Body.Close()
+
+	if !filterCalled {
+		t.Errorf("expected TraceFilter to be called")
+	}
+}

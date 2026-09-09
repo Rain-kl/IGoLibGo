@@ -74,10 +74,7 @@ func DatabaseTableData(ctx context.Context, req model.GetTableDataRequest) (mode
 		return model.TableDataResponse{}, err
 	}
 
-	offset := (req.Page - 1) * req.PageSize
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max(0, (req.Page-1)*req.PageSize)
 	limit := req.PageSize
 	if limit <= 0 {
 		limit = 10
