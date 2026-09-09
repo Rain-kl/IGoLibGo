@@ -221,8 +221,7 @@ func NewInvalidInputError(msg string) error {
 
 // AsInvalidInput reports whether err was caused by rejected caller input.
 func AsInvalidInput(err error) (string, bool) {
-	var target *InvalidInputError
-	if errors.As(err, &target) {
+	if target, ok := errors.AsType[*InvalidInputError](err); ok {
 		return target.Msg, true
 	}
 	return "", false

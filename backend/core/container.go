@@ -12,6 +12,8 @@ import (
 )
 
 // Container manages service registration and resolution using Go reflection and generics.
+//
+// Note: Go 1.26 特性与现代语法糖重构见 .agents/notes/implemented/simplification/2026-09-09-go126-modernization.md
 type Container struct {
 	mu             sync.RWMutex
 	parent         *Container
@@ -47,7 +49,7 @@ func (c *Container) remove(targetType reflect.Type) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.services, targetType)
-	c.interfaceCache = make(map[reflect.Type]any)
+	clear(c.interfaceCache)
 }
 
 // Provide registers a typed service implementation into the Context hierarchy's root IoC container.
@@ -91,7 +93,7 @@ func ProvideScoped[T any](ctx *Context, service T) {
 func (c *Container) provide(targetType reflect.Type, service any) {
 	c.mu.Lock()
 	c.services[targetType] = service
-	c.interfaceCache = make(map[reflect.Type]any)
+	clear(c.interfaceCache)
 
 	// Collect any matching listeners to invoke outside the lock
 	var callbacks []func(any)

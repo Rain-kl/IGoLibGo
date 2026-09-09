@@ -33,8 +33,8 @@ func TestAbortWithError(t *testing.T) {
 
 	require.Len(t, c.Errors, 1)
 
-	var apiErr *APIError
-	require.True(t, errors.As(c.Errors.Last().Err, &apiErr))
+	apiErr, ok := errors.AsType[*APIError](c.Errors.Last().Err)
+	require.True(t, ok)
 	assert.Equal(t, http.StatusBadRequest, apiErr.Code)
 	assert.Equal(t, "invalid input", apiErr.Msg)
 	assert.True(t, c.IsAborted())

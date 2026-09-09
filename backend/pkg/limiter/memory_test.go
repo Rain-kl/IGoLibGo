@@ -101,17 +101,15 @@ func TestMemoryLimiter_Concurrency(t *testing.T) {
 	allowedCount := int32(0)
 	var mu sync.Mutex
 
-	for i := 0; i < 200; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 200 {
+		wg.Go(func() {
 			res, err := lim.Allow(ctx, "concurrent_key", rate)
 			if err == nil && res.Allowed {
 				mu.Lock()
 				allowedCount++
 				mu.Unlock()
 			}
-		}()
+		})
 	}
 
 	wg.Wait()

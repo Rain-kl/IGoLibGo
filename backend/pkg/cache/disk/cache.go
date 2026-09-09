@@ -280,7 +280,7 @@ func (c *Cache) Clear() error {
 	defer c.mu.Unlock()
 
 	c.currentSize = 0
-	c.items = make(map[string]*list.Element)
+	clear(c.items)
 	c.evictList.Init()
 
 	return c.d.EraseAll()

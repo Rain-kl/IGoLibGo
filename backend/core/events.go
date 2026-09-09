@@ -306,24 +306,22 @@ func (b *EventBus) Parallel(ctx context.Context, topic string, payload any) erro
 	errCh := make(chan error, len(listeners))
 
 	for _, l := range listeners {
-		wg.Add(1)
-		go func(listener eventListener) {
-			defer wg.Done()
+		wg.Go(func() {
 			defer func() {
 				if r := recover(); r != nil {
 					errCh <- fmt.Errorf("core/events: panic in parallel handler for topic %q: %v", topic, r)
 				}
 			}()
 
-			args := b.buildArgs(ctx, listener, payloadVal)
-			results := listener.fnVal.Call(args)
-			if listener.returnsErr {
-				errIdx := listener.numOut - 1
+			args := b.buildArgs(ctx, l, payloadVal)
+			results := l.fnVal.Call(args)
+			if l.returnsErr {
+				errIdx := l.numOut - 1
 				if len(results) > errIdx && !results[errIdx].IsNil() {
 					errCh <- results[errIdx].Interface().(error)
 				}
 			}
-		}(l)
+		})
 	}
 
 	done := make(chan struct{})

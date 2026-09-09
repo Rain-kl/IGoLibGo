@@ -284,33 +284,29 @@ func TestEventBusConcurrentAccess(t *testing.T) {
 	var receivedCount atomic.Int64
 
 	// Concurrently subscribe and emit
-	for i := 0; i < 50; i++ {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
-			topic := fmt.Sprintf("topic:%d", idx%5)
+	for i := range 50 {
+		wg.Go(func() {
+			topic := fmt.Sprintf("topic:%d", i%5)
 			disposer := bus.On(topic, func(ctx context.Context, e UserRegisteredEvent) error {
 				receivedCount.Add(1)
 				return nil
 			})
 
 			// Emit some events
-			_ = bus.Emit(context.Background(), topic, UserRegisteredEvent{UserID: fmt.Sprintf("u_%d", idx)})
+			_ = bus.Emit(context.Background(), topic, UserRegisteredEvent{UserID: fmt.Sprintf("u_%d", i)})
 
 			// Randomly dispose
-			if idx%2 == 0 {
+			if i%2 == 0 {
 				_ = disposer()
 			}
-		}(i)
+		})
 	}
 
-	for i := 0; i < 50; i++ {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
-			topic := fmt.Sprintf("topic:%d", idx%5)
-			_ = bus.Emit(context.Background(), topic, UserRegisteredEvent{UserID: fmt.Sprintf("u_%d", idx)})
-		}(i)
+	for i := range 50 {
+		wg.Go(func() {
+			topic := fmt.Sprintf("topic:%d", i%5)
+			_ = bus.Emit(context.Background(), topic, UserRegisteredEvent{UserID: fmt.Sprintf("u_%d", i)})
+		})
 	}
 
 	wg.Wait()

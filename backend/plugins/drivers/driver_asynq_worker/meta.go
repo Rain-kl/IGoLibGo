@@ -4,9 +4,12 @@
 package driver_asynq_worker
 
 import (
+	"maps"
+	"slices"
+	"sync"
+
 	"Wavelet/core/contracts"
 	"Wavelet/core/extpoints"
-	"sync"
 )
 
 // TaskParam 任务参数定义
@@ -186,9 +189,5 @@ func GetRegisteredAsynqTasks() []string {
 	handlerRegistryMutex.RLock()
 	defer handlerRegistryMutex.RUnlock()
 
-	keys := make([]string, 0, len(handlerRegistry))
-	for k := range handlerRegistry {
-		keys = append(keys, k)
-	}
-	return keys
+	return slices.Collect(maps.Keys(handlerRegistry))
 }

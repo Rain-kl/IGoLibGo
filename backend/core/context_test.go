@@ -512,24 +512,20 @@ func TestConcurrentAccess(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// Concurrently provide, inject, fork, set, and get
-	for i := 0; i < 50; i++ {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
-			ctx.Set(fmt.Sprintf("key-%d", idx), idx)
-			_, _ = ctx.Get(fmt.Sprintf("key-%d", idx))
+	for i := range 50 {
+		wg.Go(func() {
+			ctx.Set(fmt.Sprintf("key-%d", i), i)
+			_, _ = ctx.Get(fmt.Sprintf("key-%d", i))
 
 			child := ctx.Fork()
-			child.Set("child_key", idx)
-		}(i)
+			child.Set("child_key", i)
+		})
 	}
 
 	core.Provide[SampleService](ctx, &sampleServiceImpl{})
 
-	for i := 0; i < 50; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 50 {
+		wg.Go(func() {
 			svc, err := core.Inject[SampleService](ctx)
 			if err == nil {
 				_ = svc.Greet("Concurrency")
@@ -537,7 +533,7 @@ func TestConcurrentAccess(t *testing.T) {
 			_ = core.Using(ctx, func(s SampleService) {
 				_ = s.Greet("Safe")
 			})
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -625,14 +621,12 @@ func TestContainer_InterfaceResolutionCache(t *testing.T) {
 
 	// 3. Concurrent lookups
 	var wg sync.WaitGroup
-	for i := 0; i < 20; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 20 {
+		wg.Go(func() {
 			r, e := core.Inject[SampleService](ctx)
 			assert.NoError(t, e)
 			assert.Equal(t, "Cached: Bob", r.Greet("Bob"))
-		}()
+		})
 	}
 	wg.Wait()
 

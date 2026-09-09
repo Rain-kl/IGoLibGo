@@ -29,8 +29,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 			span.SetStatus(codes.Error, err.Error())
 		}
 
-		var apiErr *APIError
-		if errors.As(err, &apiErr) {
+		if apiErr, ok := errors.AsType[*APIError](err); ok {
 			errCode := apiErr.ErrCode
 			if errCode == "" {
 				errCode = httpStatusToErrorCode(apiErr.Code)

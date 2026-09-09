@@ -76,3 +76,29 @@ func TestSortAndLimitRecords(t *testing.T) {
 		t.Errorf("expected sorted[2].id = 3, got %d", sorted[2].id)
 	}
 }
+
+func TestMap(t *testing.T) {
+	if got := Map[int, string](nil, func(i int) string { return "" }); got != nil {
+		t.Errorf("Map(nil) = %v, want nil", got)
+	}
+
+	input := []int{1, 2, 3}
+	got := Map(input, func(i int) int { return i * 2 })
+	want := []int{2, 4, 6}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Map(%v) = %v, want %v", input, got, want)
+	}
+}
+
+func TestFilter(t *testing.T) {
+	if got := Filter[int](nil, func(i int) bool { return true }); got != nil {
+		t.Errorf("Filter(nil) = %v, want nil", got)
+	}
+
+	input := []int{1, 2, 3, 4, 5, 6}
+	got := Filter(input, func(i int) bool { return i%2 == 0 })
+	want := []int{2, 4, 6}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Filter(%v) = %v, want %v", input, got, want)
+	}
+}

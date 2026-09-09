@@ -96,17 +96,15 @@ func ServeFileByID(c *gin.Context) {
 // response and reports whether it handled the error. A missing record is 404
 // and a malformed path ID is 400; anything else is left to the caller.
 func AbortUploadRecordError(c *gin.Context, err error) bool {
-	var numErr *strconv.NumError
-	switch {
-	case repository.IsRecordNotFound(err):
+	if repository.IsRecordNotFound(err) {
 		response.AbortNotFound(c, shared.ErrFileRecordNotFound)
 		return true
-	case errors.As(err, &numErr):
+	}
+	if _, ok := errors.AsType[*strconv.NumError](err); ok {
 		response.AbortBadRequest(c, shared.ErrInvalidFileID)
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // GetUploadRecordByID 从请求路径参数中解析文件 ID 并从数据库中检索处于 Pending 或 Used 状态的上传记录。

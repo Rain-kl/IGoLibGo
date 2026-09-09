@@ -130,8 +130,8 @@ func NewSource(opts ...Option) (*Source, error) {
 
 // isNotFound reports whether the loader failed only because the file is absent.
 func isNotFound(err error) bool {
-	var notFound viper.ConfigFileNotFoundError
-	return errors.As(err, &notFound) || errors.Is(err, fs.ErrNotExist)
+	_, isViperNotFound := errors.AsType[viper.ConfigFileNotFoundError](err)
+	return isViperNotFound || errors.Is(err, fs.ErrNotExist)
 }
 
 // Lookup returns the raw value stored at a dotted path, or false when the file was not

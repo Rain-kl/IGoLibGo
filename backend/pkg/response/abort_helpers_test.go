@@ -29,8 +29,8 @@ func TestAbortNotFoundIfMissing(t *testing.T) {
 		c, _ := gin.CreateTestContext(w)
 		assert.True(t, AbortNotFoundIfMissing(c, gorm.ErrRecordNotFound, "记录不存在"))
 		assert.True(t, c.IsAborted())
-		var apiErr *APIError
-		require.True(t, errors.As(c.Errors.Last().Err, &apiErr))
+		apiErr, ok := errors.AsType[*APIError](c.Errors.Last().Err)
+		require.True(t, ok)
 		assert.Equal(t, http.StatusNotFound, apiErr.Code)
 		assert.Equal(t, "记录不存在", apiErr.Msg)
 	})
@@ -40,8 +40,8 @@ func TestAbortNotFoundIfMissing(t *testing.T) {
 		c, _ := gin.CreateTestContext(w)
 		assert.True(t, AbortNotFoundIfMissing(c, errors.New("boom"), "记录不存在"))
 		assert.True(t, c.IsAborted())
-		var apiErr *APIError
-		require.True(t, errors.As(c.Errors.Last().Err, &apiErr))
+		apiErr, ok := errors.AsType[*APIError](c.Errors.Last().Err)
+		require.True(t, ok)
 		assert.Equal(t, http.StatusBadRequest, apiErr.Code)
 		assert.Equal(t, "boom", apiErr.Msg)
 	})
@@ -60,8 +60,8 @@ func TestAbortBadRequestOnError(t *testing.T) {
 		c, _ := gin.CreateTestContext(w)
 		assert.True(t, AbortBadRequestOnError(c, errors.New("bad")))
 		assert.True(t, c.IsAborted())
-		var apiErr *APIError
-		require.True(t, errors.As(c.Errors.Last().Err, &apiErr))
+		apiErr, ok := errors.AsType[*APIError](c.Errors.Last().Err)
+		require.True(t, ok)
 		assert.Equal(t, http.StatusBadRequest, apiErr.Code)
 		assert.Equal(t, "bad", apiErr.Msg)
 	})

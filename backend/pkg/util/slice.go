@@ -81,3 +81,29 @@ func SortAndLimitRecords[T IdentifiableTimeRecord](rows []T, limit int) []T {
 	}
 	return rows
 }
+
+// Map applies fn to each element of slice and returns the resulting slice.
+func Map[T, U any](slice []T, fn func(T) U) []U {
+	if slice == nil {
+		return nil
+	}
+	result := make([]U, len(slice))
+	for i, v := range slice {
+		result[i] = fn(v)
+	}
+	return result
+}
+
+// Filter returns a new slice containing only the elements that satisfy predicate.
+func Filter[T any](slice []T, predicate func(T) bool) []T {
+	if slice == nil {
+		return nil
+	}
+	result := make([]T, 0, len(slice))
+	for _, v := range slice {
+		if predicate(v) {
+			result = append(result, v)
+		}
+	}
+	return result
+}

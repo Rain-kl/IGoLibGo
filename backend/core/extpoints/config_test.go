@@ -51,9 +51,10 @@ func TestDeclareRegistersTaggedLeafKeys(t *testing.T) {
 
 	require.NoError(t, r.Declare("cache", extpoints.ConfigBinding{Prefix: "redis", Target: &redisConfig{}}))
 
-	keys := make([]string, 0)
-	for _, e := range r.Entries() {
-		keys = append(keys, e.Key)
+	entries := r.Entries()
+	keys := make([]string, len(entries))
+	for i, e := range entries {
+		keys[i] = e.Key
 	}
 	assert.Equal(t, []string{
 		"redis.addrs", "redis.db", "redis.dial_timeout", "redis.enabled", "redis.key_prefix",

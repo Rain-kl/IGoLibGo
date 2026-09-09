@@ -6,6 +6,8 @@ package testhelper
 
 import (
 	"context"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -317,10 +319,7 @@ func seedDefaultConfigs(t *testing.T, tx *gorm.DB) {
 		"oidc_login_enabled":        {},
 	}
 
-	keys := make([]string, 0, len(publicKeys))
-	for key := range publicKeys {
-		keys = append(keys, key)
-	}
+	keys := slices.Collect(maps.Keys(publicKeys))
 	if err := tx.Model(&SystemConfig{}).
 		Where("key IN ?", keys).
 		Update("visibility", "visible").Error; err != nil {
