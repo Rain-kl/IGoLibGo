@@ -9,7 +9,10 @@ import type {
   CheckInSessionResponse,
   CheckInSignRequest,
   CheckInSignResponse,
+  CheckInVenueProfile,
+  CheckInVenueProfilesResponse,
   QRCodeResponse,
+  SaveCheckInVenueProfileRequest,
 } from './types';
 
 export class IGoCheckInService extends BaseService {
@@ -47,5 +50,25 @@ export class IGoCheckInService extends BaseService {
 
   static async clearSession(): Promise<void> {
     return this.delete<void>('/session');
+  }
+
+  static async getVenueProfile(
+    libraryId: number,
+  ): Promise<CheckInVenueProfile | null> {
+    return this.get<CheckInVenueProfile | null>(`/profiles/${libraryId}`);
+  }
+
+  static async saveVenueProfile(
+    libraryId: number,
+    data: SaveCheckInVenueProfileRequest,
+  ): Promise<CheckInVenueProfile> {
+    return this.put<CheckInVenueProfile>(
+      `/profiles/${libraryId}`,
+      data as unknown as Record<string, unknown>,
+    );
+  }
+
+  static async listVenueProfiles(): Promise<CheckInVenueProfilesResponse> {
+    return this.get<CheckInVenueProfilesResponse>('/profiles');
   }
 }

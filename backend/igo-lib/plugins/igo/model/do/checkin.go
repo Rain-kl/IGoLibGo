@@ -56,3 +56,30 @@ type CheckInAuthorizationResponse struct {
 	Device               *CheckInDeviceResponse `json:"device,omitempty"`
 	DeviceRefreshWarning string                 `json:"device_refresh_warning,omitempty"`
 }
+
+// CheckInVenueProfile represents saved beacon and simulated coordinates for a venue.
+type CheckInVenueProfile struct {
+	LibraryID   int     `json:"library_id"`
+	LibraryName string  `json:"library_name"`
+	BeaconUUID  string  `json:"beacon_uuid"`
+	Major       int     `json:"major"`
+	Minor       int     `json:"minor"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+	UpdatedAt   string  `json:"updated_at,omitempty"`
+}
+
+// CheckInVenueProfilesResponse is the collection of saved venue profiles.
+type CheckInVenueProfilesResponse struct {
+	Profiles []CheckInVenueProfile `json:"profiles"`
+}
+
+// SaveCheckInVenueProfileRequest updates or creates a venue profile.
+type SaveCheckInVenueProfileRequest struct {
+	LibraryName string  `json:"library_name"`
+	BeaconUUID  string  `json:"beacon_uuid" binding:"required"`
+	Major       int     `json:"major"`
+	Minor       int     `json:"minor"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+}

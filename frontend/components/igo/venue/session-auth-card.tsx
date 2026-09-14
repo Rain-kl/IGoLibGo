@@ -58,6 +58,9 @@ export function SessionAuthCard({
   const [qrOpen, setQrOpen] = React.useState(false);
   const [qrData, setQrData] = React.useState<QRCodeResponse | null>(null);
   const [qrLoading, setQrLoading] = React.useState(false);
+  const [qrLinkInput, setQrLinkInput] = React.useState('');
+  const [rememberQrLink, setRememberQrLink] = React.useState(true);
+  const [submittingQrLink, setSubmittingQrLink] = React.useState(false);
 
   // 手动 Cookie 录入弹窗状态
   const [cookieOpen, setCookieOpen] = React.useState(false);
@@ -82,15 +85,51 @@ export function SessionAuthCard({
     }
   };
 
-  // 提交 Cookie
+  // 提交扫码后复制的链接
+  const handleSubmitQrLink = async () => {
+    if (!qrLinkInput.trim()) return;
+    setSubmittingQrLink(true);
+    try {
+      await IGoService.session.authenticateFromCode({
+        code: qrLinkInput.trim(),
+        remember: rememberQrLink,
+      });
+      toast.success(tCommon('save'));
+      setQrOpen(false);
+      setQrLinkInput('');
+      onRefresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : tCommon('unknownError'));
+    } finally {
+      setSubmittingQrLink(false);
+    }
+  };
+
+  // 提交 Cookie 或授权链接
   const handleSubmitCookie = async () => {
-    if (!cookieInput.trim()) return;
+    const trimmed = cookieInput.trim();
+    if (!trimmed) return;
     setSubmittingCookie(true);
     try {
-      await IGoService.session.authenticateFromCookie({
-        cookie: cookieInput.trim(),
-        remember: rememberCookie,
-      });
+      const hasCode = /code=[A-Za-z0-9]{32}/i.test(trimmed);
+      const isUrl =
+        trimmed.startsWith('http://') || trimmed.startsWith('https://');
+      const isRawCode = /^[A-Za-z0-9]{32}$/.test(trimmed);
+
+      if (
+        (hasCode || isUrl || isRawCode) &&
+        !trimmed.toLowerCase().includes('authorization=')
+      ) {
+        await IGoService.session.authenticateFromCode({
+          code: trimmed,
+          remember: rememberCookie,
+        });
+      } else {
+        await IGoService.session.authenticateFromCookie({
+          cookie: trimmed,
+          remember: rememberCookie,
+        });
+      }
       toast.success(tCommon('save'));
       setCookieOpen(false);
       setCookieInput('');
@@ -275,7 +314,45 @@ export function SessionAuthCard({
             )}
             <div className='flex items-center gap-2 text-xs text-muted-foreground'>
               <CheckCircle2 className='size-3.5 text-primary' />
-              <span>扫码成功后后端将自动完成会话持久化与凭据解析</span>
+              <span>
+                微信扫码并授权后，可将跳转后的页面链接复制粘贴到下方快速绑定
+              </span>
+            </div>
+            <div className='w-full space-y-2 pt-2 border-t border-dashed'>
+              <Label className='text-xs font-medium text-foreground'>
+                {t('qrLinkInputLabel')}
+              </Label>
+              <Textarea
+                value={qrLinkInput}
+                onChange={(e) => setQrLinkInput(e.target.value)}
+                placeholder={t('qrLinkPlaceholder')}
+                rows={2}
+                className='font-mono text-xs shadow-none border-dashed break-all'
+              />
+              <div className='flex items-center justify-between pt-1'>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id='remember-qr-session'
+                    checked={rememberQrLink}
+                    onCheckedChange={(c) => setRememberQrLink(!!c)}
+                  />
+                  <Label
+                    htmlFor='remember-qr-session'
+                    className='text-xs font-normal cursor-pointer text-muted-foreground'
+                  >
+                    {t('rememberSession')}
+                  </Label>
+                </div>
+                <Button
+                  size='sm'
+                  onClick={handleSubmitQrLink}
+                  disabled={!qrLinkInput.trim() || submittingQrLink}
+                  className='gap-1.5 shadow-none'
+                >
+                  {submittingQrLink && <Spinner className='size-3.5' />}
+                  {t('parseAndLoginBtn')}
+                </Button>
+              </div>
             </div>
           </div>
           <DialogFooter className='sm:justify-between'>

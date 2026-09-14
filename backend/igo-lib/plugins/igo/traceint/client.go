@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -53,6 +54,11 @@ func (c *Client) GetCookie(ctx context.Context, templates do.ProtocolTemplatesRe
 	}
 	cli := *c.http()
 	cli.Jar = jar
+	cli.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		// Stop at the redirect response from the auth endpoint so that Set-Cookie headers
+		// are not lost due to cross-host redirect (e.g. wechat.v2.traceint.com -> web.traceint.com).
+		return http.ErrUseLastResponse
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return "", err
@@ -63,15 +69,27 @@ func (c *Client) GetCookie(ctx context.Context, templates do.ProtocolTemplatesRe
 		return "", fmt.Errorf("获取 Cookie 失败: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
-	_, _ = io.Copy(io.Discard, resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	if resp.Request == nil || resp.Request.URL == nil {
 		return "", errf("获取 Cookie 失败：空响应")
 	}
-	cookies := jar.Cookies(resp.Request.URL)
-	if len(cookies) == 0 {
-		cookies = resp.Cookies()
+
+	cookies := resp.Cookies()
+	if len(cookies) == 0 && req.URL != nil {
+		cookies = jar.Cookies(req.URL)
 	}
-	return BuildCookieHeader(cookies)
+	if len(cookies) == 0 {
+		cookies = jar.Cookies(resp.Request.URL)
+	}
+
+	header, err := BuildCookieHeader(cookies)
+	if err != nil {
+		if msg := extractTraceIntErrorMessage(string(body)); msg != "" {
+			return "", fmt.Errorf("获取 Cookie 失败: %s", msg)
+		}
+		return "", err
+	}
+	return header, nil
 }
 
 func (c *Client) graphql(ctx context.Context, templates do.ProtocolTemplatesResponse, cookie, payload string, tomorrow bool) ([]byte, error) {
@@ -208,4 +226,25 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return s[:n]
+}
+
+var (
+	traceintErrorDivRE   = regexp.MustCompile(`(?i)<div\s+class=["']text["'][^>]*>([^<]+)</div>`)
+	traceintTitleErrorRE = regexp.MustCompile(`(?i)<title>([^<]+)</title>`)
+)
+
+func extractTraceIntErrorMessage(html string) string {
+	if m := traceintErrorDivRE.FindStringSubmatch(html); len(m) >= minRegexMatches {
+		msg := strings.TrimSpace(m[1])
+		if msg != "" {
+			return msg
+		}
+	}
+	if m := traceintTitleErrorRE.FindStringSubmatch(html); len(m) >= minRegexMatches {
+		title := strings.TrimSpace(m[1])
+		if strings.Contains(title, "错误") || strings.Contains(strings.ToLower(title), "error") {
+			return title
+		}
+	}
+	return ""
 }

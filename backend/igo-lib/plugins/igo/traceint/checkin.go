@@ -19,6 +19,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const checkInPublicKeyPEM = `-----BEGIN PUBLIC KEY-----
@@ -45,6 +47,9 @@ func (c *Client) ExchangeCheckInCode(ctx context.Context, templates do.ProtocolT
 	}
 	cli := *c.http()
 	cli.Jar = jar
+	cli.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return "", nil, err
@@ -58,6 +63,18 @@ func (c *Client) ExchangeCheckInCode(ctx context.Context, templates do.ProtocolT
 	defer func() { _ = resp.Body.Close() }()
 	_, _ = io.Copy(io.Discard, resp.Body)
 	token, expiresAt = extractWechatSess(resp)
+	if token == "" && req.URL != nil {
+		for _, c := range jar.Cookies(req.URL) {
+			if strings.EqualFold(c.Name, "wechatSESS_ID") && c.Value != "" {
+				token = c.Value
+				if !c.Expires.IsZero() {
+					t := c.Expires.UTC()
+					expiresAt = &t
+				}
+				break
+			}
+		}
+	}
 	if token == "" {
 		return "", nil, errf("授权响应未返回 wechatSESS_ID，授权链接可能已被使用或已过期")
 	}
@@ -96,7 +113,13 @@ func (c *Client) GetCheckInServerTime(ctx context.Context, templates do.Protocol
 
 // SignCheckIn submits a beacon check-in.
 func (c *Client) SignCheckIn(ctx context.Context, templates do.ProtocolTemplatesResponse, token string, req do.CheckInSignRequest, serverTime string) (*do.CheckInSignResponse, error) {
-	devices, err := encodeJSONBase64([]any{[]any{strings.ToUpper(req.BeaconUUID), req.Major, req.Minor}})
+	beaconUUID := strings.TrimSpace(req.BeaconUUID)
+	if norm, ok := NormalizeUUID(beaconUUID); ok {
+		beaconUUID = norm
+	} else {
+		beaconUUID = strings.ToUpper(beaconUUID)
+	}
+	devices, err := encodeJSONBase64([]any{[]any{beaconUUID, req.Major, req.Minor}})
 	if err != nil {
 		return nil, err
 	}
@@ -204,21 +227,43 @@ func mapSign(raw []byte) (*do.CheckInSignResponse, error) {
 	msg := asString(root["msg"])
 	data, _ := root["data"].(map[string]any)
 	out := &do.CheckInSignResponse{Message: orDefault(msg, "验证成功")}
-	if data != nil {
-		if v, ok := data["status"]; ok {
-			n := asInt(v)
-			out.Status = &n
+	if data == nil {
+		return out, nil
+	}
+	if v, ok := data["status"]; ok {
+		n := asInt(v)
+		out.Status = &n
+	}
+	if v, ok := data["lib_id"]; ok {
+		n := asInt(v)
+		out.LibraryID = &n
+	}
+	out.LibraryName = asString(data["lib_name"])
+	out.LibraryFloor = asString(data["lib_floor"])
+	out.SeatKey = asString(data["seat_key"])
+	out.SeatName = asString(data["seat_name"])
+	if v, ok := data["date"]; ok {
+		sec := asInt64(v)
+		if sec > 0 {
+			out.SignedAt = time.Unix(sec, 0).In(time.Local).Format("2006-01-02 15:04:05")
 		}
-		if v, ok := data["lib_id"]; ok {
-			n := asInt(v)
-			out.LibraryID = &n
+	}
+	if v, ok := data["exp_date"]; ok {
+		sec := asInt64(v)
+		if sec > 0 {
+			out.ExpirationTime = time.Unix(sec, 0).In(time.Local).Format("15:04:05")
 		}
-		out.LibraryName = asString(data["lib_name"])
-		out.LibraryFloor = asString(data["lib_floor"])
-		out.SeatKey = asString(data["seat_key"])
-		out.SeatName = asString(data["seat_name"])
 	}
 	return out, nil
+}
+
+// NormalizeUUID parses and formats a UUID to canonical uppercase form.
+func NormalizeUUID(value string) (string, bool) {
+	parsed, err := uuid.Parse(strings.TrimSpace(value))
+	if err != nil {
+		return "", false
+	}
+	return strings.ToUpper(parsed.String()), true
 }
 
 func encodeJSONBase64(v any) (string, error) {

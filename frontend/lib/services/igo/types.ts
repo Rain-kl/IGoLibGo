@@ -277,6 +277,30 @@ export interface CheckInAuthorizationResponse {
   device_refresh_warning?: string;
 }
 
+export interface CheckInVenueProfile {
+  library_id: number;
+  library_name: string;
+  beacon_uuid: string;
+  major: number;
+  minor: number;
+  latitude: number;
+  longitude: number;
+  updated_at?: string;
+}
+
+export interface CheckInVenueProfilesResponse {
+  profiles: CheckInVenueProfile[];
+}
+
+export interface SaveCheckInVenueProfileRequest {
+  library_name?: string;
+  beacon_uuid: string;
+  major: number;
+  minor: number;
+  latitude: number;
+  longitude: number;
+}
+
 export interface ProtocolTemplatesResponse {
   get_cookie_url_template: string;
   cookie_authorization_return_url: string;

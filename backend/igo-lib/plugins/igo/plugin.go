@@ -133,6 +133,9 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	g.GET("/checkin/devices", ctrl.GetCheckInDevices)
 	g.POST("/checkin/sign", ctrl.SignCheckIn)
 	g.DELETE("/checkin/session", ctrl.ClearCheckInSession)
+	g.GET("/checkin/profiles", ctrl.ListCheckInVenueProfiles)
+	g.GET("/checkin/profiles/:id", ctrl.GetCheckInVenueProfile)
+	g.PUT("/checkin/profiles/:id", ctrl.SaveCheckInVenueProfile)
 
 	g.GET("/protocol/templates", ctrl.GetProtocolTemplates)
 	g.GET("/protocol/templates/defaults", ctrl.GetDefaultProtocolTemplates)

@@ -111,3 +111,65 @@ func (ctrl *Controller) ClearCheckInSession(c *gin.Context) {
 		ctrl.noContent(c, err)
 	})
 }
+
+// GetCheckInVenueProfile 获取指定场馆的签到配置
+// @Summary 获取场馆签到配置
+// @Tags igo
+// @Produce json
+// @Param id path int true "场馆 ID"
+// @Success 200 {object} response.Any{data=do.CheckInVenueProfile}
+// @Failure 400 {object} response.AnyError
+// @Failure 401 {object} response.AnyError
+// @Router /api/v1/igo/checkin/profiles/{id} [get]
+func (ctrl *Controller) GetCheckInVenueProfile(c *gin.Context) {
+	libraryID, ok := parseLibraryID(c)
+	if !ok {
+		return
+	}
+	ctrl.withUser(c, func(userID uint64) {
+		res, err := ctrl.svc.GetCheckInVenueProfile(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
+	})
+}
+
+// SaveCheckInVenueProfile 保存指定场馆的签到配置
+// @Summary 保存场馆签到配置
+// @Tags igo
+// @Accept json
+// @Produce json
+// @Param id path int true "场馆 ID"
+// @Param request body do.SaveCheckInVenueProfileRequest true "签到配置"
+// @Success 200 {object} response.Any{data=do.CheckInVenueProfile}
+// @Failure 400 {object} response.AnyError
+// @Failure 401 {object} response.AnyError
+// @Router /api/v1/igo/checkin/profiles/{id} [put]
+//
+//nolint:dupl // standard controller parameter binding
+func (ctrl *Controller) SaveCheckInVenueProfile(c *gin.Context) {
+	libraryID, ok := parseLibraryID(c)
+	if !ok {
+		return
+	}
+	req, ok := bindJSON[do.SaveCheckInVenueProfileRequest](c)
+	if !ok {
+		return
+	}
+	ctrl.withUser(c, func(userID uint64) {
+		res, err := ctrl.svc.SaveCheckInVenueProfile(c.Request.Context(), userID, libraryID, req)
+		ctrl.jsonOK(c, res, err)
+	})
+}
+
+// ListCheckInVenueProfiles 获取所有已保存的场馆签到配置
+// @Summary 获取所有场馆签到配置
+// @Tags igo
+// @Produce json
+// @Success 200 {object} response.Any{data=do.CheckInVenueProfilesResponse}
+// @Failure 401 {object} response.AnyError
+// @Router /api/v1/igo/checkin/profiles [get]
+func (ctrl *Controller) ListCheckInVenueProfiles(c *gin.Context) {
+	ctrl.withUser(c, func(userID uint64) {
+		res, err := ctrl.svc.ListCheckInVenueProfiles(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
+	})
+}

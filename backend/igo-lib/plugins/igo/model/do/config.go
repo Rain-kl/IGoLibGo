@@ -38,36 +38,38 @@ type SaveProtocolTemplatesRequest struct {
 
 // SettingsResponse is the migratable subset of desktop system settings.
 type SettingsResponse struct {
-	RequestTimeoutSeconds              int    `json:"request_timeout_seconds"`
-	NetworkMaxRetries                  int    `json:"network_max_retries"`
-	TraceIntGraphQLOverridesEnabled    bool   `json:"traceint_graphql_overrides_enabled"`
-	GrabReservationStrategy            string `json:"grab_reservation_strategy"`
-	OptimalGrabStrategyReminderEnabled bool   `json:"optimal_grab_strategy_reminder_enabled"`
-	GrabScheduledStartDefault          string `json:"grab_scheduled_start_default,omitempty"`
-	TomorrowScheduledStartDefault      string `json:"tomorrow_scheduled_start_default,omitempty"`
-	OccupyReReserveDelaySeconds        int    `json:"occupy_re_reserve_delay_seconds"`
-	OccupyCheckIntervalMode            string `json:"occupy_check_interval_mode"`
-	GlobalLeakScanIntervalSeconds      int    `json:"global_leak_scan_interval_seconds"`
-	AutoReleaseEnabled                 bool   `json:"auto_release_enabled"`
-	AutoReleaseLeadSeconds             int    `json:"auto_release_lead_seconds"`
-	HomeReservationProgressMode        string `json:"home_reservation_progress_mode,omitempty"`
+	RequestTimeoutSeconds              int                         `json:"request_timeout_seconds"`
+	NetworkMaxRetries                  int                         `json:"network_max_retries"`
+	TraceIntGraphQLOverridesEnabled    bool                        `json:"traceint_graphql_overrides_enabled"`
+	GrabReservationStrategy            string                      `json:"grab_reservation_strategy"`
+	OptimalGrabStrategyReminderEnabled bool                        `json:"optimal_grab_strategy_reminder_enabled"`
+	GrabScheduledStartDefault          string                      `json:"grab_scheduled_start_default,omitempty"`
+	TomorrowScheduledStartDefault      string                      `json:"tomorrow_scheduled_start_default,omitempty"`
+	OccupyReReserveDelaySeconds        int                         `json:"occupy_re_reserve_delay_seconds"`
+	OccupyCheckIntervalMode            string                      `json:"occupy_check_interval_mode"`
+	GlobalLeakScanIntervalSeconds      int                         `json:"global_leak_scan_interval_seconds"`
+	AutoReleaseEnabled                 bool                        `json:"auto_release_enabled"`
+	AutoReleaseLeadSeconds             int                         `json:"auto_release_lead_seconds"`
+	HomeReservationProgressMode        string                      `json:"home_reservation_progress_mode,omitempty"`
+	CheckInProfiles                    map[int]CheckInVenueProfile `json:"checkin_profiles,omitempty"`
 }
 
 // SaveSettingsRequest updates migratable settings. All fields optional (PATCH-like PUT).
 type SaveSettingsRequest struct {
-	RequestTimeoutSeconds              *int    `json:"request_timeout_seconds"`
-	NetworkMaxRetries                  *int    `json:"network_max_retries"`
-	TraceIntGraphQLOverridesEnabled    *bool   `json:"traceint_graphql_overrides_enabled"`
-	GrabReservationStrategy            *string `json:"grab_reservation_strategy"`
-	OptimalGrabStrategyReminderEnabled *bool   `json:"optimal_grab_strategy_reminder_enabled"`
-	GrabScheduledStartDefault          *string `json:"grab_scheduled_start_default"`
-	TomorrowScheduledStartDefault      *string `json:"tomorrow_scheduled_start_default"`
-	OccupyReReserveDelaySeconds        *int    `json:"occupy_re_reserve_delay_seconds"`
-	OccupyCheckIntervalMode            *string `json:"occupy_check_interval_mode"`
-	GlobalLeakScanIntervalSeconds      *int    `json:"global_leak_scan_interval_seconds"`
-	AutoReleaseEnabled                 *bool   `json:"auto_release_enabled"`
-	AutoReleaseLeadSeconds             *int    `json:"auto_release_lead_seconds"`
-	HomeReservationProgressMode        *string `json:"home_reservation_progress_mode"`
+	RequestTimeoutSeconds              *int                        `json:"request_timeout_seconds"`
+	NetworkMaxRetries                  *int                        `json:"network_max_retries"`
+	TraceIntGraphQLOverridesEnabled    *bool                       `json:"traceint_graphql_overrides_enabled"`
+	GrabReservationStrategy            *string                     `json:"grab_reservation_strategy"`
+	OptimalGrabStrategyReminderEnabled *bool                       `json:"optimal_grab_strategy_reminder_enabled"`
+	GrabScheduledStartDefault          *string                     `json:"grab_scheduled_start_default"`
+	TomorrowScheduledStartDefault      *string                     `json:"tomorrow_scheduled_start_default"`
+	OccupyReReserveDelaySeconds        *int                        `json:"occupy_re_reserve_delay_seconds"`
+	OccupyCheckIntervalMode            *string                     `json:"occupy_check_interval_mode"`
+	GlobalLeakScanIntervalSeconds      *int                        `json:"global_leak_scan_interval_seconds"`
+	AutoReleaseEnabled                 *bool                       `json:"auto_release_enabled"`
+	AutoReleaseLeadSeconds             *int                        `json:"auto_release_lead_seconds"`
+	HomeReservationProgressMode        *string                     `json:"home_reservation_progress_mode"`
+	CheckInProfiles                    map[int]CheckInVenueProfile `json:"checkin_profiles"`
 }
 
 // BackupExportRequest encrypts and returns a backup blob.

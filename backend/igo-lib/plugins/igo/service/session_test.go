@@ -102,6 +102,30 @@ func TestAuthenticateFromCookieAndListLibraries(t *testing.T) {
 	assert.Contains(t, string(raw), "二楼")
 }
 
+func TestAuthenticateFromCookie_AutoExtractCode(t *testing.T) {
+	svc := setupService(t, func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "graphql") {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `{"data":{"userAuth":{"reserve":{"libs":[
+				{"lib_id":8,"lib_name":"二楼","lib_floor":"2","is_open":true,"lib_rt":{"seats_total":20,"seats_used":1,"seats_booking":0}}
+			]}}}}`)
+			return
+		}
+		// Authorization URL endpoint
+		http.SetCookie(w, &http.Cookie{Name: "SERVERID", Value: "s1"})
+		http.SetCookie(w, &http.Cookie{Name: "Authorization", Value: "tok"})
+		w.WriteHeader(http.StatusOK)
+	})
+
+	ctx := context.Background()
+	userWechatURL := "http://wechat.v2.traceint.com/index.php/graphql/?operationName=index&query=query%7BuserAuth%7BtongJi%7Brank%7D%7D%7D&code=081D0KGa1dplpM0ZzzIa1ss0tZ0D0KGP&state=1"
+	res, err := svc.AuthenticateFromCookie(ctx, 42, do.AuthFromCookieRequest{Cookie: userWechatURL, Remember: true})
+	require.NoError(t, err)
+	require.True(t, res.Session.Authorized)
+	require.Len(t, res.Libraries, 1)
+	assert.Equal(t, 8, res.Libraries[0].LibraryID)
+}
+
 func TestGetAuthQRCode(t *testing.T) {
 	svc := setupService(t, func(w http.ResponseWriter, r *http.Request) {})
 	ctx := context.Background()

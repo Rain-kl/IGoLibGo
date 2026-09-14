@@ -239,6 +239,8 @@ func (ctrl *Controller) SaveFavorites(c *gin.Context) {
 // @Failure 401 {object} response.AnyError
 // @Failure 501 {object} response.AnyError
 // @Router /api/v1/igo/libraries/{id}/seat-labels [put]
+//
+//nolint:dupl // standard controller parameter binding
 func (ctrl *Controller) SetSeatLabels(c *gin.Context) {
 	libraryID, ok := parseLibraryID(c)
 	if !ok {

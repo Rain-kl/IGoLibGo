@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -36,10 +37,18 @@ func ExtractCode(raw string) (string, bool) {
 		return raw, true
 	}
 	m := codeRE.FindStringSubmatch(raw)
-	if len(m) != minRegexMatches {
-		return "", false
+	if len(m) == minRegexMatches {
+		return m[1], true
 	}
-	return m[1], true
+	if strings.Contains(raw, "%") {
+		if unescaped, err := url.QueryUnescape(raw); err == nil && unescaped != raw {
+			m = codeRE.FindStringSubmatch(unescaped)
+			if len(m) == minRegexMatches {
+				return m[1], true
+			}
+		}
+	}
+	return "", false
 }
 
 // BuildCookieHeader prefers Authorization then SERVERID, matching the desktop client.
@@ -50,17 +59,23 @@ func BuildCookieHeader(cookies []*http.Cookie) (string, error) {
 	var auth, server string
 	for _, c := range cookies {
 		pair := c.Name + "=" + c.Value
-		switch c.Name {
-		case "Authorization":
+		if strings.EqualFold(c.Name, "Authorization") {
 			auth = pair
-		case "SERVERID":
+		} else if strings.EqualFold(c.Name, "SERVERID") {
 			server = pair
 		}
 	}
 	if auth != "" && server != "" {
 		return auth + "; " + server, nil
 	}
-	return cookies[1].Name + "=" + cookies[1].Value + "; " + cookies[0].Name + "=" + cookies[0].Value, nil
+	if auth != "" && len(cookies) >= 2 {
+		for _, c := range cookies {
+			if !strings.EqualFold(c.Name, "Authorization") {
+				return auth + "; " + c.Name + "=" + c.Value, nil
+			}
+		}
+	}
+	return "", errf("Cookie不包含关键身份信息，可能是code过期，重新填写含code的链接")
 }
 
 // CookieExpiration parses expireAt/exp from the Authorization JWT.

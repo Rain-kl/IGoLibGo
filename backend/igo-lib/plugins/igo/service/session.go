@@ -55,7 +55,15 @@ func (s *Service) AuthenticateFromCode(ctx context.Context, userID uint64, req d
 }
 
 // AuthenticateFromCookie stores and validates a raw cookie.
+// If the input is detected to be a WeChat authorization link or code, it automatically exchanges it.
 func (s *Service) AuthenticateFromCookie(ctx context.Context, userID uint64, req do.AuthFromCookieRequest) (*do.SessionWorkflowResponse, error) {
+	raw := strings.TrimSpace(req.Cookie)
+	if code, ok := traceint.ExtractCode(raw); ok && (!strings.Contains(raw, "Authorization=") || strings.HasPrefix(raw, "http")) {
+		return s.AuthenticateFromCode(ctx, userID, do.AuthFromCodeRequest{
+			Code:     code,
+			Remember: req.Remember,
+		})
+	}
 	return s.persistCookie(ctx, userID, req.Cookie, "manual_cookie", req.Remember)
 }
 

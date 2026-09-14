@@ -85,6 +85,9 @@ func (s *Service) SaveSettings(ctx context.Context, userID uint64, req do.SaveSe
 	applyBool(&cur.AutoReleaseEnabled, req.AutoReleaseEnabled)
 	applyInt(&cur.AutoReleaseLeadSeconds, req.AutoReleaseLeadSeconds)
 	applyStr(&cur.HomeReservationProgressMode, req.HomeReservationProgressMode)
+	if req.CheckInProfiles != nil {
+		cur.CheckInProfiles = req.CheckInProfiles
+	}
 	raw, err := json.Marshal(cur)
 	if err != nil {
 		return nil, err
