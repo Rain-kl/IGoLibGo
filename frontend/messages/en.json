@@ -2103,7 +2103,8 @@
       "labelDialogTitle": "Batch Set Seat Notes & Labels",
       "labelInputPlaceholder": "Enter note text (e.g. Quiet Zone Window, Dedicated)...",
       "saveLabel": "Save Note",
-      "deleteLabel": "Delete Note"
+      "deleteLabel": "Delete Note",
+      "refreshVenue": "Refresh Venue"
     },
     "grab": {
       "title": "Seat Grabber",

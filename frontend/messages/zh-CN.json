@@ -2103,7 +2103,8 @@
       "labelDialogTitle": "批量设置座位备注与标签",
       "labelInputPlaceholder": "输入座位备注（如：静音区靠窗、考研专属）",
       "saveLabel": "保存备注",
-      "deleteLabel": "删除备注"
+      "deleteLabel": "删除备注",
+      "refreshVenue": "刷新场馆"
     },
     "grab": {
       "title": "抢座引擎",
