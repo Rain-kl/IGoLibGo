@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Bell, Code2, FileText, Sliders } from 'lucide-react';
+import { Code2, Sliders } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IGoService } from '@/lib/services/igo';
@@ -16,8 +16,6 @@ import type {
 
 import { RuntimeSettingsTab } from './runtime-settings-tab';
 import { ProtocolTemplatesTab } from './protocol-templates-tab';
-import { BackupRestoreTab } from './backup-restore-tab';
-import { NotificationJumpCard } from './notification-jump-card';
 
 export function IGoTab() {
   const t = useTranslations('igo.settings');
@@ -57,14 +55,6 @@ export function IGoTab() {
             <Code2 className='size-3.5' />
             <span>{t('tabTemplates')}</span>
           </TabsTrigger>
-          <TabsTrigger value='backup' className='text-xs gap-1.5'>
-            <FileText className='size-3.5' />
-            <span>{t('tabBackup')}</span>
-          </TabsTrigger>
-          <TabsTrigger value='notifications' className='text-xs gap-1.5'>
-            <Bell className='size-3.5' />
-            <span>{t('tabNotifications')}</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -87,20 +77,6 @@ export function IGoTab() {
             loading={loading}
             onRefresh={loadData}
           />
-        </TabsContent>
-
-        <TabsContent
-          value='backup'
-          className='space-y-4 focus-visible:outline-none'
-        >
-          <BackupRestoreTab />
-        </TabsContent>
-
-        <TabsContent
-          value='notifications'
-          className='space-y-4 focus-visible:outline-none'
-        >
-          <NotificationJumpCard />
         </TabsContent>
       </Tabs>
     </div>
