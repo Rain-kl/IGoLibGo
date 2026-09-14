@@ -32,7 +32,8 @@ func (s *Service) GetAuthQRCode(ctx context.Context, userID uint64) (*do.QRCodeR
 		return nil, err
 	}
 	return &do.QRCodeResponse{
-		AuthURL: tpl.CookieAuthorizationReturnURL,
+		ImageDataURL: defaultQRCodeDataURL(),
+		AuthURL:      tpl.CookieAuthorizationReturnURL,
 	}, nil
 }
 

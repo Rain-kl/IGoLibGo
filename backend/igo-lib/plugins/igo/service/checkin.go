@@ -29,7 +29,10 @@ func (s *Service) GetCheckInAuthQRCode(ctx context.Context, userID uint64) (*do.
 	if err != nil {
 		return nil, err
 	}
-	return &do.QRCodeResponse{AuthURL: tpl.RemoteCheckInAuthorizationReturnURL}, nil
+	return &do.QRCodeResponse{
+		ImageDataURL: defaultQRCodeDataURL(),
+		AuthURL:      tpl.RemoteCheckInAuthorizationReturnURL,
+	}, nil
 }
 
 // AuthorizeCheckInFromCode exchanges a WeChat code for a check-in session.
