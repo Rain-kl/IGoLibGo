@@ -195,14 +195,17 @@ func TestLoginRequiredMiddlewarePopulatesServiceContext(t *testing.T) {
 		})
 
 		var (
-			gotUser *contracts.UserDTO
-			userErr error
-			gotUID  uint64
-			uidErr  error
+			gotUser       *contracts.UserDTO
+			userErr       error
+			gotUID        uint64
+			uidErr        error
+			gotReqUser    *contracts.UserDTO
+			reqUserErr    error
 		)
 		engine.GET("/protected", auth.LoginRequired(), func(c *gin.Context) {
 			gotUser, userErr = svc.GetCurrentUser(c)
 			gotUID, uidErr = svc.GetCurrentUserID(c)
+			gotReqUser, reqUserErr = svc.GetCurrentUser(c.Request.Context())
 			c.Status(http.StatusNoContent)
 		})
 
@@ -215,6 +218,11 @@ func TestLoginRequiredMiddlewarePopulatesServiceContext(t *testing.T) {
 		assert.Equal(t, uint64(9001), gotUser.ID)
 		assert.Equal(t, "session_user", gotUser.Username)
 
+		require.NoError(t, reqUserErr)
+		require.NotNil(t, gotReqUser)
+		assert.Equal(t, uint64(9001), gotReqUser.ID)
+		assert.Equal(t, "session_user", gotReqUser.Username)
+
 		require.NoError(t, uidErr)
 		assert.Equal(t, uint64(9001), gotUID)
 	})
@@ -222,11 +230,14 @@ func TestLoginRequiredMiddlewarePopulatesServiceContext(t *testing.T) {
 	t.Run("Access Token 鉴权链路上 GetCurrentUser 可用", func(t *testing.T) {
 		engine := newSessionEngine()
 		var (
-			gotUser *contracts.UserDTO
-			userErr error
+			gotUser    *contracts.UserDTO
+			userErr    error
+			gotReqUser *contracts.UserDTO
+			reqUserErr error
 		)
 		engine.GET("/protected", auth.LoginRequired(), func(c *gin.Context) {
 			gotUser, userErr = svc.GetCurrentUser(c)
+			gotReqUser, reqUserErr = svc.GetCurrentUser(c.Request.Context())
 			c.Status(http.StatusNoContent)
 		})
 
@@ -240,6 +251,11 @@ func TestLoginRequiredMiddlewarePopulatesServiceContext(t *testing.T) {
 		require.NotNil(t, gotUser)
 		assert.Equal(t, uint64(9002), gotUser.ID)
 		assert.Equal(t, "token_user", gotUser.Username)
+
+		require.NoError(t, reqUserErr)
+		require.NotNil(t, gotReqUser)
+		assert.Equal(t, uint64(9002), gotReqUser.ID)
+		assert.Equal(t, "token_user", gotReqUser.Username)
 	})
 
 	t.Run("未登录请求被中间件拒绝", func(t *testing.T) {
