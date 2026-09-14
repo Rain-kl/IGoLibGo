@@ -13,6 +13,7 @@ import type {
   BoundLibraryResponse,
   CheckInDeviceResponse,
   CheckInSessionResponse,
+  ReservationResponse,
 } from '@/lib/services/igo/types';
 
 import { CheckInAuthCard } from '@/components/igo/checkin/checkin-auth-card';
@@ -32,23 +33,29 @@ export default function CheckInPage() {
   const [boundInfo, setBoundInfo] = React.useState<BoundLibraryResponse | null>(
     null,
   );
+  const [reservation, setReservation] =
+    React.useState<ReservationResponse | null>(null);
   const [logs, setLogs] = React.useState<ActivityLogEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   const loadData = React.useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
-      const [sessRes, devRes, boundRes, logsRes] = await Promise.all([
-        IGoService.checkin.getSession().catch(() => null),
-        IGoService.checkin.getDevices().catch(() => null),
-        IGoService.venue.getBoundLibrary().catch(() => null),
-        IGoService.dashboard.listActivityLogs({ limit: 40 }).catch(() => []),
-      ]);
+      const [sessRes, devRes, boundRes, logsRes, reservRes] = await Promise.all(
+        [
+          IGoService.checkin.getSession().catch(() => null),
+          IGoService.checkin.getDevices().catch(() => null),
+          IGoService.venue.getBoundLibrary().catch(() => null),
+          IGoService.dashboard.listActivityLogs({ limit: 40 }).catch(() => []),
+          IGoService.reservation.getReservation().catch(() => null),
+        ],
+      );
 
       setSession(sessRes);
       setDevice(devRes);
       setBoundInfo(boundRes);
       setLogs(logsRes || []);
+      setReservation(reservRes);
     } finally {
       if (!isSilent) setLoading(false);
     }
@@ -89,6 +96,7 @@ export default function CheckInPage() {
       <CheckInActionPanel
         boundInfo={boundInfo}
         device={device}
+        currentReservation={reservation}
         onSuccess={() => loadData(true)}
       />
 
