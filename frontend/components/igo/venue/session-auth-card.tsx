@@ -322,7 +322,7 @@ export function SessionAuthCard({
               onChange={(e) => setCookieInput(e.target.value)}
               placeholder={t('cookiePlaceholder')}
               rows={5}
-              className='font-mono text-xs shadow-none border-dashed'
+              className='font-mono text-xs shadow-none border-dashed break-all whitespace-pre-wrap max-h-60 overflow-y-auto'
             />
             <div className='flex items-center space-x-2'>
               <Checkbox

@@ -21,7 +21,7 @@ export function NotificationJumpCard() {
   const t = useTranslations('igo.settings');
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <Bell className='size-4 text-primary' />
@@ -37,7 +37,12 @@ export function NotificationJumpCard() {
         </p>
 
         <div className='flex flex-wrap items-center gap-3 pt-1'>
-          <Button variant='outline' size='sm' asChild className='gap-1 text-xs'>
+          <Button
+            variant='outline'
+            size='sm'
+            asChild
+            className='gap-1 text-xs border-dashed shadow-none'
+          >
             <Link href='/admin/push'>
               <Bell className='size-3.5 text-primary' />
               <span>{t('jumpToPushBtn')}</span>
@@ -45,7 +50,12 @@ export function NotificationJumpCard() {
             </Link>
           </Button>
 
-          <Button variant='outline' size='sm' asChild className='gap-1 text-xs'>
+          <Button
+            variant='outline'
+            size='sm'
+            asChild
+            className='gap-1 text-xs border-dashed shadow-none'
+          >
             <Link href='/admin/message-gateway'>
               <MessagesSquare className='size-3.5 text-primary' />
               <span>{t('jumpToGatewayBtn')}</span>

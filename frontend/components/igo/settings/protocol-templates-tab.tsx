@@ -128,7 +128,7 @@ export function ProtocolTemplatesTab({
   };
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
@@ -142,7 +142,7 @@ export function ProtocolTemplatesTab({
             size='sm'
             onClick={handleReset}
             disabled={resetting || loading}
-            className='h-7 text-xs gap-1'
+            className='h-7 text-xs gap-1 border-dashed shadow-none'
           >
             <RotateCcw
               className={`size-3 ${resetting ? 'animate-spin' : ''}`}
@@ -159,7 +159,7 @@ export function ProtocolTemplatesTab({
             value={currentField}
             onValueChange={(val) => setCurrentField(val as TemplateField)}
           >
-            <SelectTrigger className='h-9 text-xs'>
+            <SelectTrigger className='h-8 text-xs shadow-none bg-background'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -178,7 +178,7 @@ export function ProtocolTemplatesTab({
             value={formData[currentField] || ''}
             onChange={(e) => handleTextChange(e.target.value)}
             rows={10}
-            className='font-mono text-xs leading-relaxed bg-muted/20'
+            className='font-mono text-xs leading-relaxed bg-muted/20 shadow-none border-dashed'
           />
         </div>
 
@@ -188,7 +188,7 @@ export function ProtocolTemplatesTab({
             size='sm'
             onClick={handleSave}
             disabled={saving || loading}
-            className='gap-1.5'
+            className='gap-1.5 shadow-none'
           >
             {saving ? (
               <Spinner className='size-3.5' />

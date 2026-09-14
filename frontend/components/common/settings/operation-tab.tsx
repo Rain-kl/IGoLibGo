@@ -114,12 +114,10 @@ export function OperationTab({
   return (
     <div className='space-y-6'>
       {/* 文件访问白名单设置 */}
-      <Card className='border border-dashed shadow-sm'>
+      <Card className='border border-dashed shadow-none'>
         <CardHeader className='border-b border-dashed pb-4'>
           <div className='flex items-center gap-2'>
-            <div className='p-1.5 rounded-lg bg-primary/10 text-primary'>
-              <KeyRound className='size-4' />
-            </div>
+            <KeyRound className='size-5 text-primary' />
             <div>
               <CardTitle className='text-base font-semibold'>
                 {t('fileAccessControl')}
@@ -145,7 +143,10 @@ export function OperationTab({
                   uploadTypesQuery.isPending
                 }
               >
-                <SelectTrigger className='w-[200px]' size='sm'>
+                <SelectTrigger
+                  className='w-[200px] h-8 text-xs shadow-none'
+                  size='sm'
+                >
                   <SelectValue placeholder={t('selectBusinessType')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -168,7 +169,7 @@ export function OperationTab({
             </div>
 
             {/* 当前白名单列表 */}
-            <div className='rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 hover:border-primary/30 transition-all duration-300 shadow-sm space-y-3'>
+            <div className='rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 hover:border-primary/30 transition-all duration-300 shadow-none space-y-3'>
               <div className='flex items-center gap-2'>
                 <ShieldAlert className='size-4 text-primary' />
                 <span className='font-medium text-sm text-foreground'>

@@ -84,7 +84,7 @@ export function CheckInAuthCard({
 
   return (
     <>
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -98,20 +98,18 @@ export function CheckInAuthCard({
             ) : isAuthorized ? (
               <Badge
                 variant='outline'
-                className='gap-1 border-primary/40 text-primary'
+                className='gap-1 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
               >
                 <ShieldCheck className='size-3' />
                 <span>{t('authorized')}</span>
               </Badge>
             ) : (
               <Badge variant='secondary' className='text-muted-foreground'>
-                未授权
+                {t('unauthorized')}
               </Badge>
             )}
           </div>
-          <CardDescription>
-            微信签到端为独立的 OAuth 会话，打卡前请确保已完成扫码授权
-          </CardDescription>
+          <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           {isAuthorized && session ? (
@@ -131,7 +129,7 @@ export function CheckInAuthCard({
             </div>
           ) : (
             <div className='p-3 rounded-lg bg-muted/40 text-xs text-muted-foreground'>
-              尚未完成签到端微信授权，请点击下方扫码授权
+              {t('waitingAuth')}
             </div>
           )}
 
@@ -140,7 +138,7 @@ export function CheckInAuthCard({
               variant='outline'
               size='sm'
               onClick={handleOpenQr}
-              className='gap-1.5'
+              className='gap-1.5 border-dashed shadow-none'
             >
               <QrCode className='size-3.5' />
               <span>{t('scanQrBtn')}</span>
@@ -181,7 +179,7 @@ export function CheckInAuthCard({
                 </p>
               </div>
             ) : qrData?.image_data_url ? (
-              <div className='p-2 bg-white rounded-lg border shadow-sm'>
+              <div className='p-2 bg-white rounded-lg border border-dashed shadow-none'>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrData.image_data_url}
@@ -194,10 +192,6 @@ export function CheckInAuthCard({
                 二维码失效，请点击刷新
               </div>
             )}
-            <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-              <CheckCircle2 className='size-3.5 text-primary' />
-              <span>扫码完成后关闭弹窗并刷新设备列表即可生效</span>
-            </div>
           </div>
           <DialogFooter className='sm:justify-between'>
             <Button
@@ -205,12 +199,12 @@ export function CheckInAuthCard({
               size='sm'
               onClick={handleOpenQr}
               disabled={qrLoading}
-              className='gap-1'
+              className='gap-1 border-dashed shadow-none'
             >
               <RefreshCw
                 className={`size-3.5 ${qrLoading ? 'animate-spin' : ''}`}
               />
-              <span>刷新二维码</span>
+              <span>{t('refreshQr')}</span>
             </Button>
             <Button
               variant='secondary'
@@ -219,6 +213,7 @@ export function CheckInAuthCard({
                 setQrOpen(false);
                 onRefresh();
               }}
+              className='shadow-none'
             >
               {tCommon('confirm')}
             </Button>

@@ -151,12 +151,10 @@ export function OtherTab({ configs }: OtherTabProps) {
   };
 
   return (
-    <Card className='border border-dashed shadow-sm'>
+    <Card className='border border-dashed shadow-none'>
       <CardHeader className='border-b border-dashed pb-4'>
         <div className='flex items-center gap-2'>
-          <div className='p-1.5 rounded-lg bg-primary/10 text-primary'>
-            <LayoutList className='size-4' />
-          </div>
+          <LayoutList className='size-5 text-primary' />
           <div>
             <CardTitle className='text-base font-semibold'>
               {t('menuDisplayManagement')}
@@ -187,7 +185,7 @@ export function OtherTab({ configs }: OtherTabProps) {
                 return (
                   <div
                     key={item.path}
-                    className='flex items-center justify-between gap-4 rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 hover:border-primary/30 transition-all duration-300 shadow-sm'
+                    className='flex items-center justify-between gap-4 rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 hover:border-primary/30 transition-all duration-300 shadow-none'
                   >
                     <div className='space-y-1.5 flex-1 min-w-0 pr-2'>
                       <div className='flex items-center gap-2'>

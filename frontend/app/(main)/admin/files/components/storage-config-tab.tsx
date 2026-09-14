@@ -322,12 +322,10 @@ export function StorageConfigTab() {
         </Card>
       )}
 
-      <Card className='border border-dashed shadow-sm'>
+      <Card className='border border-dashed shadow-none'>
         <CardHeader className='border-b border-dashed pb-4'>
           <div className='flex items-center gap-2'>
-            <div className='rounded-lg bg-indigo-500/10 p-1.5 text-indigo-500'>
-              <Database className='size-4' />
-            </div>
+            <Database className='size-5 text-indigo-500' />
             <div>
               <CardTitle className='text-base font-semibold'>
                 {t('storage.fileStorage')}

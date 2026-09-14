@@ -124,7 +124,7 @@ export function TableBrowser({
   };
 
   return (
-    <Card className='border-border/40 bg-card/50 backdrop-blur-sm shadow-sm'>
+    <Card className='border border-dashed shadow-none'>
       <CardHeader className='pb-3 border-b border-dashed flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
         <div className='space-y-0.5'>
           <CardTitle className='text-sm font-semibold'>

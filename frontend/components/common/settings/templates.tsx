@@ -152,12 +152,10 @@ export function TemplatesManager() {
 
   return (
     <div className='space-y-6'>
-      <Card className='border border-dashed shadow-sm'>
+      <Card className='border border-dashed shadow-none'>
         <CardHeader className='border-b border-dashed pb-4 flex flex-row items-center justify-between gap-4'>
           <div className='flex items-center gap-2'>
-            <div className='p-1.5 rounded-lg bg-primary/10 text-primary'>
-              <FileText className='size-4' />
-            </div>
+            <FileText className='size-5 text-primary' />
             <div>
               <CardTitle className='text-base font-semibold'>
                 {t('templateManagement')}
@@ -172,6 +170,7 @@ export function TemplatesManager() {
             size='sm'
             onClick={handleOpenCreate}
             variant='secondary'
+            className='h-8 text-xs shadow-none border-dashed'
           >
             <Plus className='mr-1.5 size-3.5' />
             {t('addTemplate')}
@@ -187,7 +186,7 @@ export function TemplatesManager() {
               {(templatesQuery.data ?? []).map((tmpl) => (
                 <div
                   key={tmpl.id}
-                  className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 hover:border-primary/30 transition-all duration-300 shadow-sm'
+                  className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-dashed p-4 bg-card hover:bg-muted/10 hover:border-primary/30 transition-all duration-300 shadow-none'
                 >
                   <div className='space-y-1.5'>
                     <div className='flex items-center gap-2 flex-wrap'>

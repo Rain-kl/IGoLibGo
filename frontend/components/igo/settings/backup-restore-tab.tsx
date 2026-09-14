@@ -111,7 +111,7 @@ export function BackupRestoreTab() {
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
       {/* 导出卡片 */}
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center gap-2'>
             <FileDown className='size-4 text-primary' />
@@ -132,7 +132,7 @@ export function BackupRestoreTab() {
               value={exportPassword}
               onChange={(e) => setExportPassword(e.target.value)}
               placeholder='至少 8 位高强度密码'
-              className='h-9 text-xs'
+              className='h-8 text-xs shadow-none bg-background'
             />
           </div>
 
@@ -141,7 +141,7 @@ export function BackupRestoreTab() {
             size='sm'
             onClick={handleExport}
             disabled={exporting || exportPassword.length < 8}
-            className='gap-1.5'
+            className='gap-1.5 shadow-none'
           >
             {exporting ? (
               <Spinner className='size-3.5' />
@@ -154,7 +154,7 @@ export function BackupRestoreTab() {
       </Card>
 
       {/* 导入卡片 */}
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center gap-2'>
             <FileUp className='size-4 text-primary' />
@@ -175,7 +175,7 @@ export function BackupRestoreTab() {
               value={importPassword}
               onChange={(e) => setImportPassword(e.target.value)}
               placeholder='输入导出时设定的密码'
-              className='h-9 text-xs'
+              className='h-8 text-xs shadow-none bg-background'
             />
           </div>
 
@@ -197,7 +197,7 @@ export function BackupRestoreTab() {
               onChange={(e) => setImportContent(e.target.value)}
               placeholder='粘贴导出的加密备份 Base64 文本或直接选择本地文件'
               rows={3}
-              className='font-mono text-xs'
+              className='font-mono text-xs shadow-none border-dashed'
             />
           </div>
 
@@ -206,7 +206,7 @@ export function BackupRestoreTab() {
             size='sm'
             onClick={handleImport}
             disabled={importing || !importPassword || !importContent.trim()}
-            className='gap-1.5'
+            className='gap-1.5 border-dashed shadow-none'
           >
             {importing ? (
               <Spinner className='size-3.5' />

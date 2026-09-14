@@ -38,7 +38,7 @@ export function CheckInDeviceTable({
   }
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <Smartphone className='size-4 text-primary' />
@@ -91,7 +91,7 @@ export function CheckInDeviceTable({
                 <Radio className='size-3.5 text-primary' />
                 <span>可用 Beacon UUID 列表</span>
               </div>
-              <div className='flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 border rounded-lg bg-muted/15 font-mono text-[11px]'>
+              <div className='flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 border border-dashed rounded-lg bg-muted/15 font-mono text-[11px]'>
                 {device.beacon_uuids?.map((uuid) => (
                   <Badge
                     key={uuid}

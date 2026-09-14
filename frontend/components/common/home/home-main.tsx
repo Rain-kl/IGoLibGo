@@ -126,7 +126,7 @@ export function HomeMain() {
                 <div className='flex gap-2.5'>
                   <Button
                     size='sm'
-                    className='bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold px-4 shadow-sm h-7'
+                    className='bg-indigo-600 hover:bg-indigo-700 text-xs font-semibold px-4 shadow-none h-7'
                     asChild
                   >
                     <Link href='/home'>{t('banner.getStarted')}</Link>

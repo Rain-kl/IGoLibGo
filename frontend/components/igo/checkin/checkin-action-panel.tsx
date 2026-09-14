@@ -102,7 +102,7 @@ export function CheckInActionPanel({
   };
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <Compass className='size-4 text-primary' />
@@ -121,7 +121,7 @@ export function CheckInActionPanel({
             <Label className='text-xs font-medium'>{t('selectBeacon')}</Label>
             {device?.beacon_uuids && device.beacon_uuids.length > 0 ? (
               <Select value={selectedBeacon} onValueChange={setSelectedBeacon}>
-                <SelectTrigger className='h-9 text-xs font-mono'>
+                <SelectTrigger className='h-8 text-xs font-mono shadow-none bg-background'>
                   <SelectValue placeholder='请选择 Beacon UUID' />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,7 +141,7 @@ export function CheckInActionPanel({
                 value={selectedBeacon}
                 onChange={(e) => setSelectedBeacon(e.target.value)}
                 placeholder='手动输入 Beacon UUID'
-                className='h-9 text-xs font-mono'
+                className='h-8 text-xs font-mono shadow-none bg-background'
               />
             )}
           </div>
@@ -152,7 +152,7 @@ export function CheckInActionPanel({
             <Input
               value={bound ? `${bound.name} (${bound.floor})` : '未锁定场馆'}
               disabled
-              className='h-9 text-xs bg-muted/30'
+              className='h-8 text-xs bg-muted/30 shadow-none'
             />
           </div>
         </div>
@@ -165,7 +165,7 @@ export function CheckInActionPanel({
               type='number'
               value={major}
               onChange={(e) => setMajor(Number(e.target.value))}
-              className='h-8 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
           </div>
           <div className='space-y-1'>
@@ -174,7 +174,7 @@ export function CheckInActionPanel({
               type='number'
               value={minor}
               onChange={(e) => setMinor(Number(e.target.value))}
-              className='h-8 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
           </div>
           <div className='space-y-1'>
@@ -186,7 +186,7 @@ export function CheckInActionPanel({
               step='0.0001'
               value={latitude}
               onChange={(e) => setLatitude(Number(e.target.value))}
-              className='h-8 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
           </div>
           <div className='space-y-1'>
@@ -198,14 +198,14 @@ export function CheckInActionPanel({
               step='0.0001'
               value={longitude}
               onChange={(e) => setLongitude(Number(e.target.value))}
-              className='h-8 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
           </div>
         </div>
 
         {/* 打卡结果提示 */}
         {signResult && (
-          <div className='p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-xs text-foreground flex items-start gap-2.5'>
+          <div className='p-3 rounded-lg border border-dashed border-emerald-500/30 bg-emerald-500/10 text-xs text-foreground flex items-start gap-2.5 shadow-none'>
             <CheckCircle2 className='size-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5' />
             <div className='space-y-0.5'>
               <div className='font-semibold text-emerald-900 dark:text-emerald-200'>
@@ -226,7 +226,7 @@ export function CheckInActionPanel({
             variant='default'
             onClick={handleSign}
             disabled={signing || !bound || !selectedBeacon}
-            className='gap-1.5'
+            className='gap-1.5 shadow-none'
           >
             {signing ? (
               <Spinner className='size-4' />

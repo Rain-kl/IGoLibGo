@@ -200,7 +200,7 @@ export function DatabasePageClient() {
         : overview && (
             <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4'>
               {/* 卡片1: 数据库类型 */}
-              <Card className='shadow-sm border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300'>
+              <Card className='border border-dashed shadow-none hover:border-primary/20 transition-all duration-300'>
                 <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                   <CardDescription className='text-[10px] font-medium'>
                     {t('dbType')}
@@ -208,14 +208,14 @@ export function DatabasePageClient() {
                   <Server className='size-3.5 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className='text-sm font-bold uppercase'>
+                  <div className='text-sm font-semibold uppercase'>
                     {overview.type}
                   </div>
                 </CardContent>
               </Card>
 
               {/* 卡片2: 数据库版本 */}
-              <Card className='shadow-sm border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300 col-span-1 md:col-span-2 lg:col-span-1'>
+              <Card className='border border-dashed shadow-none hover:border-primary/20 transition-all duration-300 col-span-1 md:col-span-2 lg:col-span-1'>
                 <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                   <CardDescription className='text-[10px] font-medium'>
                     {t('versionInfo')}
@@ -233,7 +233,7 @@ export function DatabasePageClient() {
               </Card>
 
               {/* 卡片3: 数据库名称 */}
-              <Card className='shadow-sm border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300'>
+              <Card className='border border-dashed shadow-none hover:border-primary/20 transition-all duration-300'>
                 <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                   <CardDescription className='text-[10px] font-medium'>
                     {t('nameOrPath')}
@@ -253,7 +253,7 @@ export function DatabasePageClient() {
               </Card>
 
               {/* 卡片4: 数据库大小 */}
-              <Card className='shadow-sm border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300'>
+              <Card className='border border-dashed shadow-none hover:border-primary/20 transition-all duration-300'>
                 <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                   <CardDescription className='text-[10px] font-medium'>
                     {t('dbSize')}
@@ -261,12 +261,12 @@ export function DatabasePageClient() {
                   <HardDrive className='size-3.5 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className='text-sm font-bold'>{overview.size}</div>
+                  <div className='text-sm font-semibold'>{overview.size}</div>
                 </CardContent>
               </Card>
 
               {/* 卡片5: 表数量 */}
-              <Card className='shadow-sm border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300'>
+              <Card className='border border-dashed shadow-none hover:border-primary/20 transition-all duration-300'>
                 <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                   <CardDescription className='text-[10px] font-medium'>
                     {t('physicalTables')}
@@ -274,14 +274,14 @@ export function DatabasePageClient() {
                   <Layers className='size-3.5 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className='text-sm font-bold'>
+                  <div className='text-sm font-semibold'>
                     {formatNumber(overview.table_count)}
                   </div>
                 </CardContent>
               </Card>
 
               {/* 卡片6: 连接数 */}
-              <Card className='shadow-sm border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300'>
+              <Card className='border border-dashed shadow-none hover:border-primary/20 transition-all duration-300'>
                 <CardHeader className='flex flex-row items-center justify-between pb-2 space-y-0'>
                   <CardDescription className='text-[10px] font-medium'>
                     {t('activeConnections')}
@@ -289,7 +289,7 @@ export function DatabasePageClient() {
                   <Activity className='size-3.5 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className='text-sm font-bold'>
+                  <div className='text-sm font-semibold'>
                     {formatNumber(overview.connections)}
                   </div>
                 </CardContent>
@@ -308,7 +308,7 @@ export function DatabasePageClient() {
       <CacheManager refreshTrigger={refreshTrigger} />
 
       {/* 4. 底部功能卡片区 */}
-      <Card className='border-border/40 bg-card/50 backdrop-blur-sm shadow-sm'>
+      <Card className='border border-dashed shadow-none'>
         <CardHeader className='pb-3 border-b border-dashed'>
           <CardTitle className='text-sm font-semibold'>
             {t('featureArea')}

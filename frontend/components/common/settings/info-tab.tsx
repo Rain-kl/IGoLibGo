@@ -62,13 +62,11 @@ export function InfoTab() {
 
   return (
     <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
-      <Card className='border border-dashed shadow-sm'>
+      <Card className='border border-dashed shadow-none'>
         <CardHeader className='border-b border-dashed pb-4'>
           <div className='flex items-start justify-between gap-4'>
             <div className='flex items-center gap-2'>
-              <div className='rounded-lg bg-muted p-1.5 text-muted-foreground'>
-                <Sparkles className='size-4' />
-              </div>
+              <Sparkles className='size-5 text-primary' />
               <div>
                 <CardTitle className='text-base font-semibold'>
                   {t('appUpdate')}

@@ -74,7 +74,7 @@ export function RuntimeSettingsTab({
   };
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <Sliders className='size-4 text-primary' />
@@ -101,7 +101,7 @@ export function RuntimeSettingsTab({
               }
               min={3}
               max={120}
-              className='h-9 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
             <p className='text-[10px] text-muted-foreground'>
               单个 HTTP / GraphQL 请求的最大等待响应秒数
@@ -121,7 +121,7 @@ export function RuntimeSettingsTab({
               }
               min={0}
               max={10}
-              className='h-9 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
             <p className='text-[10px] text-muted-foreground'>
               遭遇网络超时或断网时的自动指数退避重试次数
@@ -129,7 +129,7 @@ export function RuntimeSettingsTab({
           </div>
         </div>
 
-        <div className='divide-y border rounded-lg bg-muted/20'>
+        <div className='divide-y border border-dashed rounded-lg bg-muted/20'>
           <div className='p-3.5 flex items-center justify-between gap-4'>
             <div className='space-y-0.5'>
               <Label className='text-xs font-medium'>
@@ -174,7 +174,7 @@ export function RuntimeSettingsTab({
                 }
                 min={10}
                 max={600}
-                className='h-9 text-xs font-mono max-w-xs'
+                className='h-8 text-xs font-mono max-w-xs shadow-none bg-background'
               />
             </div>
           )}
@@ -186,7 +186,7 @@ export function RuntimeSettingsTab({
             size='sm'
             onClick={handleSave}
             disabled={saving || loading}
-            className='gap-1.5'
+            className='gap-1.5 shadow-none'
           >
             {saving ? (
               <Spinner className='size-3.5' />
