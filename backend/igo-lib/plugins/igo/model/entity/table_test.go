@@ -4,6 +4,7 @@
 package entity_test
 
 import (
+	"strings"
 	"testing"
 
 	"Wavelet/igo-lib/plugins/igo/consts"
@@ -32,6 +33,7 @@ func TestTableNamesMatchOwnedTables(t *testing.T) {
 	for _, name := range consts.OwnedTables {
 		_, ok := got[name]
 		assert.True(t, ok, "missing entity TableName for %s", name)
-		assert.Contains(t, name, "w_igo_")
+		assert.True(t, strings.HasPrefix(name, "igo_"), "table %s must use igo_ prefix", name)
+		assert.False(t, strings.HasPrefix(name, "w_"), "downstream tables must not use platform w_ prefix")
 	}
 }

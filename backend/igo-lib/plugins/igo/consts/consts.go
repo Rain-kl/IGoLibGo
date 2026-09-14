@@ -34,19 +34,32 @@ const (
 	// TaskKindTomorrow is the tomorrow-reservation coordinator.
 	TaskKindTomorrow = "tomorrow"
 
-	TableSessions            = "w_igo_sessions"
-	TableVenues              = "w_igo_venues"
-	TableFavorites           = "w_igo_favorites"
-	TableSeatLabels          = "w_igo_seat_labels"
-	TableProtocolOverrides   = "w_igo_protocol_overrides"
-	TableSettings            = "w_igo_settings"
-	TableTaskRuns            = "w_igo_task_runs"
-	TableTaskLaunchHistory   = "w_igo_task_launch_history"
-	TableGlobalLeakTargets   = "w_igo_global_leak_targets"
-	TableGlobalLeakBlacklist = "w_igo_global_leak_blacklist"
-	TableCheckInSessions     = "w_igo_checkin_sessions"
-	TableDashboardMetrics    = "w_igo_dashboard_metrics"
-	TableWebDAV              = "w_igo_webdav"
+	TableSessions            = "igo_sessions"
+	TableVenues              = "igo_venues"
+	TableFavorites           = "igo_favorites"
+	TableSeatLabels          = "igo_seat_labels"
+	TableProtocolOverrides   = "igo_protocol_overrides"
+	TableSettings            = "igo_settings"
+	TableTaskRuns            = "igo_task_runs"
+	TableTaskLaunchHistory   = "igo_task_launch_history"
+	TableGlobalLeakTargets   = "igo_global_leak_targets"
+	TableGlobalLeakBlacklist = "igo_global_leak_blacklist"
+	TableCheckInSessions     = "igo_checkin_sessions"
+	TableDashboardMetrics    = "igo_dashboard_metrics"
+	TableWebDAV              = "igo_webdav"
+
+	CodeSessionRequired = "session_required"
+	CodeNotFound        = "not_found"
+	CodeTraceInt        = "traceint_error"
+	CodeConflict        = "conflict"
+
+	TaskTypeTick = "igo:tick"
+
+	PlaceholderCode      = "ReplaceMeByCode"
+	PlaceholderReturnURL = "ReplaceMeByReturnUrl"
+	PlaceholderSeatKey   = "ReplaceMeBySeatKey"
+	PlaceholderLibID     = "ReplaceMeByLibID"
+	PlaceholderGeneric   = "ReplaceMe"
 )
 
 // OwnedTables is the igo plugin's single-owner table list (must match Goose SQL).
@@ -68,6 +81,31 @@ var OwnedTables = []string{
 
 // ErrNotImplemented is returned by service stubs before business logic is migrated.
 var ErrNotImplemented = errors.New("not_implemented")
+
+// ErrNoSession means the Wavelet user has no TraceInt cookie yet.
+var ErrNoSession = errors.New("session_required")
+
+// CodedError is a service-layer error mapped to the wavelet envelope.
+type CodedError struct {
+	Status int
+	Code   string
+	Msg    string
+	Err    error
+}
+
+func (e *CodedError) Error() string {
+	if e == nil {
+		return ""
+	}
+	return e.Msg
+}
+
+func (e *CodedError) Unwrap() error { return e.Err }
+
+// NewError builds a CodedError.
+func NewError(status int, code, msg string) *CodedError {
+	return &CodedError{Status: status, Code: code, Msg: msg}
+}
 
 // SupportedTaskKinds lists task kinds accepted by /tasks/:kind/*.
 var SupportedTaskKinds = map[string]struct{}{

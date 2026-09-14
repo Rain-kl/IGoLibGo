@@ -11,7 +11,7 @@ import (
 // Settings stores migratable per-user settings as JSON.
 type Settings struct {
 	ID        uint64    `gorm:"primaryKey" json:"id,string"`
-	UserID    uint64    `gorm:"uniqueIndex:uq_w_igo_settings_user;not null" json:"user_id,string"`
+	UserID    uint64    `gorm:"uniqueIndex:uq_igo_settings_user;not null" json:"user_id,string"`
 	Payload   string    `gorm:"type:text;not null" json:"payload"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

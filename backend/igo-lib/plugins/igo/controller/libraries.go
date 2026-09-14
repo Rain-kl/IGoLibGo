@@ -19,8 +19,8 @@ import (
 // @Router /api/v1/igo/libraries [get]
 func (ctrl *Controller) ListLibraries(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.ListLibraries(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.ListLibraries(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -34,8 +34,8 @@ func (ctrl *Controller) ListLibraries(c *gin.Context) {
 // @Router /api/v1/igo/libraries/bound [get]
 func (ctrl *Controller) GetBoundLibrary(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetBoundLibrary(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetBoundLibrary(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -49,8 +49,8 @@ func (ctrl *Controller) GetBoundLibrary(c *gin.Context) {
 // @Router /api/v1/igo/libraries/bound/refresh [post]
 func (ctrl *Controller) RefreshBoundLibrary(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.RefreshBoundLibrary(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.RefreshBoundLibrary(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -70,8 +70,8 @@ func (ctrl *Controller) GetLibrary(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetLibrary(c.Request.Context(), userID, libraryID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetLibrary(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -91,8 +91,8 @@ func (ctrl *Controller) GetLibraryLayout(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetLibraryLayout(c.Request.Context(), userID, libraryID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetLibraryLayout(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -112,8 +112,8 @@ func (ctrl *Controller) GetLibraryRule(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetLibraryRule(c.Request.Context(), userID, libraryID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetLibraryRule(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -133,8 +133,8 @@ func (ctrl *Controller) BindLibrary(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.BindLibrary(c.Request.Context(), userID, libraryID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.BindLibrary(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -154,8 +154,8 @@ func (ctrl *Controller) PreviewLibrary(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.PreviewLibrary(c.Request.Context(), userID, libraryID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.PreviewLibrary(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -175,8 +175,8 @@ func (ctrl *Controller) GetFavorites(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetFavorites(c.Request.Context(), userID, libraryID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetFavorites(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -203,7 +203,7 @@ func (ctrl *Controller) SaveFavorites(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.SaveFavorites(c.Request.Context(), userID, libraryID, req.Seats)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }
 
@@ -229,8 +229,8 @@ func (ctrl *Controller) SetSeatLabels(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.SetSeatLabels(c.Request.Context(), userID, libraryID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.SetSeatLabels(c.Request.Context(), userID, libraryID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -256,6 +256,6 @@ func (ctrl *Controller) DeleteSeatLabels(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.DeleteSeatLabels(c.Request.Context(), userID, libraryID, req.SeatKeys)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }

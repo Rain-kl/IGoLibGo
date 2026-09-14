@@ -19,8 +19,8 @@ import (
 // @Router /api/v1/igo/reservation [get]
 func (ctrl *Controller) GetReservation(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetReservation(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetReservation(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -34,8 +34,8 @@ func (ctrl *Controller) GetReservation(c *gin.Context) {
 // @Router /api/v1/igo/reservation/refresh [post]
 func (ctrl *Controller) RefreshReservation(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.RefreshReservation(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.RefreshReservation(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -59,7 +59,7 @@ func (ctrl *Controller) CancelReservation(c *gin.Context) {
 		req = bound
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.CancelReservation(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.CancelReservation(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }

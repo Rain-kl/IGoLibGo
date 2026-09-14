@@ -19,8 +19,8 @@ import (
 // @Router /api/v1/igo/protocol/templates [get]
 func (ctrl *Controller) GetProtocolTemplates(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetProtocolTemplates(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetProtocolTemplates(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -34,8 +34,8 @@ func (ctrl *Controller) GetProtocolTemplates(c *gin.Context) {
 // @Router /api/v1/igo/protocol/templates/defaults [get]
 func (ctrl *Controller) GetDefaultProtocolTemplates(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetDefaultProtocolTemplates(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetDefaultProtocolTemplates(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -56,8 +56,8 @@ func (ctrl *Controller) SaveProtocolTemplates(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.SaveProtocolTemplates(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.SaveProtocolTemplates(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -71,8 +71,8 @@ func (ctrl *Controller) SaveProtocolTemplates(c *gin.Context) {
 // @Router /api/v1/igo/protocol/templates/reset [post]
 func (ctrl *Controller) ResetProtocolTemplates(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.ResetProtocolTemplates(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.ResetProtocolTemplates(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -86,8 +86,8 @@ func (ctrl *Controller) ResetProtocolTemplates(c *gin.Context) {
 // @Router /api/v1/igo/settings [get]
 func (ctrl *Controller) GetSettings(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetSettings(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetSettings(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -108,8 +108,8 @@ func (ctrl *Controller) SaveSettings(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.SaveSettings(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.SaveSettings(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -130,8 +130,8 @@ func (ctrl *Controller) ExportBackup(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.ExportBackup(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.ExportBackup(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -153,7 +153,7 @@ func (ctrl *Controller) ImportBackup(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.ImportBackup(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }
 
@@ -167,8 +167,8 @@ func (ctrl *Controller) ImportBackup(c *gin.Context) {
 // @Router /api/v1/igo/webdav [get]
 func (ctrl *Controller) GetWebDAV(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetWebDAV(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetWebDAV(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -189,8 +189,8 @@ func (ctrl *Controller) SaveWebDAV(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.SaveWebDAV(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.SaveWebDAV(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -204,7 +204,7 @@ func (ctrl *Controller) SaveWebDAV(c *gin.Context) {
 // @Router /api/v1/igo/webdav/sync [post]
 func (ctrl *Controller) SyncWebDAV(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.SyncWebDAV(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.SyncWebDAV(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }

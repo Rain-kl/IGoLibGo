@@ -11,7 +11,7 @@ import (
 // WebDAV is the remote sync endpoint for one user. Password encryption is a later stage.
 type WebDAV struct {
 	ID              uint64    `gorm:"primaryKey" json:"id,string"`
-	UserID          uint64    `gorm:"uniqueIndex:uq_w_igo_webdav_user;not null" json:"user_id,string"`
+	UserID          uint64    `gorm:"uniqueIndex:uq_igo_webdav_user;not null" json:"user_id,string"`
 	Endpoint        string    `gorm:"size:1024;not null;default:''" json:"endpoint"`
 	RemoteDirectory string    `gorm:"size:512;not null;default:''" json:"remote_directory"`
 	Username        string    `gorm:"size:255;not null;default:''" json:"username"`

@@ -7,6 +7,7 @@ package controller
 import (
 	"Wavelet/core/contracts"
 	"Wavelet/igo-lib/plugins/igo/consts"
+	"Wavelet/igo-lib/plugins/igo/dao"
 	"Wavelet/igo-lib/plugins/igo/service"
 	"Wavelet/pkg/response"
 	"errors"
@@ -40,12 +41,39 @@ func (ctrl *Controller) reply(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
+	var coded *consts.CodedError
+	if errors.As(err, &coded) {
+		response.AbortWithErrorCode(c, coded.Status, coded.Code, coded.Msg)
+		return true
+	}
 	if errors.Is(err, consts.ErrNotImplemented) {
 		response.AbortWithErrorCode(c, http.StatusNotImplemented, consts.CodeNotImplemented, "接口尚未实现")
 		return true
 	}
+	if errors.Is(err, consts.ErrNoSession) {
+		response.AbortWithErrorCode(c, http.StatusConflict, consts.CodeSessionRequired, "请先完成 TraceInt 登录")
+		return true
+	}
+	if errors.Is(err, dao.ErrDBNotReady) {
+		response.AbortWithErrorCode(c, http.StatusServiceUnavailable, "service_unavailable", "数据库未就绪")
+		return true
+	}
 	response.AbortInternal(c, "内部系统错误")
 	return true
+}
+
+func (ctrl *Controller) jsonOK(c *gin.Context, data any, err error) {
+	if ctrl.reply(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, response.OK(data))
+}
+
+func (ctrl *Controller) noContent(c *gin.Context, err error) {
+	if ctrl.reply(c, err) {
+		return
+	}
+	response.NoContent(c)
 }
 
 func bindJSON[T any](c *gin.Context) (T, bool) {

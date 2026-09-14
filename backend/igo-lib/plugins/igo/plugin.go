@@ -9,6 +9,7 @@ package igo
 import (
 	"Wavelet/core"
 	"Wavelet/core/contracts"
+	"Wavelet/core/extpoints"
 	"Wavelet/igo-lib/plugins/igo/consts"
 	"Wavelet/igo-lib/plugins/igo/controller"
 	"Wavelet/igo-lib/plugins/igo/dao"
@@ -53,6 +54,18 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 
 	p.svc = service.New()
+	if taskSvc, err := ctx.Inject[contracts.TaskService](); err == nil && taskSvc != nil {
+		p.svc.SetTasks(taskSvc)
+	}
+	ctx.Task().Register(consts.TaskTypeTick, p.svc.HandleTick,
+		extpoints.WithTaskType("igo_tick"),
+		extpoints.WithTaskName("IGo 任务节拍"),
+		extpoints.WithTaskDescription("抢座、占座、全域捡漏与明日预约的轮询节拍"),
+		extpoints.WithTaskCategory("igo"),
+		extpoints.WithTaskRetry(1),
+		extpoints.WithTaskQueue("default"),
+		extpoints.WithTaskRetryable(true),
+	)
 	ctx.Provide[*service.Service](p.svc)
 	ctrl := controller.New(p.svc, authSvc)
 

@@ -19,8 +19,8 @@ import (
 // @Router /api/v1/igo/checkin/session [get]
 func (ctrl *Controller) GetCheckInSession(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetCheckInSession(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetCheckInSession(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -34,8 +34,8 @@ func (ctrl *Controller) GetCheckInSession(c *gin.Context) {
 // @Router /api/v1/igo/checkin/auth-qrcode [get]
 func (ctrl *Controller) GetCheckInAuthQRCode(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetCheckInAuthQRCode(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetCheckInAuthQRCode(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -56,8 +56,8 @@ func (ctrl *Controller) AuthorizeCheckInFromCode(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.AuthorizeCheckInFromCode(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.AuthorizeCheckInFromCode(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -71,8 +71,8 @@ func (ctrl *Controller) AuthorizeCheckInFromCode(c *gin.Context) {
 // @Router /api/v1/igo/checkin/devices [get]
 func (ctrl *Controller) GetCheckInDevices(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetCheckInDevices(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetCheckInDevices(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -93,8 +93,8 @@ func (ctrl *Controller) SignCheckIn(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.SignCheckIn(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.SignCheckIn(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -108,6 +108,6 @@ func (ctrl *Controller) SignCheckIn(c *gin.Context) {
 func (ctrl *Controller) ClearCheckInSession(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.ClearCheckInSession(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }

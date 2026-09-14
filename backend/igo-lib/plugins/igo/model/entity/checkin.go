@@ -11,7 +11,7 @@ import (
 // CheckInSession is the independent remote-check-in WeChat session.
 type CheckInSession struct {
 	ID             uint64     `gorm:"primaryKey" json:"id,string"`
-	UserID         uint64     `gorm:"uniqueIndex:uq_w_igo_checkin_sessions_user;not null" json:"user_id,string"`
+	UserID         uint64     `gorm:"uniqueIndex:uq_igo_checkin_sessions_user;not null" json:"user_id,string"`
 	Token          string     `gorm:"type:text;not null" json:"-"`
 	SavedAt        time.Time  `gorm:"not null" json:"saved_at"`
 	ExpiresAt      *time.Time `json:"expires_at,omitempty"`

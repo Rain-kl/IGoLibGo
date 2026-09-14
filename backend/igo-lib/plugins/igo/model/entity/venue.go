@@ -11,7 +11,7 @@ import (
 // Venue is the currently bound library for one Wavelet user.
 type Venue struct {
 	ID          uint64    `gorm:"primaryKey" json:"id,string"`
-	UserID      uint64    `gorm:"uniqueIndex:uq_w_igo_venues_user;not null" json:"user_id,string"`
+	UserID      uint64    `gorm:"uniqueIndex:uq_igo_venues_user;not null" json:"user_id,string"`
 	LibraryID   int       `gorm:"not null" json:"library_id"`
 	Name        string    `gorm:"size:255;not null" json:"name"`
 	Floor       string    `gorm:"size:64;not null;default:''" json:"floor"`

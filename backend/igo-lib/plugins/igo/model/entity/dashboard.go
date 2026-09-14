@@ -11,7 +11,7 @@ import (
 // DashboardMetrics stores cumulative home-page counters per user.
 type DashboardMetrics struct {
 	ID                     uint64    `gorm:"primaryKey" json:"id,string"`
-	UserID                 uint64    `gorm:"uniqueIndex:uq_w_igo_dashboard_metrics_user;not null" json:"user_id,string"`
+	UserID                 uint64    `gorm:"uniqueIndex:uq_igo_dashboard_metrics_user;not null" json:"user_id,string"`
 	HistoricalSuccessCount int       `gorm:"not null;default:0" json:"historical_success_count"`
 	TotalGuardSeconds      int64     `gorm:"not null;default:0" json:"total_guard_seconds"`
 	UpdatedAt              time.Time `json:"updated_at"`

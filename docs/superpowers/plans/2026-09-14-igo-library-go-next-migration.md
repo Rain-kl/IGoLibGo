@@ -15,7 +15,7 @@
 - 成功 `{ "data": ... }`，分页附 `meta`，错误 `{ "error": { "code", "message", "details" }, "error_msg" }`；禁止全 200。
 - 不迁移：手机控制、cloudflared、通知设置（走平台通知）、客户端专属（托盘、开机启动、阻止休眠、本地外观、本地存储路径、自动更新、局域网快传、桌面 Toast/提示音）。
 - 严禁 import `plugins/domain/*` 内部实现；鉴权只走 `contracts.AuthService`。
-- 禁止 GORM AutoMigrate；表前缀 `w_igo_*`；无物理外键。
+- 禁止 GORM AutoMigrate；表前缀 `igo_*`（不用平台 `w_`）；无物理外键。
 - 前端包管理器 `bun`，格式化 `Biome`。
 
 ---
@@ -73,19 +73,19 @@
 
 按用户隔离落表（双方言 Goose）：
 
-- `w_igo_sessions` Cookie 会话
-- `w_igo_venues` 绑定场馆
-- `w_igo_favorites` 收藏座位
-- `w_igo_seat_labels` 座位标签
-- `w_igo_protocol_overrides` 协议覆盖
-- `w_igo_settings` 每用户设置 JSON
-- `w_igo_task_runs` 任务运行状态
-- `w_igo_task_launch_history` 启动历史
-- `w_igo_global_leak_targets` 捡漏场馆
-- `w_igo_global_leak_blacklist` 捡漏黑名单
-- `w_igo_checkin_sessions` 远程签到会话
-- `w_igo_dashboard_metrics` 首页累计成功/守护时长
-- `w_igo_webdav` WebDAV 配置（密钥脱敏）
+- `igo_sessions` Cookie 会话
+- `igo_venues` 绑定场馆
+- `igo_favorites` 收藏座位
+- `igo_seat_labels` 座位标签
+- `igo_protocol_overrides` 协议覆盖
+- `igo_settings` 每用户设置 JSON
+- `igo_task_runs` 任务运行状态
+- `igo_task_launch_history` 启动历史
+- `igo_global_leak_targets` 捡漏场馆
+- `igo_global_leak_blacklist` 捡漏黑名单
+- `igo_checkin_sessions` 远程签到会话
+- `igo_dashboard_metrics` 首页累计成功/守护时长
+- `igo_webdav` WebDAV 配置（密钥脱敏）
 
 ### 阶段 3 — 逻辑实现
 

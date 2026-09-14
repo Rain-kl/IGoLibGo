@@ -21,8 +21,8 @@ import (
 // @Router /api/v1/igo/tasks [get]
 func (ctrl *Controller) ListTasks(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.ListTasks(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.ListTasks(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -36,8 +36,8 @@ func (ctrl *Controller) ListTasks(c *gin.Context) {
 // @Router /api/v1/igo/task-records [get]
 func (ctrl *Controller) ListTaskRecords(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.ListTaskRecords(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.ListTaskRecords(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -86,7 +86,7 @@ func (ctrl *Controller) StartTask(c *gin.Context) {
 			}
 			err = ctrl.svc.StartTomorrow(c.Request.Context(), userID, req)
 		}
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }
 
@@ -107,7 +107,7 @@ func (ctrl *Controller) CancelTask(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.CancelTask(c.Request.Context(), userID, kind)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }
 
@@ -129,7 +129,7 @@ func (ctrl *Controller) RunTomorrowNow(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.RunTomorrowNow(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }
 
@@ -143,8 +143,8 @@ func (ctrl *Controller) RunTomorrowNow(c *gin.Context) {
 // @Router /api/v1/igo/global-leak/blacklist [get]
 func (ctrl *Controller) GetGlobalLeakBlacklist(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetGlobalLeakBlacklist(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetGlobalLeakBlacklist(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -166,7 +166,7 @@ func (ctrl *Controller) SaveGlobalLeakBlacklist(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.SaveGlobalLeakBlacklist(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }
 
@@ -180,8 +180,8 @@ func (ctrl *Controller) SaveGlobalLeakBlacklist(c *gin.Context) {
 // @Router /api/v1/igo/global-leak/selected-libraries [get]
 func (ctrl *Controller) GetGlobalLeakSelectedLibraries(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetGlobalLeakSelectedLibraries(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetGlobalLeakSelectedLibraries(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -203,6 +203,6 @@ func (ctrl *Controller) SaveGlobalLeakSelectedLibraries(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.SaveGlobalLeakSelectedLibraries(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }

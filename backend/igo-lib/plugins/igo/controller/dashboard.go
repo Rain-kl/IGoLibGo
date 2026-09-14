@@ -4,6 +4,8 @@
 package controller
 
 import (
+	"Wavelet/pkg/response"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,8 +19,8 @@ import (
 // @Router /api/v1/igo/dashboard [get]
 func (ctrl *Controller) GetDashboard(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetDashboard(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetDashboard(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -32,8 +34,8 @@ func (ctrl *Controller) GetDashboard(c *gin.Context) {
 // @Router /api/v1/igo/status [get]
 func (ctrl *Controller) GetStatus(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetStatus(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetStatus(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -50,7 +52,10 @@ func (ctrl *Controller) GetStatus(c *gin.Context) {
 func (ctrl *Controller) ListActivityLogs(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
 		page, perPage := parsePage(c)
-		_, _, err := ctrl.svc.ListActivityLogs(c.Request.Context(), userID, page, perPage)
-		ctrl.reply(c, err)
+		items, total, err := ctrl.svc.ListActivityLogs(c.Request.Context(), userID, page, perPage)
+		if ctrl.reply(c, err) {
+			return
+		}
+		c.JSON(200, response.Paged(items, response.Meta{Total: total, Page: page, PerPage: perPage}))
 	})
 }

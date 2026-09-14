@@ -19,8 +19,8 @@ import (
 // @Router /api/v1/igo/session [get]
 func (ctrl *Controller) GetSession(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetSession(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetSession(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -34,8 +34,8 @@ func (ctrl *Controller) GetSession(c *gin.Context) {
 // @Router /api/v1/igo/session/auth-qrcode [get]
 func (ctrl *Controller) GetAuthQRCode(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.GetAuthQRCode(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.GetAuthQRCode(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -56,8 +56,8 @@ func (ctrl *Controller) AuthenticateFromCode(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.AuthenticateFromCode(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.AuthenticateFromCode(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -78,8 +78,8 @@ func (ctrl *Controller) AuthenticateFromCookie(c *gin.Context) {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.AuthenticateFromCookie(c.Request.Context(), userID, req)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.AuthenticateFromCookie(c.Request.Context(), userID, req)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -93,8 +93,8 @@ func (ctrl *Controller) AuthenticateFromCookie(c *gin.Context) {
 // @Router /api/v1/igo/session/cookie/refresh [post]
 func (ctrl *Controller) RefreshCookie(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		_, err := ctrl.svc.RefreshCookie(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		res, err := ctrl.svc.RefreshCookie(c.Request.Context(), userID)
+		ctrl.jsonOK(c, res, err)
 	})
 }
 
@@ -108,6 +108,6 @@ func (ctrl *Controller) RefreshCookie(c *gin.Context) {
 func (ctrl *Controller) SignOut(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.SignOut(c.Request.Context(), userID)
-		ctrl.reply(c, err)
+		ctrl.noContent(c, err)
 	})
 }

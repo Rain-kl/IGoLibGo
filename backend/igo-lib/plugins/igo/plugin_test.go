@@ -174,7 +174,8 @@ func TestPlugin_NotImplementedEnvelope(t *testing.T) {
 	ctx := applyPlugin(t)
 	engine := mountRoutes(t, ctx.Router().Routes())
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/igo/dashboard", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/igo/backup/export", strings.NewReader(`{"password":"12345678"}`))
+	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 
@@ -196,8 +197,8 @@ func TestPlugin_OriginalPathStatusEnvelope(t *testing.T) {
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusNotImplemented, w.Code)
-	assert.Contains(t, w.Body.String(), `"not_implemented"`)
+	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+	assert.Contains(t, w.Body.String(), `"service_unavailable"`)
 }
 
 func TestPlugin_ValidationErrorEnvelope(t *testing.T) {
@@ -251,6 +252,6 @@ func TestPlugin_ValidStartBodyStillNotImplemented(t *testing.T) {
 	w := httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusNotImplemented, w.Code)
-	assert.Contains(t, w.Body.String(), consts.CodeNotImplemented)
+	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+	assert.Contains(t, w.Body.String(), "service_unavailable")
 }

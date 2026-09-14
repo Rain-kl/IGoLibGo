@@ -12,7 +12,7 @@ import (
 // Session is the TraceInt cookie session for one Wavelet user.
 type Session struct {
 	ID             uint64     `gorm:"primaryKey" json:"id,string"`
-	UserID         uint64     `gorm:"uniqueIndex:uq_w_igo_sessions_user;not null" json:"user_id,string"`
+	UserID         uint64     `gorm:"uniqueIndex:uq_igo_sessions_user;not null" json:"user_id,string"`
 	Cookie         string     `gorm:"type:text;not null" json:"-"`
 	Source         string     `gorm:"size:32;not null;default:''" json:"source"`
 	SavedAt        time.Time  `gorm:"not null" json:"saved_at"`

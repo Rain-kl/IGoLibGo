@@ -10,11 +10,11 @@ import (
 // GlobalLeakTarget is a venue in scan-priority order for one user.
 type GlobalLeakTarget struct {
 	ID           uint64 `gorm:"primaryKey" json:"id,string"`
-	UserID       uint64 `gorm:"uniqueIndex:uq_w_igo_leak_targets_user_lib,priority:1;index:idx_w_igo_leak_targets_user_prio,priority:1;not null" json:"user_id,string"`
-	LibraryID    int    `gorm:"uniqueIndex:uq_w_igo_leak_targets_user_lib,priority:2;not null" json:"library_id"`
+	UserID       uint64 `gorm:"uniqueIndex:uq_igo_leak_targets_user_lib,priority:1;index:idx_igo_leak_targets_user_prio,priority:1;not null" json:"user_id,string"`
+	LibraryID    int    `gorm:"uniqueIndex:uq_igo_leak_targets_user_lib,priority:2;not null" json:"library_id"`
 	LibraryName  string `gorm:"size:255;not null;default:''" json:"library_name"`
 	Floor        string `gorm:"size:64;not null;default:''" json:"floor"`
-	ScanPriority int    `gorm:"index:idx_w_igo_leak_targets_user_prio,priority:2;not null;default:0" json:"scan_priority"`
+	ScanPriority int    `gorm:"index:idx_igo_leak_targets_user_prio,priority:2;not null;default:0" json:"scan_priority"`
 }
 
 // TableName returns the plugin-prefixed table name.
@@ -23,9 +23,9 @@ func (GlobalLeakTarget) TableName() string { return consts.TableGlobalLeakTarget
 // GlobalLeakBlacklistSeat is a seat excluded from global-leak scanning.
 type GlobalLeakBlacklistSeat struct {
 	ID        uint64 `gorm:"primaryKey" json:"id,string"`
-	UserID    uint64 `gorm:"uniqueIndex:uq_w_igo_leak_blacklist_user_lib_seat,priority:1;index:idx_w_igo_leak_blacklist_user_lib,priority:1;not null" json:"user_id,string"`
-	LibraryID int    `gorm:"uniqueIndex:uq_w_igo_leak_blacklist_user_lib_seat,priority:2;index:idx_w_igo_leak_blacklist_user_lib,priority:2;not null" json:"library_id"`
-	SeatKey   string `gorm:"uniqueIndex:uq_w_igo_leak_blacklist_user_lib_seat,priority:3;size:64;not null" json:"seat_key"`
+	UserID    uint64 `gorm:"uniqueIndex:uq_igo_leak_blacklist_user_lib_seat,priority:1;index:idx_igo_leak_blacklist_user_lib,priority:1;not null" json:"user_id,string"`
+	LibraryID int    `gorm:"uniqueIndex:uq_igo_leak_blacklist_user_lib_seat,priority:2;index:idx_igo_leak_blacklist_user_lib,priority:2;not null" json:"library_id"`
+	SeatKey   string `gorm:"uniqueIndex:uq_igo_leak_blacklist_user_lib_seat,priority:3;size:64;not null" json:"seat_key"`
 	SeatName  string `gorm:"size:128;not null;default:''" json:"seat_name"`
 }
 
