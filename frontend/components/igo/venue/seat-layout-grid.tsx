@@ -71,27 +71,42 @@ export function SeatLayoutGrid({
     return new Set(favorites.map((f) => f.seat_key));
   }, [favorites]);
 
-  // 计算网格边界
-  const { seatsByCoord, maxX, maxY } = React.useMemo(() => {
+  // 计算紧凑映射网格边界：将稀疏坐标映射到紧凑连续的行/列索引
+  const { seatsByCoord, totalCols, totalRows } = React.useMemo(() => {
     if (!layout || !layout.seats || layout.seats.length === 0) {
       return {
         seatsByCoord: new Map<string, SeatSnapshot>(),
-        maxX: 0,
-        maxY: 0,
+        totalCols: 0,
+        totalRows: 0,
       };
     }
 
-    const map = new Map<string, SeatSnapshot>();
-    let mx = layout.max_x ?? 0;
-    let my = layout.max_y ?? 0;
+    // 提取所有唯一且排序的 X 和 Y
+    const xs = Array.from(new Set(layout.seats.map((s) => s.x))).sort(
+      (a, b) => a - b,
+    );
+    const ys = Array.from(new Set(layout.seats.map((s) => s.y))).sort(
+      (a, b) => a - b,
+    );
 
+    const xMap = new Map<number, number>();
+    xs.forEach((x, idx) => xMap.set(x, idx + 1));
+
+    const yMap = new Map<number, number>();
+    ys.forEach((y, idx) => yMap.set(y, idx + 1));
+
+    const map = new Map<string, SeatSnapshot>();
     for (const seat of layout.seats) {
-      map.set(`${seat.x},${seat.y}`, seat);
-      if (seat.x > mx) mx = seat.x;
-      if (seat.y > my) my = seat.y;
+      const col = xMap.get(seat.x) ?? 1;
+      const row = yMap.get(seat.y) ?? 1;
+      map.set(`${col},${row}`, seat);
     }
 
-    return { seatsByCoord: map, maxX: mx, maxY: my };
+    return {
+      seatsByCoord: map,
+      totalCols: xs.length,
+      totalRows: ys.length,
+    };
   }, [layout]);
 
   // 鼠标拖动画布事件处理
@@ -374,20 +389,25 @@ export function SeatLayoutGrid({
             className='inline-block'
           >
             <div
-              className='grid gap-1'
+              className='grid gap-1.5'
               style={{
-                gridTemplateColumns: `repeat(${Math.max(maxX, 1)}, minmax(32px, 32px))`,
+                gridTemplateColumns: `repeat(${Math.max(totalCols, 1)}, minmax(36px, 36px))`,
               }}
             >
-              {Array.from({ length: maxY }, (_, yIdx) => {
-                const y = yIdx + 1;
-                return Array.from({ length: maxX }, (_, xIdx) => {
-                  const x = xIdx + 1;
-                  const seat = seatsByCoord.get(`${x},${y}`);
+              {Array.from({ length: totalRows }, (_, rIdx) => {
+                const row = rIdx + 1;
+                return Array.from({ length: totalCols }, (_, cIdx) => {
+                  const col = cIdx + 1;
+                  const seat = seatsByCoord.get(`${col},${row}`);
 
                   if (!seat) {
                     // 空过道或空白占位
-                    return <div key={`empty-${x}-${y}`} className='w-8 h-8' />;
+                    return (
+                      <div
+                        key={`empty-${col}-${row}`}
+                        className='w-9 h-9 opacity-0 pointer-events-none'
+                      />
+                    );
                   }
 
                   const selectedIdx = selectedSeats.findIndex(

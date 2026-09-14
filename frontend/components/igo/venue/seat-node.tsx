@@ -43,7 +43,7 @@ export function SeatNode({
             aria-label={`座位 ${seat.seat_name || seat.seat_key} ${isOccupied ? '已被占用' : '空闲可选'}`}
             className={`
               relative flex flex-col items-center justify-center rounded-md border text-xs font-mono transition-all duration-150 select-none
-              w-8 h-8 p-0.5
+              w-9 h-9 p-0.5
               ${
                 isSelected
                   ? 'bg-primary text-primary-foreground border-primary shadow-none ring-2 ring-primary/30 scale-105 z-10'
@@ -54,7 +54,7 @@ export function SeatNode({
             `}
           >
             {/* 序号或座位名 */}
-            <span className='font-semibold text-[9px] leading-tight truncate max-w-full'>
+            <span className='font-semibold text-[10px] leading-tight truncate max-w-full'>
               {seat.seat_name || seat.seat_key}
             </span>
 
