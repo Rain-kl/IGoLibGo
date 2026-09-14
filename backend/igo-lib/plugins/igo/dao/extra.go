@@ -74,14 +74,3 @@ func GetDashboardMetrics(ctx context.Context, userID uint64) (*entity.DashboardM
 func UpsertDashboardMetrics(ctx context.Context, row *entity.DashboardMetrics) error {
 	return upsertByUser(ctx, &row.ID, row, []string{"historical_success_count", "total_guard_seconds", colUpdatedAt})
 }
-
-// GetWebDAV returns WebDAV settings for a user.
-func GetWebDAV(ctx context.Context, userID uint64) (*entity.WebDAV, error) {
-	var row entity.WebDAV
-	return getByUser(ctx, userID, &row)
-}
-
-// UpsertWebDAV stores WebDAV settings for a user.
-func UpsertWebDAV(ctx context.Context, row *entity.WebDAV) error {
-	return upsertByUser(ctx, &row.ID, row, []string{"endpoint", "remote_directory", "username", "password", "tls_verify_mode", colUpdatedAt})
-}

@@ -52,7 +52,6 @@ const (
 	TableGlobalLeakBlacklist = "igo_global_leak_blacklist"
 	TableCheckInSessions     = "igo_checkin_sessions"
 	TableDashboardMetrics    = "igo_dashboard_metrics"
-	TableWebDAV              = "igo_webdav"
 )
 
 // API error codes.
@@ -96,7 +95,6 @@ var OwnedTables = []string{
 	TableGlobalLeakBlacklist,
 	TableCheckInSessions,
 	TableDashboardMetrics,
-	TableWebDAV,
 }
 
 // ErrNotImplemented is returned by service stubs before business logic is migrated.

@@ -86,26 +86,3 @@ type BackupImportRequest struct {
 	Password string `json:"password" binding:"required"`
 	Content  string `json:"content" binding:"required"`
 }
-
-// WebDAVSettings is the remote sync endpoint (password never echoed back).
-type WebDAVSettings struct {
-	Endpoint        string `json:"endpoint"`
-	RemoteDirectory string `json:"remote_directory"`
-	Username        string `json:"username"`
-	PasswordSet     bool   `json:"password_set"`
-	TLSVerifyMode   string `json:"tls_verify_mode"`
-}
-
-// SaveWebDAVRequest writes WebDAV sync settings.
-type SaveWebDAVRequest struct {
-	Endpoint        string `json:"endpoint" binding:"required"`
-	RemoteDirectory string `json:"remote_directory"`
-	Username        string `json:"username"`
-	Password        string `json:"password"`
-	TLSVerifyMode   string `json:"tls_verify_mode"`
-}
-
-// WebDAVSyncResponse is the result of a manual sync.
-type WebDAVSyncResponse struct {
-	Message string `json:"message"`
-}

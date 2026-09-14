@@ -9,10 +9,7 @@ import type {
   ProtocolTemplatesResponse,
   SaveProtocolTemplatesRequest,
   SaveSettingsRequest,
-  SaveWebDAVRequest,
   SettingsResponse,
-  WebDAVSettings,
-  WebDAVSyncResponse,
 } from './types';
 
 export class IGoConfigService extends BaseService {
@@ -66,20 +63,5 @@ export class IGoConfigService extends BaseService {
       '/backup/import',
       data as unknown as Record<string, unknown>,
     );
-  }
-
-  static async getWebDAV(): Promise<WebDAVSettings> {
-    return this.get<WebDAVSettings>('/webdav');
-  }
-
-  static async saveWebDAV(data: SaveWebDAVRequest): Promise<WebDAVSettings> {
-    return this.put<WebDAVSettings>(
-      '/webdav',
-      data as unknown as Record<string, unknown>,
-    );
-  }
-
-  static async syncWebDAV(): Promise<WebDAVSyncResponse> {
-    return this.post<WebDAVSyncResponse>('/webdav/sync');
   }
 }

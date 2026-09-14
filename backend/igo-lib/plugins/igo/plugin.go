@@ -145,9 +145,5 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	g.POST("/backup/export", ctrl.ExportBackup)
 	g.POST("/backup/import", ctrl.ImportBackup)
 
-	g.GET("/webdav", ctrl.GetWebDAV)
-	g.PUT("/webdav", ctrl.SaveWebDAV)
-	g.POST("/webdav/sync", ctrl.SyncWebDAV)
-
 	return nil
 }

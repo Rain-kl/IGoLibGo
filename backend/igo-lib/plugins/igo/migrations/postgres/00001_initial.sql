@@ -140,24 +140,10 @@ CREATE TABLE IF NOT EXISTS igo_dashboard_metrics (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_igo_dashboard_metrics_user ON igo_dashboard_metrics (user_id);
-
-CREATE TABLE IF NOT EXISTS igo_webdav (
-    id BIGINT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    endpoint VARCHAR(1024) NOT NULL DEFAULT '',
-    remote_directory VARCHAR(512) NOT NULL DEFAULT '',
-    username VARCHAR(255) NOT NULL DEFAULT '',
-    password TEXT NOT NULL DEFAULT '',
-    tls_verify_mode VARCHAR(32) NOT NULL DEFAULT 'default',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-CREATE UNIQUE INDEX IF NOT EXISTS uq_igo_webdav_user ON igo_webdav (user_id);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS igo_webdav;
 DROP TABLE IF EXISTS igo_dashboard_metrics;
 DROP TABLE IF EXISTS igo_checkin_sessions;
 DROP TABLE IF EXISTS igo_global_leak_blacklist;

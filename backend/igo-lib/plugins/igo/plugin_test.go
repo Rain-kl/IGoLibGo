@@ -105,9 +105,6 @@ var expectedRoutes = []struct {
 	{"PUT", "/api/v1/igo/settings"},
 	{"POST", "/api/v1/igo/backup/export"},
 	{"POST", "/api/v1/igo/backup/import"},
-	{"GET", "/api/v1/igo/webdav"},
-	{"PUT", "/api/v1/igo/webdav"},
-	{"POST", "/api/v1/igo/webdav/sync"},
 }
 
 func applyPlugin(t *testing.T) *core.Context {

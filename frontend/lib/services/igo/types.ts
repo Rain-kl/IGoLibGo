@@ -353,23 +353,3 @@ export interface BackupImportRequest {
   password: string;
   content: string;
 }
-
-export interface WebDAVSettings {
-  endpoint: string;
-  remote_directory: string;
-  username: string;
-  password_set: boolean;
-  tls_verify_mode: string;
-}
-
-export interface SaveWebDAVRequest {
-  endpoint: string;
-  remote_directory?: string;
-  username?: string;
-  password?: string;
-  tls_verify_mode?: string;
-}
-
-export interface WebDAVSyncResponse {
-  message: string;
-}

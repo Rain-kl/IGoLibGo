@@ -27,7 +27,6 @@ func TestTableNamesMatchOwnedTables(t *testing.T) {
 		entity.GlobalLeakBlacklistSeat{}.TableName(): {},
 		entity.CheckInSession{}.TableName():          {},
 		entity.DashboardMetrics{}.TableName():        {},
-		entity.WebDAV{}.TableName():                  {},
 	}
 	assert.Len(t, got, len(consts.OwnedTables))
 	for _, name := range consts.OwnedTables {
