@@ -90,9 +90,7 @@ const igoNavItems: NavItem[] = [
   { titleKey: 'settings', url: '/igo-settings', icon: Settings },
 ];
 
-const navMainItems: NavItem[] = [
-  { titleKey: 'myFiles', url: '/files', icon: FolderOpen },
-];
+const navMainItems: NavItem[] = [];
 
 const adminItems: NavItem[] = [
   { titleKey: 'users', url: '/admin/users', icon: UserRound },
