@@ -266,12 +266,12 @@ func (ctrl *Controller) SetSeatLabels(c *gin.Context) {
 // @Failure 501 {object} response.AnyError
 // @Router /api/v1/igo/libraries/{id}/seat-labels [delete]
 func (ctrl *Controller) DeleteSeatLabels(c *gin.Context) {
-	libraryID, ok := parseLibraryID(c)
+	req, ok := bindJSON[do.DeleteSeatLabelsRequest](c)
 	if !ok {
 		return
 	}
-	req, ok := bindJSON[do.DeleteSeatLabelsRequest](c)
-	if !ok {
+	libraryID, valid := parseLibraryID(c)
+	if !valid {
 		return
 	}
 	ctrl.withUser(c, func(userID uint64) {

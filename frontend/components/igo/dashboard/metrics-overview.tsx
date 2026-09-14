@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Award, Cpu, Shield, Zap } from 'lucide-react';
+import { Award, Cpu, Shield } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DashboardResponse } from '@/lib/services/igo/types';
 

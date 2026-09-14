@@ -23,7 +23,7 @@ func (s *Service) GetProtocolTemplates(ctx context.Context, userID uint64) (*do.
 }
 
 // GetDefaultProtocolTemplates returns built-in templates.
-func (s *Service) GetDefaultProtocolTemplates(ctx context.Context, userID uint64) (*do.ProtocolTemplatesResponse, error) {
+func (s *Service) GetDefaultProtocolTemplates(_ context.Context, _ uint64) (*do.ProtocolTemplatesResponse, error) {
 	tpl := traceint.DefaultTemplates()
 	return &tpl, nil
 }
@@ -96,12 +96,12 @@ func (s *Service) SaveSettings(ctx context.Context, userID uint64, req do.SaveSe
 }
 
 // ExportBackup is not implemented in this stage.
-func (s *Service) ExportBackup(ctx context.Context, userID uint64, req do.BackupExportRequest) (*do.BackupExportResponse, error) {
+func (s *Service) ExportBackup(_ context.Context, _ uint64, _ do.BackupExportRequest) (*do.BackupExportResponse, error) {
 	return nil, consts.ErrNotImplemented
 }
 
 // ImportBackup is not implemented in this stage.
-func (s *Service) ImportBackup(ctx context.Context, userID uint64, req do.BackupImportRequest) error {
+func (s *Service) ImportBackup(_ context.Context, _ uint64, _ do.BackupImportRequest) error {
 	return consts.ErrNotImplemented
 }
 
@@ -148,6 +148,6 @@ func (s *Service) SaveWebDAV(ctx context.Context, userID uint64, req do.SaveWebD
 }
 
 // SyncWebDAV is not implemented in this stage.
-func (s *Service) SyncWebDAV(ctx context.Context, userID uint64) (*do.WebDAVSyncResponse, error) {
+func (s *Service) SyncWebDAV(_ context.Context, _ uint64) (*do.WebDAVSyncResponse, error) {
 	return nil, consts.ErrNotImplemented
 }

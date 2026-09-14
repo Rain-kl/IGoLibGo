@@ -21,6 +21,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// MigrationsFS embeds migration SQL files for PostgreSQL and SQLite.
+//
 //go:embed migrations/*/*.sql
 var MigrationsFS embed.FS
 

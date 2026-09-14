@@ -94,10 +94,7 @@ export default function DashboardRootPage() {
       />
 
       {/* 5. 四大自动化引擎快捷调度 */}
-      <QuickTaskControls
-        tasks={dashboard?.tasks ?? []}
-        loading={dashboardLoading}
-      />
+      <QuickTaskControls tasks={dashboard?.tasks ?? []} />
 
       {/* 6. 实时活动日志流 */}
       <ActivityLogStream

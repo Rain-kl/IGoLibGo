@@ -4,6 +4,7 @@
 package dao
 
 import (
+	"Wavelet/igo-lib/plugins/igo/consts"
 	"Wavelet/igo-lib/plugins/igo/model/entity"
 	"context"
 	"errors"
@@ -48,7 +49,7 @@ func UpsertTaskRun(ctx context.Context, row *entity.TaskRun) error {
 	}
 	ensureID(&row.ID)
 	return gdb.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "user_id"}, {Name: "kind"}},
+		Columns: []clause.Column{{Name: colUserID}, {Name: "kind"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"state", "title", "message", "plan_json",
 			"started_at", "last_updated_at", "last_request_at",
@@ -87,7 +88,7 @@ func UpsertTaskLaunchHistory(ctx context.Context, row *entity.TaskLaunchHistory)
 	}).Create(row).Error; err != nil {
 		return err
 	}
-	return pruneTaskLaunchHistory(gdb, row.UserID, row.Kind, 5)
+	return pruneTaskLaunchHistory(gdb, row.UserID, row.Kind, consts.MaxTaskLaunchHistory)
 }
 
 func pruneTaskLaunchHistory(gdb *gorm.DB, userID uint64, kind string, keep int) error {

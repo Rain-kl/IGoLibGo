@@ -349,4 +349,3 @@ func (m *unauthenticatedAuthService) GetCurrentUserID(context.Context) (uint64, 
 func (m *unauthenticatedAuthService) GetCurrentUser(context.Context) (*contracts.UserDTO, error) {
 	return nil, errors.New("unauthorized")
 }
-

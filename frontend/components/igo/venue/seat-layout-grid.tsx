@@ -17,23 +17,13 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { toast } from 'sonner';
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
 import { SeatNode } from './seat-node';
 import type {
   LibraryLayoutResponse,
-  SeatLabel,
   SeatRef,
   SeatSnapshot,
 } from '@/lib/services/igo/types';

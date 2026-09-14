@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Clock, Sliders } from 'lucide-react';
+import { Sliders } from 'lucide-react';
 import {
   Card,
   CardContent,

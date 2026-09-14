@@ -65,13 +65,21 @@ func (s *Service) GetLibrary(ctx context.Context, userID uint64, libraryID int) 
 	return nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "场馆不存在")
 }
 
-// GetLibraryLayout returns the seat map.
-func (s *Service) GetLibraryLayout(ctx context.Context, userID uint64, libraryID int) (*do.LibraryLayoutResponse, error) {
+func (s *Service) authParams(ctx context.Context, userID uint64) (string, do.ProtocolTemplatesResponse, error) {
 	cookie, _, err := s.cookie(ctx, userID)
 	if err != nil {
-		return nil, err
+		return "", do.ProtocolTemplatesResponse{}, err
 	}
 	tpl, err := s.templates(ctx, userID)
+	if err != nil {
+		return "", do.ProtocolTemplatesResponse{}, err
+	}
+	return cookie, tpl, nil
+}
+
+// GetLibraryLayout returns the seat map.
+func (s *Service) GetLibraryLayout(ctx context.Context, userID uint64, libraryID int) (*do.LibraryLayoutResponse, error) {
+	cookie, tpl, err := s.authParams(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,11 +89,7 @@ func (s *Service) GetLibraryLayout(ctx context.Context, userID uint64, libraryID
 
 // GetLibraryRule returns opening/booking rules.
 func (s *Service) GetLibraryRule(ctx context.Context, userID uint64, libraryID int) (*do.LibraryRuleResponse, error) {
-	cookie, _, err := s.cookie(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	tpl, err := s.templates(ctx, userID)
+	cookie, tpl, err := s.authParams(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

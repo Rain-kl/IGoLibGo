@@ -5,6 +5,7 @@ package controller
 
 import (
 	"Wavelet/pkg/response"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,6 +57,6 @@ func (ctrl *Controller) ListActivityLogs(c *gin.Context) {
 		if ctrl.reply(c, err) {
 			return
 		}
-		c.JSON(200, response.Paged(items, response.Meta{Total: total, Page: page, PerPage: perPage}))
+		c.JSON(http.StatusOK, response.Paged(items, response.Meta{Total: total, Page: page, PerPage: perPage}))
 	})
 }

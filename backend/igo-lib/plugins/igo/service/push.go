@@ -19,6 +19,7 @@ type Emitter interface {
 	Emit(ctx context.Context, topic string, payload any) error
 }
 
+// SetEmitter configures the domain event emitter.
 func (s *Service) SetEmitter(e Emitter) { s.events = e }
 
 // RegisterPushEvents declares IGo events in the notification center.
@@ -31,46 +32,56 @@ func RegisterPushEvents(reg contracts.PushRegistry) {
 	}
 }
 
+// Push notification title constants.
+const (
+	titleGrabSucceeded       = "抢座成功"
+	titleOccupySucceeded     = "占座成功"
+	titleGlobalLeakSucceeded = "全域捡漏成功"
+	titleTomorrowSucceeded   = "明日预约成功"
+	levelInfo                = "INFO"
+	metaTaskName             = "task_name"
+)
+
 func builtinPushEvents() []contracts.PushEventMeta {
 	return []contracts.PushEventMeta{
 		{
 			Key:         consts.PushGrabSucceeded,
-			Name:        "抢座成功",
+			Name:        titleGrabSucceeded,
 			Description: "抢座任务预约到目标座位时触发。可在通知中心绑定推送渠道。",
 			DefaultTemplate: contracts.PushNotificationTemplate{
-				Title:   "抢座成功",
+				Title:   titleGrabSucceeded,
 				Content: "{{library_name}} 的座位 {{seat_name}} 已预约成功。",
-				Level:   "INFO",
+				Level:   levelInfo,
 			},
 		},
 		{
 			Key:         consts.PushOccupySucceeded,
-			Name:        "占座成功",
+			Name:        titleOccupySucceeded,
 			Description: "占座任务完成重新预约时触发。可在通知中心绑定推送渠道。",
 			DefaultTemplate: contracts.PushNotificationTemplate{
-				Title:   "占座成功",
+				Title:   titleOccupySucceeded,
 				Content: "座位 {{seat_name}} 已重新预约成功。",
-				Level:   "INFO",
+				Level:   levelInfo,
 			},
 		},
 		{
 			Key:         consts.PushGlobalLeakSucceeded,
-			Name:        "全域捡漏成功",
+			Name:        titleGlobalLeakSucceeded,
 			Description: "全域捡漏预约到空座时触发。可在通知中心绑定推送渠道。",
 			DefaultTemplate: contracts.PushNotificationTemplate{
-				Title:   "全域捡漏成功",
+				Title:   titleGlobalLeakSucceeded,
 				Content: "{{library_name}} 的座位 {{seat_name}} 捡漏成功。",
-				Level:   "INFO",
+				Level:   levelInfo,
 			},
 		},
 		{
 			Key:         consts.PushTomorrowSucceeded,
-			Name:        "明日预约成功",
+			Name:        titleTomorrowSucceeded,
 			Description: "明日预约提交成功时触发。可在通知中心绑定推送渠道。",
 			DefaultTemplate: contracts.PushNotificationTemplate{
-				Title:   "明日预约成功",
+				Title:   titleTomorrowSucceeded,
 				Content: "{{library_name}} 的座位 {{seat_name}} 明日预约已提交。",
-				Level:   "INFO",
+				Level:   levelInfo,
 			},
 		},
 		{
@@ -127,17 +138,17 @@ func (s *Service) notify(ctx context.Context, userID uint64, key, title, content
 
 func (s *Service) notifySuccess(ctx context.Context, userID uint64, kind, libraryName, seatName, message string) {
 	key := consts.PushGrabSucceeded
-	title := "抢座成功"
+	title := titleGrabSucceeded
 	switch kind {
 	case consts.TaskKindOccupy:
-		key, title = consts.PushOccupySucceeded, "占座成功"
+		key, title = consts.PushOccupySucceeded, titleOccupySucceeded
 	case consts.TaskKindGlobalLeak:
-		key, title = consts.PushGlobalLeakSucceeded, "全域捡漏成功"
+		key, title = consts.PushGlobalLeakSucceeded, titleGlobalLeakSucceeded
 	case consts.TaskKindTomorrow:
-		key, title = consts.PushTomorrowSucceeded, "明日预约成功"
+		key, title = consts.PushTomorrowSucceeded, titleTomorrowSucceeded
 	}
 	s.notify(ctx, userID, key, title, message, map[string]any{
-		"task_name":    kindTitle(kind),
+		metaTaskName:   kindTitle(kind),
 		"library_name": libraryName,
 		"seat_name":    seatName,
 		"message":      message,
@@ -147,14 +158,14 @@ func (s *Service) notifySuccess(ctx context.Context, userID uint64, kind, librar
 func (s *Service) notifyFailure(ctx context.Context, userID uint64, kind, reason string) {
 	if isAuthFailure(reason) {
 		s.notify(ctx, userID, consts.PushSessionInvalid, "Cookie 已失效", reason, map[string]any{
-			"task_name": kindTitle(kind),
-			"reason":    reason,
+			metaTaskName: kindTitle(kind),
+			"reason":     reason,
 		})
 		return
 	}
 	s.notify(ctx, userID, consts.PushTaskFailed, "任务失败", kindTitle(kind)+" 失败："+reason, map[string]any{
-		"task_name": kindTitle(kind),
-		"reason":    reason,
+		metaTaskName: kindTitle(kind),
+		"reason":     reason,
 	})
 }
 

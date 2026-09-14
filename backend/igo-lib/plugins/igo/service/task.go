@@ -24,6 +24,17 @@ const (
 	stateRunning = "running"
 	stateSuccess = "succeeded"
 	stateFailed  = "failed"
+
+	maxOccupyRetries        = 3
+	schedulePreWaitInterval = 30 * time.Second
+	defaultPollInterval     = 10 * time.Second
+	occupyBaseIntervalSec   = 10
+	occupyJitterRangeSec    = 11
+	aggressiveDelayMS       = 1000
+	randomMinDelayMS        = 4000
+	randomMaxDelayMS        = 8000
+	defaultDelayMS          = 5000
+	dayDuration             = 24 * time.Hour
 )
 
 // ListTasks returns coordinator snapshots.
@@ -52,7 +63,7 @@ func (s *Service) ListTasks(ctx context.Context, userID uint64) (*do.TaskListRes
 func (s *Service) ListTaskRecords(ctx context.Context, userID uint64) ([]do.TaskLaunchRecord, error) {
 	var out []do.TaskLaunchRecord
 	for _, kind := range []string{consts.TaskKindGrab, consts.TaskKindGlobalLeak} {
-		rows, err := dao.ListTaskLaunchHistory(ctx, userID, kind, 5)
+		rows, err := dao.ListTaskLaunchHistory(ctx, userID, kind, consts.MaxTaskLaunchHistory)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +206,7 @@ func (s *Service) startKind(ctx context.Context, userID uint64, kind, message st
 	return nil
 }
 
-func (s *Service) recordLaunch(ctx context.Context, userID uint64, kind string, plan any, raw []byte) {
+func (s *Service) recordLaunch(ctx context.Context, userID uint64, kind string, _ any, raw []byte) {
 	if kind != consts.TaskKindGrab && kind != consts.TaskKindGlobalLeak {
 		return
 	}
@@ -392,7 +403,7 @@ func (s *Service) tickOccupy(ctx context.Context, userID uint64, tpl do.Protocol
 			return false, "", err
 		}
 	}
-	for attempt := 1; attempt <= 3; attempt++ {
+	for attempt := 1; attempt <= maxOccupyRetries; attempt++ {
 		ok, err = s.api(ctx, userID).ReserveSeat(ctx, tpl, cookie, info.LibraryID, info.SeatKey)
 		if err != nil {
 			return false, "", err
@@ -402,7 +413,7 @@ func (s *Service) tickOccupy(ctx context.Context, userID uint64, tpl do.Protocol
 			s.notifySuccess(ctx, userID, consts.TaskKindOccupy, info.LibraryName, info.SeatName, msg)
 			return false, msg, nil
 		}
-		if attempt < 3 {
+		if attempt < maxOccupyRetries {
 			if err := sleepCtx(ctx, time.Second); err != nil {
 				return false, "", err
 			}
@@ -532,7 +543,7 @@ func tickDelay(kind, planJSON string) time.Duration {
 		var plan do.GrabStartRequest
 		_ = json.Unmarshal([]byte(planJSON), &plan)
 		if wait, _ := scheduledWait(plan.ScheduledStart); wait {
-			return minDuration(30*time.Second, timeUntilClock(plan.ScheduledStart))
+			return minDuration(schedulePreWaitInterval, timeUntilClock(plan.ScheduledStart))
 		}
 		minMS, maxMS := grabDelayMS(plan)
 		if maxMS < minMS {
@@ -541,27 +552,27 @@ func tickDelay(kind, planJSON string) time.Duration {
 		if maxMS == minMS {
 			return time.Duration(minMS) * time.Millisecond
 		}
-		return time.Duration(minMS+rand.IntN(maxMS-minMS+1)) * time.Millisecond
+		return time.Duration(minMS+rand.IntN(maxMS-minMS+1)) * time.Millisecond //nolint:gosec // jitter delay does not require crypto security
 	case consts.TaskKindOccupy:
 		var plan do.OccupyStartRequest
 		_ = json.Unmarshal([]byte(planJSON), &plan)
 		if plan.CheckIntervalMode == "random_ten_to_twenty_seconds" {
-			return time.Duration(10+rand.IntN(11)) * time.Second
+			return time.Duration(occupyBaseIntervalSec+rand.IntN(occupyJitterRangeSec)) * time.Second //nolint:gosec // jitter delay does not require crypto security
 		}
-		return 10 * time.Second
+		return defaultPollInterval
 	case consts.TaskKindGlobalLeak:
 		var plan do.GlobalLeakStartRequest
 		_ = json.Unmarshal([]byte(planJSON), &plan)
 		if plan.ScanIntervalSeconds > 0 {
 			return time.Duration(plan.ScanIntervalSeconds) * time.Second
 		}
-		return 10 * time.Second
+		return defaultPollInterval
 	case consts.TaskKindTomorrow:
 		var plan do.TomorrowStartRequest
 		_ = json.Unmarshal([]byte(planJSON), &plan)
 		if !plan.ExecuteImmediately {
 			if wait, _ := scheduledWait(plan.ScheduledStart); wait {
-				return minDuration(30*time.Second, timeUntilClock(plan.ScheduledStart))
+				return minDuration(schedulePreWaitInterval, timeUntilClock(plan.ScheduledStart))
 			}
 		}
 		return time.Second
@@ -581,11 +592,11 @@ func grabDelayMS(plan do.GrabStartRequest) (minMS, maxMS int) {
 	}
 	switch plan.PollingMode {
 	case "aggressive":
-		return 1000, 1000
+		return aggressiveDelayMS, aggressiveDelayMS
 	case "randomized":
-		return 4000, 8000
+		return randomMinDelayMS, randomMaxDelayMS
 	default:
-		return 5000, 5000
+		return defaultDelayMS, defaultDelayMS
 	}
 }
 
@@ -627,7 +638,7 @@ func parseClock(clock string) (time.Time, bool) {
 		}
 		fire := time.Date(now.Year(), now.Month(), now.Day(), t.Hour(), t.Minute(), t.Second(), 0, now.Location())
 		if !fire.After(now) {
-			fire = fire.Add(24 * time.Hour)
+			fire = fire.Add(dayDuration)
 		}
 		return fire, true
 	}

@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Bookmark, Plus, Trash2, X } from 'lucide-react';
+import { Bookmark, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -38,7 +38,6 @@ export function FavoritesDrawer({
   onRemoveFavorite,
 }: FavoritesDrawerProps) {
   const t = useTranslations('igo.venue');
-  const tCommon = useTranslations('common');
 
   const seatMap = React.useMemo(() => {
     return new Map(allSeats.map((s) => [s.seat_key, s]));

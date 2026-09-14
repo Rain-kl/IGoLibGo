@@ -9,8 +9,6 @@ import { useTranslations } from 'next-intl';
 import {
   ArrowUpRight,
   Calendar,
-  Clock,
-  Compass,
   Radio,
   Rocket,
   ShieldCheck,
@@ -23,7 +21,6 @@ import type { CoordinatorStatus } from '@/lib/services/igo/types';
 
 interface QuickTaskControlsProps {
   tasks: CoordinatorStatus[];
-  loading: boolean;
 }
 
 interface EngineDefinition {
@@ -65,7 +62,7 @@ const ENGINES: EngineDefinition[] = [
   },
 ];
 
-export function QuickTaskControls({ tasks, loading }: QuickTaskControlsProps) {
+export function QuickTaskControls({ tasks }: QuickTaskControlsProps) {
   const t = useTranslations('igo.dashboard');
 
   const taskMap = React.useMemo(() => {

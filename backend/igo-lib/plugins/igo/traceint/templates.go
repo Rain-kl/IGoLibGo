@@ -12,19 +12,21 @@ import (
 	"strings"
 )
 
+const traceintWebIndexURL = "https://web.traceint.com/web/index.html"
+
 // DefaultTemplates is the built-in TraceInt protocol set from IGoLibrary-Ex.
 func DefaultTemplates() do.ProtocolTemplatesResponse {
 	return do.ProtocolTemplatesResponse{
 		GetCookieURLTemplate:                "http://wechat.v2.traceint.com/index.php/urlNew/auth.html?r=ReplaceMeByReturnUrl&code=ReplaceMeByCode&state=1",
-		CookieAuthorizationReturnURL:        "https://web.traceint.com/web/index.html",
+		CookieAuthorizationReturnURL:        traceintWebIndexURL,
 		GraphQLEndpointURL:                  "https://wechat.v2.traceint.com/index.php/graphql/",
-		GraphQLDefaultRefererURL:            "https://web.traceint.com/web/index.html",
+		GraphQLDefaultRefererURL:            traceintWebIndexURL,
 		GraphQLDefaultOriginURL:             "https://web.traceint.com",
 		GraphQLTomorrowRefererURL:           "https://web.traceint.com/",
 		GraphQLTomorrowOriginURL:            "https://web.traceint.com",
 		TomorrowReservationQueueURLTemplate: "wss://wechat.v2.traceint.com/ws?ns=prereserve/queue",
 		RemoteCheckInAuthURLTemplate:        "https://wechat.v2.traceint.com/index.php/wxApp/wechatAuth.html?r=ReplaceMeByReturnUrl&code=ReplaceMeByCode&state=1",
-		RemoteCheckInAuthorizationReturnURL: "https://web.traceint.com/web/index.html",
+		RemoteCheckInAuthorizationReturnURL: traceintWebIndexURL,
 		RemoteCheckInAuthRefererURL:         "https://open.weixin.qq.com/",
 		RemoteCheckInDevicesEndpointURL:     "https://wechat.v2.traceint.com/index.php/wxApp/devices.html",
 		RemoteCheckInTimeEndpointURL:        "https://wechat.v2.traceint.com/index.php/wxApp/getTime.html",

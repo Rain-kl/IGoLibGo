@@ -4,7 +4,7 @@
 'use client';
 
 import * as React from 'react';
-import { Bookmark, Sparkles, Tag } from 'lucide-react';
+import { Bookmark, Tag } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,

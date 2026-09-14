@@ -6,7 +6,6 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import {
-  Activity,
   AlertTriangle,
   Info,
   RefreshCw,
@@ -16,7 +15,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
 import type { ActivityLogEntry } from '@/lib/services/igo/types';
 

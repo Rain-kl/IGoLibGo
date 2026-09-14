@@ -5,14 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  CheckCircle2,
-  Compass,
-  MapPin,
-  Radio,
-  Send,
-  Sliders,
-} from 'lucide-react';
+import { CheckCircle2, Compass, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {

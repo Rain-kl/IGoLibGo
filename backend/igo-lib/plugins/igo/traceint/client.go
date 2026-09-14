@@ -17,9 +17,11 @@ import (
 )
 
 const (
-	desktopUA  = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x63070626)"
-	tomorrowUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x63090719) XWEB/8391 Flue"
-	appVersion = "2.0.11"
+	desktopUA             = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x63070626)"
+	tomorrowUA            = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 NetType/WIFI MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x63090719) XWEB/8391 Flue"
+	appVersion            = "2.0.11"
+	defaultRetries        = 3
+	maxErrorSnippetLength = 200
 )
 
 // Client is a TraceInt HTTP/GraphQL client.
@@ -39,7 +41,7 @@ func (c *Client) retries() int {
 	if c != nil && c.MaxRetries > 0 {
 		return c.MaxRetries
 	}
-	return 3
+	return defaultRetries
 }
 
 // GetCookie exchanges a WeChat code for a TraceInt cookie header.
@@ -60,7 +62,7 @@ func (c *Client) GetCookie(ctx context.Context, templates do.ProtocolTemplatesRe
 	if err != nil {
 		return "", fmt.Errorf("获取 Cookie 失败: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_, _ = io.Copy(io.Discard, resp.Body)
 	if resp.Request == nil || resp.Request.URL == nil {
 		return "", errf("获取 Cookie 失败：空响应")
@@ -112,17 +114,17 @@ func (c *Client) graphql(ctx context.Context, templates do.ProtocolTemplatesResp
 			continue
 		}
 		body, readErr := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		if readErr != nil {
 			lastErr = readErr
 			continue
 		}
-		if resp.StatusCode >= 500 && i+1 < attempts {
-			lastErr = fmt.Errorf("TraceInt HTTP %d: %s", resp.StatusCode, truncate(string(body), 200))
+		if resp.StatusCode >= http.StatusInternalServerError && i+1 < attempts {
+			lastErr = fmt.Errorf("TraceInt HTTP %d: %s", resp.StatusCode, truncate(string(body), maxErrorSnippetLength))
 			continue
 		}
-		if resp.StatusCode >= 400 {
-			return nil, fmt.Errorf("TraceInt HTTP %d: %s", resp.StatusCode, truncate(string(body), 200))
+		if resp.StatusCode >= http.StatusBadRequest {
+			return nil, fmt.Errorf("TraceInt HTTP %d: %s", resp.StatusCode, truncate(string(body), maxErrorSnippetLength))
 		}
 		return body, nil
 	}

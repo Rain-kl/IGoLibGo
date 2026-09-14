@@ -6,15 +6,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import {
-  Building2,
-  Clock,
-  ExternalLink,
-  Layers,
-  ListOrdered,
-  RotateCcw,
-  Sliders,
-} from 'lucide-react';
+import { Building2, ExternalLink, ListOrdered, Sliders } from 'lucide-react';
 
 import {
   Card,

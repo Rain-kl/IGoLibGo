@@ -5,14 +5,8 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Building2, CheckSquare, Layers, Square, Users } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Building2, CheckSquare, Layers, Square } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';

@@ -50,13 +50,9 @@ func (ctrl *Controller) RefreshReservation(c *gin.Context) {
 // @Failure 501 {object} response.AnyError
 // @Router /api/v1/igo/reservation/cancel [post]
 func (ctrl *Controller) CancelReservation(c *gin.Context) {
-	var req do.CancelReservationRequest
-	if c.Request.ContentLength > 0 {
-		bound, ok := bindJSON[do.CancelReservationRequest](c)
-		if !ok {
-			return
-		}
-		req = bound
+	req, ok := bindOptionalJSON[do.CancelReservationRequest](c)
+	if !ok {
+		return
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		res, err := ctrl.svc.CancelReservation(c.Request.Context(), userID, req)

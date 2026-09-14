@@ -7,7 +7,6 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import {
   CheckCircle2,
-  KeyRound,
   LogOut,
   QrCode,
   RefreshCw,
@@ -183,7 +182,7 @@ export function CheckInAuthCard({
               </div>
             ) : qrData?.image_data_url ? (
               <div className='p-2 bg-white rounded-lg border shadow-sm'>
-                {/* biome-ignore lint/a11y/useAltText: QR code */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrData.image_data_url}
                   alt='CheckIn QR'

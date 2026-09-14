@@ -38,7 +38,6 @@ export function GrabStatusCard({
   canStart,
 }: GrabStatusCardProps) {
   const t = useTranslations('igo.grab');
-  const tCommon = useTranslations('common');
 
   const state = status?.state || 'idle';
   const isRunning = state === 'running' || state === 'starting';

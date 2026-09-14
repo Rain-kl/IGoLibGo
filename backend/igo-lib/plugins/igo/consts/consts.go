@@ -34,6 +34,12 @@ const (
 	// TaskKindTomorrow is the tomorrow-reservation coordinator.
 	TaskKindTomorrow = "tomorrow"
 
+	// MaxTaskLaunchHistory is the maximum number of recent launch history records retained per task kind.
+	MaxTaskLaunchHistory = 5
+)
+
+// Database table names owned by the igo plugin.
+const (
 	TableSessions            = "igo_sessions"
 	TableVenues              = "igo_venues"
 	TableFavorites           = "igo_favorites"
@@ -47,7 +53,10 @@ const (
 	TableCheckInSessions     = "igo_checkin_sessions"
 	TableDashboardMetrics    = "igo_dashboard_metrics"
 	TableWebDAV              = "igo_webdav"
+)
 
+// API error codes.
+const (
 	CodeSessionRequired = "session_required"
 	CodeNotFound        = "not_found"
 	CodeTraceInt        = "traceint_error"

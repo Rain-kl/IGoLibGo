@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Cloud, RefreshCw, Save, Send } from 'lucide-react';
+import { Cloud, RefreshCw, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {

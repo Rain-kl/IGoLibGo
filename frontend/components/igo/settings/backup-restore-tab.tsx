@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Download, FileDown, FileUp, Lock, Upload } from 'lucide-react';
+import { Download, FileDown, FileUp, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {

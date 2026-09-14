@@ -20,7 +20,7 @@ func (s *Service) GetStatus(ctx context.Context, userID uint64) (*do.DashboardRe
 }
 
 // ListActivityLogs is not persisted in this stage.
-func (s *Service) ListActivityLogs(ctx context.Context, userID uint64, page, perPage int) ([]do.ActivityLogEntry, int64, error) {
+func (s *Service) ListActivityLogs(_ context.Context, _ uint64, _, _ int) ([]do.ActivityLogEntry, int64, error) {
 	return []do.ActivityLogEntry{}, 0, nil
 }
 

@@ -6,26 +6,9 @@ package dao
 import (
 	"Wavelet/igo-lib/plugins/igo/model/entity"
 	"context"
-	"errors"
 
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-
-func getByUser[T any](ctx context.Context, userID uint64, dest *T) (*T, error) {
-	gdb, err := db(ctx)
-	if err != nil {
-		return nil, err
-	}
-	err = gdb.Where("user_id = ?", userID).First(dest).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	return dest, nil
-}
 
 func upsertByUser(ctx context.Context, id *uint64, row any, updateCols []string) error {
 	gdb, err := db(ctx)
@@ -34,7 +17,7 @@ func upsertByUser(ctx context.Context, id *uint64, row any, updateCols []string)
 	}
 	ensureID(id)
 	return gdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}},
+		Columns:   []clause.Column{{Name: colUserID}},
 		DoUpdates: clause.AssignmentColumns(updateCols),
 	}).Create(row).Error
 }
@@ -47,7 +30,7 @@ func GetProtocolOverride(ctx context.Context, userID uint64) (*entity.ProtocolOv
 
 // UpsertProtocolOverride stores protocol overrides for a user.
 func UpsertProtocolOverride(ctx context.Context, row *entity.ProtocolOverride) error {
-	return upsertByUser(ctx, &row.ID, row, []string{"overrides", "updated_at"})
+	return upsertByUser(ctx, &row.ID, row, []string{"overrides", colUpdatedAt})
 }
 
 // GetSettings returns settings JSON for a user.
@@ -58,7 +41,7 @@ func GetSettings(ctx context.Context, userID uint64) (*entity.Settings, error) {
 
 // UpsertSettings stores settings JSON for a user.
 func UpsertSettings(ctx context.Context, row *entity.Settings) error {
-	return upsertByUser(ctx, &row.ID, row, []string{"payload", "updated_at"})
+	return upsertByUser(ctx, &row.ID, row, []string{"payload", colUpdatedAt})
 }
 
 // GetCheckInSession returns the remote-check-in session for a user.
@@ -69,7 +52,7 @@ func GetCheckInSession(ctx context.Context, userID uint64) (*entity.CheckInSessi
 
 // UpsertCheckInSession stores the remote-check-in session for a user.
 func UpsertCheckInSession(ctx context.Context, row *entity.CheckInSession) error {
-	return upsertByUser(ctx, &row.ID, row, []string{"token", "saved_at", "expires_at", "can_auto_restore", "updated_at"})
+	return upsertByUser(ctx, &row.ID, row, []string{"token", "saved_at", "expires_at", "can_auto_restore", colUpdatedAt})
 }
 
 // DeleteCheckInSession removes the remote-check-in session for a user.
@@ -78,7 +61,7 @@ func DeleteCheckInSession(ctx context.Context, userID uint64) error {
 	if err != nil {
 		return err
 	}
-	return gdb.Where("user_id = ?", userID).Delete(&entity.CheckInSession{}).Error
+	return gdb.Where(colUserID+" = ?", userID).Delete(&entity.CheckInSession{}).Error
 }
 
 // GetDashboardMetrics returns home counters for a user.
@@ -89,7 +72,7 @@ func GetDashboardMetrics(ctx context.Context, userID uint64) (*entity.DashboardM
 
 // UpsertDashboardMetrics stores home counters for a user.
 func UpsertDashboardMetrics(ctx context.Context, row *entity.DashboardMetrics) error {
-	return upsertByUser(ctx, &row.ID, row, []string{"historical_success_count", "total_guard_seconds", "updated_at"})
+	return upsertByUser(ctx, &row.ID, row, []string{"historical_success_count", "total_guard_seconds", colUpdatedAt})
 }
 
 // GetWebDAV returns WebDAV settings for a user.
@@ -100,5 +83,5 @@ func GetWebDAV(ctx context.Context, userID uint64) (*entity.WebDAV, error) {
 
 // UpsertWebDAV stores WebDAV settings for a user.
 func UpsertWebDAV(ctx context.Context, row *entity.WebDAV) error {
-	return upsertByUser(ctx, &row.ID, row, []string{"endpoint", "remote_directory", "username", "password", "tls_verify_mode", "updated_at"})
+	return upsertByUser(ctx, &row.ID, row, []string{"endpoint", "remote_directory", "username", "password", "tls_verify_mode", colUpdatedAt})
 }

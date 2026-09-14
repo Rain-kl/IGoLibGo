@@ -195,12 +195,12 @@ func TestLoginRequiredMiddlewarePopulatesServiceContext(t *testing.T) {
 		})
 
 		var (
-			gotUser       *contracts.UserDTO
-			userErr       error
-			gotUID        uint64
-			uidErr        error
-			gotReqUser    *contracts.UserDTO
-			reqUserErr    error
+			gotUser    *contracts.UserDTO
+			userErr    error
+			gotUID     uint64
+			uidErr     error
+			gotReqUser *contracts.UserDTO
+			reqUserErr error
 		)
 		engine.GET("/protected", auth.LoginRequired(), func(c *gin.Context) {
 			gotUser, userErr = svc.GetCurrentUser(c)

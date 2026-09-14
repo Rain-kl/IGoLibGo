@@ -261,7 +261,7 @@ export function SessionAuthCard({
               </div>
             ) : qrData?.image_data_url ? (
               <div className='p-2 bg-white rounded-lg border shadow-sm'>
-                {/* biome-ignore lint/a11y/useAltText: QR code image */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrData.image_data_url}
                   alt='TraceInt Auth QR'

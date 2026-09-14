@@ -70,8 +70,8 @@ func UpsertSeatLabels(ctx context.Context, userID uint64, libraryID int, labels 
 		ensureID(&labels[i].ID)
 	}
 	return gdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}, {Name: "library_id"}, {Name: "seat_key"}},
-		DoUpdates: clause.AssignmentColumns([]string{"seat_name", "label_text", "updated_at"}),
+		Columns:   []clause.Column{{Name: colUserID}, {Name: "library_id"}, {Name: "seat_key"}},
+		DoUpdates: clause.AssignmentColumns([]string{"seat_name", "label_text", colUpdatedAt}),
 	}).Create(&labels).Error
 }
 

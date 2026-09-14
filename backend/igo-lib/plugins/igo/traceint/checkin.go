@@ -55,7 +55,7 @@ func (c *Client) ExchangeCheckInCode(ctx context.Context, templates do.ProtocolT
 	if err != nil {
 		return "", nil, fmt.Errorf("获取签到授权失败: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	_, _ = io.Copy(io.Discard, resp.Body)
 	token, expiresAt = extractWechatSess(resp)
 	if token == "" {
@@ -86,7 +86,7 @@ func (c *Client) GetCheckInServerTime(ctx context.Context, templates do.Protocol
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -133,13 +133,13 @@ func (c *Client) checkInForm(ctx context.Context, endpoint, referer, form string
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("签到 HTTP %d: %s", resp.StatusCode, truncate(string(body), 200))
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, fmt.Errorf("签到 HTTP %d: %s", resp.StatusCode, truncate(string(body), maxErrorSnippetLength))
 	}
 	return body, nil
 }
@@ -242,6 +242,7 @@ func encryptTimestamp(ts string) (string, error) {
 	if !ok {
 		return "", errf("签到公钥类型错误")
 	}
+	//nolint:staticcheck // TraceInt remote protocol requires PKCS#1 v1.5 RSA encryption
 	cipher, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPub, []byte(ts))
 	if err != nil {
 		return "", err

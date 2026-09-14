@@ -341,10 +341,3 @@ func orDefault(s, fallback string) string {
 	}
 	return s
 }
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

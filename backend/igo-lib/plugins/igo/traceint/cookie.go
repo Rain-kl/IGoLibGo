@@ -12,12 +12,21 @@ import (
 	"time"
 )
 
+const (
+	rawCodeLength    = 32
+	minRegexMatches  = 2
+	minCookieCount   = 2
+	minJWTSegments   = 2
+	minMaskLength    = 16
+	maskPrefixLength = 12
+)
+
 var codeRE = regexp.MustCompile(`(?i)code=([A-Za-z0-9]{32})`)
 
 // ExtractCode pulls a 32-char WeChat code from a URL or raw code string.
 func ExtractCode(raw string) (string, bool) {
 	raw = strings.TrimSpace(raw)
-	if len(raw) == 32 {
+	if len(raw) == rawCodeLength {
 		for _, r := range raw {
 			ok := (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
 			if !ok {
@@ -27,7 +36,7 @@ func ExtractCode(raw string) (string, bool) {
 		return raw, true
 	}
 	m := codeRE.FindStringSubmatch(raw)
-	if len(m) != 2 {
+	if len(m) != minRegexMatches {
 		return "", false
 	}
 	return m[1], true
@@ -35,7 +44,7 @@ func ExtractCode(raw string) (string, bool) {
 
 // BuildCookieHeader prefers Authorization then SERVERID, matching the desktop client.
 func BuildCookieHeader(cookies []*http.Cookie) (string, error) {
-	if len(cookies) < 2 {
+	if len(cookies) < minCookieCount {
 		return "", errf("Cookie不包含关键身份信息，可能是code过期，重新填写含code的链接")
 	}
 	var auth, server string
@@ -58,7 +67,7 @@ func BuildCookieHeader(cookies []*http.Cookie) (string, error) {
 func CookieExpiration(cookie string) *time.Time {
 	token := authorizationToken(cookie)
 	parts := strings.Split(token, ".")
-	if len(parts) < 2 {
+	if len(parts) < minJWTSegments {
 		return nil
 	}
 	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
@@ -114,8 +123,8 @@ func unixSeconds(v any) (int64, bool) {
 
 // MaskCookie redacts a cookie for API responses.
 func MaskCookie(cookie string) string {
-	if len(cookie) <= 16 {
+	if len(cookie) <= minMaskLength {
 		return "***"
 	}
-	return cookie[:12] + "..."
+	return cookie[:maskPrefixLength] + "..."
 }
