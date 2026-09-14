@@ -52,3 +52,33 @@ func TestPushRegistry(t *testing.T) {
 	}
 	require.True(t, found, "registered key %q should be visible via GetBuiltInEvents", key)
 }
+
+func TestNotificationPushUsesContractEventKey(t *testing.T) {
+	assert.Equal(t, "notification:push", contracts.EventTopicNotificationPush)
+
+	ctx := core.NewContext(context.Background())
+	require.NoError(t, msg_gateway.New().Apply(ctx))
+
+	var received contracts.PushNotificationEvent
+	var fired bool
+	ctx.Events().On(contracts.EventTopicNotificationPush, func(_ context.Context, e contracts.PushNotificationEvent) error {
+		fired = true
+		received = e
+		return nil
+	})
+
+	err := ctx.Events().Emit(context.Background(), contracts.EventTopicNotificationPush, contracts.PushNotificationEvent{
+		EventKey: "igo.grab_succeeded",
+		UserID:   42,
+		Title:    "抢座成功",
+		Content:  "A1 预约成功",
+		Metadata: map[string]any{"library_name": "二楼"},
+	})
+	require.NoError(t, err)
+	require.True(t, fired)
+	assert.Equal(t, "igo.grab_succeeded", received.EventKey)
+	assert.Equal(t, uint64(42), received.UserID)
+
+	var aliased msg_gateway.PushNotificationEvent = received
+	assert.Equal(t, "igo.grab_succeeded", aliased.EventKey)
+}
