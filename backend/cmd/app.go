@@ -6,6 +6,7 @@ package cmd
 import (
 	"Wavelet/core"
 	"Wavelet/core/contracts"
+	"Wavelet/igo-lib/plugins/igo"
 	"Wavelet/plugins/domain/admin"
 	"Wavelet/plugins/domain/auth"
 	"Wavelet/plugins/domain/msg_gateway"
@@ -110,6 +111,11 @@ func newWaveletApp(profile core.Profile, opts ...core.AppOption) *core.App {
 		risk_control.New(),
 		upload.New(),
 		system.New(),
+	)
+
+	// 3b. Downstream IGoLibrary plugin (after domain services, before HTTP driver)
+	app.Use(
+		igo.New(),
 	)
 
 	// 4. Bind Goose migration engine

@@ -1,0 +1,241 @@
+// Copyright 2026 Arctel.net
+// SPDX-License-Identifier: Apache-2.0
+
+package igo_test
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"Wavelet/core"
+	"Wavelet/core/contracts"
+	"Wavelet/core/extpoints"
+	"Wavelet/igo-lib/plugins/igo"
+	"Wavelet/igo-lib/plugins/igo/consts"
+	"Wavelet/pkg/response"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+type mockAuthService struct {
+	contracts.AuthService
+}
+
+func (m *mockAuthService) RequireAuthMiddleware() any {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		c.Next()
+	})
+}
+
+func (m *mockAuthService) GetCurrentUserID(context.Context) (uint64, error) {
+	return 1, nil
+}
+
+var expectedRoutes = []struct {
+	method string
+	path   string
+}{
+	{"GET", "/api/v1/igo/dashboard"},
+	{"GET", "/api/v1/igo/status"},
+	{"GET", "/api/v1/igo/activity-logs"},
+	{"GET", "/api/v1/igo/session"},
+	{"GET", "/api/v1/igo/session/auth-qrcode"},
+	{"POST", "/api/v1/igo/session/from-code"},
+	{"POST", "/api/v1/igo/session/from-cookie"},
+	{"POST", "/api/v1/igo/session/cookie/refresh"},
+	{"DELETE", "/api/v1/igo/session"},
+	{"GET", "/api/v1/igo/libraries"},
+	{"GET", "/api/v1/igo/libraries/bound"},
+	{"POST", "/api/v1/igo/libraries/bound/refresh"},
+	{"GET", "/api/v1/igo/libraries/:id"},
+	{"GET", "/api/v1/igo/libraries/:id/layout"},
+	{"GET", "/api/v1/igo/libraries/:id/rule"},
+	{"POST", "/api/v1/igo/libraries/:id/bind"},
+	{"POST", "/api/v1/igo/libraries/:id/preview"},
+	{"GET", "/api/v1/igo/libraries/:id/favorites"},
+	{"PUT", "/api/v1/igo/libraries/:id/favorites"},
+	{"PUT", "/api/v1/igo/libraries/:id/seat-labels"},
+	{"DELETE", "/api/v1/igo/libraries/:id/seat-labels"},
+	{"GET", "/api/v1/igo/reservation"},
+	{"POST", "/api/v1/igo/reservation/refresh"},
+	{"POST", "/api/v1/igo/reservation/cancel"},
+	{"GET", "/api/v1/igo/tasks"},
+	{"GET", "/api/v1/igo/task-records"},
+	{"POST", "/api/v1/igo/tasks/tomorrow/run-now"},
+	{"POST", "/api/v1/igo/tasks/:kind/start"},
+	{"POST", "/api/v1/igo/tasks/:kind/cancel"},
+	{"GET", "/api/v1/igo/global-leak/blacklist"},
+	{"PUT", "/api/v1/igo/global-leak/blacklist"},
+	{"GET", "/api/v1/igo/global-leak/selected-libraries"},
+	{"PUT", "/api/v1/igo/global-leak/selected-libraries"},
+	{"GET", "/api/v1/igo/checkin/session"},
+	{"GET", "/api/v1/igo/checkin/auth-qrcode"},
+	{"POST", "/api/v1/igo/checkin/from-code"},
+	{"GET", "/api/v1/igo/checkin/devices"},
+	{"POST", "/api/v1/igo/checkin/sign"},
+	{"DELETE", "/api/v1/igo/checkin/session"},
+	{"GET", "/api/v1/igo/protocol/templates"},
+	{"GET", "/api/v1/igo/protocol/templates/defaults"},
+	{"PUT", "/api/v1/igo/protocol/templates"},
+	{"POST", "/api/v1/igo/protocol/templates/reset"},
+	{"GET", "/api/v1/igo/settings"},
+	{"PUT", "/api/v1/igo/settings"},
+	{"POST", "/api/v1/igo/backup/export"},
+	{"POST", "/api/v1/igo/backup/import"},
+	{"GET", "/api/v1/igo/webdav"},
+	{"PUT", "/api/v1/igo/webdav"},
+	{"POST", "/api/v1/igo/webdav/sync"},
+}
+
+func applyPlugin(t *testing.T) *core.Context {
+	t.Helper()
+	ctx := core.NewContext(context.Background())
+	ctx.Provide[contracts.AuthService](&mockAuthService{})
+	p := igo.New()
+	require.Equal(t, consts.PluginName, p.Name())
+	require.NoError(t, p.Apply(ctx))
+	return ctx
+}
+
+func asGinHandler(t *testing.T, h any, where string) gin.HandlerFunc {
+	t.Helper()
+	switch fn := h.(type) {
+	case gin.HandlerFunc:
+		return fn
+	case func(*gin.Context):
+		return fn
+	default:
+		t.Fatalf("%s is %T, not a gin handler", where, h)
+		return nil
+	}
+}
+
+func mountRoutes(t *testing.T, routes []extpoints.RouteDefinition) *gin.Engine {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	engine.Use(response.ErrorHandlerMiddleware())
+	for _, rt := range routes {
+		handlers := make([]gin.HandlerFunc, 0, len(rt.Middlewares)+len(rt.Handlers))
+		for _, mw := range rt.Middlewares {
+			handlers = append(handlers, asGinHandler(t, mw, rt.Method+" "+rt.Path+" middleware"))
+		}
+		for _, h := range rt.Handlers {
+			handlers = append(handlers, asGinHandler(t, h, rt.Method+" "+rt.Path+" handler"))
+		}
+		engine.Handle(rt.Method, rt.Path, handlers...)
+	}
+	return engine
+}
+
+func TestPlugin_RegistersExpectedRoutes(t *testing.T) {
+	ctx := applyPlugin(t)
+	routes := ctx.Router().Routes()
+	got := make(map[string]struct{}, len(routes))
+	for _, rt := range routes {
+		got[rt.Method+" "+rt.Path] = struct{}{}
+	}
+	assert.Len(t, routes, len(expectedRoutes))
+	for _, want := range expectedRoutes {
+		_, ok := got[want.method+" "+want.path]
+		assert.True(t, ok, "missing route %s %s", want.method, want.path)
+	}
+}
+
+func TestPlugin_ApplyRequiresAuthService(t *testing.T) {
+	ctx := core.NewContext(context.Background())
+	err := igo.New().Apply(ctx)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "AuthService")
+}
+
+func TestPlugin_NotImplementedEnvelope(t *testing.T) {
+	ctx := applyPlugin(t)
+	engine := mountRoutes(t, ctx.Router().Routes())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/igo/dashboard", nil)
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotImplemented, w.Code)
+
+	var body response.ErrorResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	assert.Equal(t, consts.CodeNotImplemented, body.Error.Code)
+	assert.Equal(t, "接口尚未实现", body.Error.Message)
+	assert.Equal(t, "接口尚未实现", body.ErrorMsg)
+	assert.Nil(t, body.Data)
+}
+
+func TestPlugin_OriginalPathStatusEnvelope(t *testing.T) {
+	ctx := applyPlugin(t)
+	engine := mountRoutes(t, ctx.Router().Routes())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/igo/status", nil)
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotImplemented, w.Code)
+	assert.Contains(t, w.Body.String(), `"not_implemented"`)
+}
+
+func TestPlugin_ValidationErrorEnvelope(t *testing.T) {
+	ctx := applyPlugin(t)
+	engine := mountRoutes(t, ctx.Router().Routes())
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/igo/session/from-code", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var body response.ErrorResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	assert.Equal(t, consts.CodeValidationError, body.Error.Code)
+}
+
+func TestPlugin_InvalidTaskKind(t *testing.T) {
+	ctx := applyPlugin(t)
+	engine := mountRoutes(t, ctx.Router().Routes())
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/igo/tasks/foo/start", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), consts.CodeInvalidTaskKind)
+}
+
+func TestPlugin_InvalidLibraryID(t *testing.T) {
+	ctx := applyPlugin(t)
+	engine := mountRoutes(t, ctx.Router().Routes())
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/igo/libraries/abc/layout", nil)
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), consts.CodeInvalidID)
+}
+
+func TestPlugin_ValidStartBodyStillNotImplemented(t *testing.T) {
+	ctx := applyPlugin(t)
+	engine := mountRoutes(t, ctx.Router().Routes())
+
+	body := `{"library_id":1,"seats":[{"seat_key":"A-1","seat_name":"A1"}]}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/igo/tasks/grab/start", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotImplemented, w.Code)
+	assert.Contains(t, w.Body.String(), consts.CodeNotImplemented)
+}
