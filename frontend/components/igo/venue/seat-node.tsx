@@ -46,7 +46,7 @@ export function SeatNode({
               w-10 h-10 p-0.5
               ${
                 isSelected
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm ring-2 ring-primary/30 scale-105 z-10'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-none ring-2 ring-primary/30 scale-105 z-10'
                   : isOccupied
                     ? 'bg-muted/50 text-muted-foreground/50 border-border/40 cursor-not-allowed opacity-60'
                     : 'bg-card text-card-foreground border-border hover:border-primary/80 hover:bg-accent/40 cursor-pointer'
@@ -60,7 +60,7 @@ export function SeatNode({
 
             {/* 选中顺序角标 */}
             {isSelected && selectionIndex !== undefined && (
-              <span className='absolute -top-1.5 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground border border-background text-[9px] font-bold flex items-center justify-center shadow-xs'>
+              <span className='absolute -top-1.5 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground border border-background text-[9px] font-semibold flex items-center justify-center shadow-none'>
                 {selectionIndex + 1}
               </span>
             )}

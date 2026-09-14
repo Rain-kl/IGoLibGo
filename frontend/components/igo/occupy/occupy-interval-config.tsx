@@ -39,7 +39,7 @@ export function OccupyIntervalConfig({
   const t = useTranslations('igo.occupy');
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <Sliders className='size-4 text-primary' />
@@ -58,7 +58,7 @@ export function OccupyIntervalConfig({
               {t('intervalModeTitle')}
             </Label>
             <Select value={intervalMode} onValueChange={onIntervalModeChange}>
-              <SelectTrigger className='h-9 text-xs'>
+              <SelectTrigger className='h-8 text-xs shadow-none bg-background'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -87,7 +87,7 @@ export function OccupyIntervalConfig({
               }
               min={10}
               max={600}
-              className='h-9 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
             <p className='text-[10px] text-muted-foreground'>
               {t('reReserveDelayHelp')}（推荐 60 秒）

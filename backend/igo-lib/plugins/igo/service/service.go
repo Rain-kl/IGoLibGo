@@ -12,11 +12,23 @@ import (
 	"Wavelet/igo-lib/plugins/igo/model/entity"
 	"Wavelet/igo-lib/plugins/igo/traceint"
 	"context"
+	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
 )
+
+//go:embed assets/qrcode.png
+var defaultQRCodePNG []byte
+
+func defaultQRCodeDataURL() string {
+	if len(defaultQRCodePNG) == 0 {
+		return ""
+	}
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(defaultQRCodePNG)
+}
 
 // Service is the igo business facade.
 type Service struct {

@@ -37,7 +37,7 @@
 | 自动通知 | 否（平台通知模块） | — |
 | 系统设置 | 是（裁剪） | `/igo/settings` |
 
-系统设置原 5 个分类：常规 / 外观 / 网络与接口 / 存储与日志 / 关于。Web 只保留：**常规（任务默认值）**、**网络与接口（协议模板 + 超时重试，去掉 Cloudflare/手机控制）**、**备份与同步（本地备份导入导出 + WebDAV）**。外观、关于、日志路径走平台。
+系统设置原 5 个分类：常规 / 外观 / 网络与接口 / 存储与日志 / 关于。Web 只保留：**常规（任务默认值）**、**网络与接口（协议模板 + 超时重试，去掉 Cloudflare/手机控制）**、**备份与恢复（本地备份导入导出）**。外观、关于、日志路径走平台。
 
 ### 原桌面 HTTP（手机控制）路径映射
 
@@ -85,7 +85,6 @@
 - `igo_global_leak_blacklist` 捡漏黑名单
 - `igo_checkin_sessions` 远程签到会话
 - `igo_dashboard_metrics` 首页累计成功/守护时长
-- `igo_webdav` WebDAV 配置（密钥脱敏）
 
 ### 阶段 3 — 逻辑实现
 
@@ -97,7 +96,7 @@
 4. Reservation：刷新、取消
 5. Grab / GlobalLeak / Occupy / Tomorrow 状态机 + Asynq 循环
 6. Remote check-in：独立授权、设备、签到
-7. Protocol editor、Settings、Backup/WebDAV
+7. Protocol editor、Settings、Backup
 8. 任务成功/失败/Cookie 到期 → 平台推送（不迁通知设置页）
 
 ### 阶段 4 — 其他后端
@@ -115,12 +114,12 @@ Cron（Cookie 到期扫描）、活动日志、限流、配置 schema、健康�
    - 明日预约：单目标、触发时间、立即执行一次
    - 占座：当前预约、重预约间隔、检查间隔模式
    - 远程签到：独立微信授权、Beacon、坐标、签到
-   - 系统设置：任务默认、协议模板、超时重试、备份、WebDAV
+   - 系统设置：任务默认、协议模板、超时重试、备份
 3. 通知入口接到平台通知设置，不新建渠道页
 
 ---
 
-## 阶段 1 API 清单（50）
+## 阶段 1 API 清单（47）
 
 鉴权：全部挂 `AuthService.RequireAuthMiddleware()`。未实现返回 HTTP 501，`error.code = not_implemented`。
 
@@ -191,9 +190,6 @@ Cron（Cookie 到期扫描）、活动日志、限流、配置 schema、健康�
 - `PUT /api/v1/igo/settings`
 - `POST /api/v1/igo/backup/export`
 - `POST /api/v1/igo/backup/import`
-- `GET /api/v1/igo/webdav`
-- `PUT /api/v1/igo/webdav`
-- `POST /api/v1/igo/webdav/sync`
 
 ---
 
@@ -207,4 +203,4 @@ Cron（Cookie 到期扫描）、活动日志、限流、配置 schema、健康�
 
 ## 验证
 
-阶段 1：`go test ./igo-lib/plugins/igo/...` 断言 50 条路由 + 501 信封 + 校验 400。`TestNewWaveletAppProfiles` 插件数 18，含 `igo`。
+阶段 1：`go test ./igo-lib/plugins/igo/...` 断言 47 条路由 + 501 信封 + 校验 400。`TestNewWaveletAppProfiles` 插件数 18，含 `igo`。

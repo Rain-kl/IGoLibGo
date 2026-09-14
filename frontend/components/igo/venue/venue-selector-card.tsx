@@ -98,7 +98,7 @@ export function VenueSelectorCard({
   const bound = boundInfo?.library;
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
@@ -179,7 +179,7 @@ export function VenueSelectorCard({
                 onSelectLibrary(Number(val));
               }}
             >
-              <SelectTrigger className='h-9 text-xs'>
+              <SelectTrigger className='h-8 text-xs shadow-none bg-background'>
                 <SelectValue placeholder={t('changeVenue')} />
               </SelectTrigger>
               <SelectContent>
@@ -203,7 +203,7 @@ export function VenueSelectorCard({
               size='sm'
               onClick={handleBind}
               disabled={!selectedId || binding}
-              className='gap-1.5'
+              className='gap-1.5 shadow-none'
             >
               {binding ? (
                 <Spinner className='size-3.5' />
@@ -218,7 +218,7 @@ export function VenueSelectorCard({
                 size='sm'
                 onClick={handleRefreshBound}
                 disabled={refreshing}
-                className='gap-1.5'
+                className='gap-1.5 border-dashed shadow-none'
               >
                 <RefreshCw
                   className={`size-3.5 ${refreshing ? 'animate-spin' : ''}`}

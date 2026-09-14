@@ -91,7 +91,7 @@ export function ReservationProgressCard({
 
   return (
     <>
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -175,7 +175,7 @@ export function ReservationProgressCard({
                   variant='outline'
                   size='sm'
                   asChild
-                  className='h-8 text-xs gap-1'
+                  className='h-8 text-xs gap-1 border-dashed shadow-none'
                 >
                   <Link href='/occupy'>
                     <span>前往续座守护</span>
@@ -187,7 +187,7 @@ export function ReservationProgressCard({
                   variant='destructive'
                   size='sm'
                   onClick={() => setCancelOpen(true)}
-                  className='h-8 text-xs gap-1'
+                  className='h-8 text-xs gap-1 shadow-none'
                 >
                   <XCircle className='size-3.5' />
                   <span>{t('cancelReservation')}</span>
@@ -204,7 +204,7 @@ export function ReservationProgressCard({
                   variant='outline'
                   size='sm'
                   asChild
-                  className='h-7 text-xs'
+                  className='h-7 text-xs border-dashed shadow-none'
                 >
                   <Link href='/venue'>选座预约</Link>
                 </Button>
@@ -212,7 +212,7 @@ export function ReservationProgressCard({
                   variant='default'
                   size='sm'
                   asChild
-                  className='h-7 text-xs'
+                  className='h-7 text-xs shadow-none'
                 >
                   <Link href='/grab'>启动抢座</Link>
                 </Button>

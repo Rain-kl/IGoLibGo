@@ -131,7 +131,7 @@ export function SessionAuthCard({
 
   return (
     <>
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -198,7 +198,7 @@ export function SessionAuthCard({
               variant='outline'
               size='sm'
               onClick={handleOpenQrDialog}
-              className='gap-1.5'
+              className='gap-1.5 border-dashed shadow-none'
             >
               <QrCode className='size-3.5' />
               {t('qrLoginBtn')}
@@ -207,7 +207,7 @@ export function SessionAuthCard({
               variant='outline'
               size='sm'
               onClick={() => setCookieOpen(true)}
-              className='gap-1.5'
+              className='gap-1.5 border-dashed shadow-none'
             >
               <KeyRound className='size-3.5' />
               {t('cookieLoginBtn')}
@@ -219,7 +219,7 @@ export function SessionAuthCard({
                   size='sm'
                   onClick={handleRefreshCookie}
                   disabled={refreshingSession}
-                  className='gap-1.5'
+                  className='gap-1.5 border-dashed shadow-none'
                 >
                   <RefreshCw
                     className={`size-3.5 ${refreshingSession ? 'animate-spin' : ''}`}
@@ -260,7 +260,7 @@ export function SessionAuthCard({
                 </p>
               </div>
             ) : qrData?.image_data_url ? (
-              <div className='p-2 bg-white rounded-lg border shadow-sm'>
+              <div className='p-2 bg-white rounded-lg border border-dashed shadow-none'>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrData.image_data_url}
@@ -284,7 +284,7 @@ export function SessionAuthCard({
               size='sm'
               onClick={handleOpenQrDialog}
               disabled={qrLoading}
-              className='gap-1'
+              className='gap-1 border-dashed shadow-none'
             >
               <RefreshCw
                 className={`size-3.5 ${qrLoading ? 'animate-spin' : ''}`}
@@ -298,6 +298,7 @@ export function SessionAuthCard({
                 setQrOpen(false);
                 onRefresh();
               }}
+              className='shadow-none'
             >
               {tCommon('confirm')}
             </Button>
@@ -321,7 +322,7 @@ export function SessionAuthCard({
               onChange={(e) => setCookieInput(e.target.value)}
               placeholder={t('cookiePlaceholder')}
               rows={5}
-              className='font-mono text-xs'
+              className='font-mono text-xs shadow-none border-dashed'
             />
             <div className='flex items-center space-x-2'>
               <Checkbox
@@ -342,6 +343,7 @@ export function SessionAuthCard({
               variant='outline'
               size='sm'
               onClick={() => setCookieOpen(false)}
+              className='border-dashed shadow-none'
             >
               {tCommon('cancel')}
             </Button>
@@ -349,7 +351,7 @@ export function SessionAuthCard({
               size='sm'
               onClick={handleSubmitCookie}
               disabled={!cookieInput.trim() || submittingCookie}
-              className='gap-1.5'
+              className='gap-1.5 shadow-none'
             >
               {submittingCookie && <Spinner className='size-3.5' />}
               {tCommon('confirm')}

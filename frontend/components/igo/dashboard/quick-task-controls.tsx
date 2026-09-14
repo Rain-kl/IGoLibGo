@@ -74,7 +74,7 @@ export function QuickTaskControls({ tasks }: QuickTaskControlsProps) {
   }, [tasks]);
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <Zap className='size-4 text-primary' />
@@ -93,7 +93,7 @@ export function QuickTaskControls({ tasks }: QuickTaskControlsProps) {
             return (
               <div
                 key={engine.kind}
-                className='p-3.5 rounded-lg border bg-card hover:border-primary/40 hover:bg-muted/30 transition-all flex flex-col justify-between space-y-3'
+                className='p-3.5 rounded-lg border border-dashed shadow-none bg-card hover:border-primary/40 hover:bg-muted/30 transition-all flex flex-col justify-between space-y-3'
               >
                 <div className='space-y-2'>
                   <div className='flex items-center justify-between'>

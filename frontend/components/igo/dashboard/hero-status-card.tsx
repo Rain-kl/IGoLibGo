@@ -57,12 +57,12 @@ export function HeroStatusCard({
     (isAuthorized ? t('heroReadyDesc') : t('heroWaitingAuthDesc'));
 
   return (
-    <Card className='border-border/60 bg-gradient-to-r from-card via-card to-primary/5 shadow-sm overflow-hidden relative'>
+    <Card className='border-dashed shadow-none bg-gradient-to-r from-card via-card to-primary/5 overflow-hidden relative'>
       <CardContent className='p-6'>
         <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
           <div className='space-y-1.5'>
             <div className='flex items-center gap-2'>
-              <h2 className='text-xl font-bold tracking-tight text-foreground'>
+              <h2 className='text-xl font-semibold tracking-tight text-foreground'>
                 {greeting}，{userName}
               </h2>
               {isAuthorized ? (
@@ -92,7 +92,7 @@ export function HeroStatusCard({
           </div>
 
           <div className='flex flex-col md:items-end justify-center font-mono space-y-0.5 border-t md:border-t-0 md:border-l border-border/40 pt-3 md:pt-0 md:pl-6 shrink-0'>
-            <div className='text-2xl font-bold tracking-wider text-foreground'>
+            <div className='text-2xl font-semibold tracking-wider text-foreground'>
               {currentTime}
             </div>
             <div className='text-xs text-muted-foreground flex items-center gap-1'>

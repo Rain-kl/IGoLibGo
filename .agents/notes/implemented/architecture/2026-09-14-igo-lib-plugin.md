@@ -10,7 +10,7 @@ IGoLibrary-Ex 是单机 Avalonia 客户端。要挂到 Wavelet 上，必须先�
 
 IGoLibrary 业务作为单个 Cordis 插件 `igo` 放在 `backend/igo-lib/plugins/igo`。所有 HTTP 都挂在 `/api/v1/igo/` 下，由 `contracts.AuthService` 鉴权，数据按 Wavelet `user_id` 隔离。手机控制、cloudflared、通知渠道配置和桌面专属能力不进入这个插件。
 
-13 张表使用 `igo_*` 前缀（不用平台 `w_`），按 `user_id` 隔离。TraceInt Cookie/GraphQL/签到客户端已接入会话、场馆、预约、协议、设置与四个任务节拍（`igo:tick`）。抢座/占座/捡漏/明日预约成功、任务失败、Cookie 即将过期与会话失效通过 `contracts.PushRegistry` 注册为通知中心内置事件，触发走 `notification:push`。备份导入导出不做。Cookie / WebDAV 密码列目前明文存储。
+12 张表使用 `igo_*` 前缀（不用平台 `w_`），按 `user_id` 隔离（WebDAV 同步特性已彻底裁撤，见 [remove-webdav-sync](../simplification/2026-09-14-remove-webdav-sync.md)）。TraceInt Cookie/GraphQL/签到客户端已接入会话、场馆、预约、协议、设置与四个任务节拍（`igo:tick`）。抢座/占座/捡漏/明日预约成功、任务失败、Cookie 即将过期与会话失效通过 `contracts.PushRegistry` 注册为通知中心内置事件，触发走 `notification:push`。备份导入导出不做。Cookie 列目前明文存储。
 
 ## Package 拓扑
 

@@ -125,7 +125,7 @@ export function SeatLayoutGrid({
 
   if (loading) {
     return (
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardContent className='py-24 flex flex-col items-center justify-center gap-3'>
           <Spinner className='size-8' />
           <p className='text-xs text-muted-foreground'>{tCommon('loading')}</p>
@@ -145,7 +145,7 @@ export function SeatLayoutGrid({
   }
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <div className='flex items-center gap-2'>
@@ -265,7 +265,7 @@ export function SeatLayoutGrid({
                 variant='ghost'
                 size='sm'
                 onClick={handleClearSelection}
-                className='h-7 text-xs text-muted-foreground'
+                className='h-7 text-xs text-muted-foreground shadow-none'
               >
                 <Trash2 className='size-3 mr-1' />
                 {t('clearSelection')}
@@ -274,7 +274,7 @@ export function SeatLayoutGrid({
                 variant='outline'
                 size='sm'
                 onClick={onSaveFavorites}
-                className='h-7 text-xs gap-1'
+                className='h-7 text-xs gap-1 border-dashed shadow-none'
               >
                 <BookmarkCheck className='size-3 text-amber-500' />
                 {t('saveToFavorites')}
@@ -283,7 +283,7 @@ export function SeatLayoutGrid({
                 variant='default'
                 size='sm'
                 onClick={handleApplyGrab}
-                className='h-7 text-xs gap-1'
+                className='h-7 text-xs gap-1 shadow-none'
               >
                 <Rocket className='size-3' />
                 {t('applyGrab')}
@@ -293,7 +293,7 @@ export function SeatLayoutGrid({
         )}
 
         {/* 座位排布网格渲染 */}
-        <div className='border rounded-lg bg-muted/15 p-4 overflow-auto min-h-96 max-h-[640px]'>
+        <div className='border border-dashed shadow-none rounded-lg bg-muted/15 p-4 overflow-auto min-h-96 max-h-[640px]'>
           <div
             style={{
               transform: `scale(${zoomLevel})`,

@@ -35,7 +35,7 @@ export function ActivityLogStream({
   const tCommon = useTranslations('common');
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
