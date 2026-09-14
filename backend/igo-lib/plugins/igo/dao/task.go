@@ -81,8 +81,26 @@ func UpsertTaskLaunchHistory(ctx context.Context, row *entity.TaskLaunchHistory)
 		return err
 	}
 	ensureID(&row.ID)
-	return gdb.Clauses(clause.OnConflict{
+	if err := gdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "kind"}, {Name: "fingerprint"}},
 		DoUpdates: clause.AssignmentColumns([]string{"record_id", "recorded_at", "payload_json"}),
-	}).Create(row).Error
+	}).Create(row).Error; err != nil {
+		return err
+	}
+	return pruneTaskLaunchHistory(gdb, row.UserID, row.Kind, 5)
+}
+
+func pruneTaskLaunchHistory(gdb *gorm.DB, userID uint64, kind string, keep int) error {
+	var ids []uint64
+	if err := gdb.Model(&entity.TaskLaunchHistory{}).
+		Where("user_id = ? AND kind = ?", userID, kind).
+		Order("id DESC").
+		Pluck("id", &ids).Error; err != nil {
+		return err
+	}
+	if len(ids) <= keep {
+		return nil
+	}
+	return gdb.Where("user_id = ? AND kind = ? AND id IN ?", userID, kind, ids[keep:]).
+		Delete(&entity.TaskLaunchHistory{}).Error
 }

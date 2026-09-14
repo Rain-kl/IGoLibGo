@@ -48,6 +48,11 @@ func TestGraphQLError(t *testing.T) {
 	assert.Contains(t, err.Error(), "未登录")
 }
 
+func TestTomorrowSeatKey(t *testing.T) {
+	assert.Equal(t, "A1.", TomorrowSeatKey("A1"))
+	assert.Equal(t, "A1.", TomorrowSeatKey("A1."))
+}
+
 func TestBuildAuthorizationURL(t *testing.T) {
 	u := BuildAuthorizationURL(
 		"http://example.com/auth?r=ReplaceMeByReturnUrl&code=ReplaceMeByCode",

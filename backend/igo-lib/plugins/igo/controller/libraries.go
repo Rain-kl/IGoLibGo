@@ -180,6 +180,26 @@ func (ctrl *Controller) GetFavorites(c *gin.Context) {
 	})
 }
 
+// GetSeatLabels 座位标签
+// @Summary 获取座位标签
+// @Tags igo
+// @Produce json
+// @Param id path int true "场馆 ID"
+// @Success 200 {object} response.Any{data=[]do.SeatLabel}
+// @Failure 400 {object} response.AnyError
+// @Failure 401 {object} response.AnyError
+// @Router /api/v1/igo/libraries/{id}/seat-labels [get]
+func (ctrl *Controller) GetSeatLabels(c *gin.Context) {
+	libraryID, ok := parseLibraryID(c)
+	if !ok {
+		return
+	}
+	ctrl.withUser(c, func(userID uint64) {
+		res, err := ctrl.svc.GetSeatLabels(c.Request.Context(), userID, libraryID)
+		ctrl.jsonOK(c, res, err)
+	})
+}
+
 // SaveFavorites 保存收藏座位
 // @Summary 保存收藏座位
 // @Tags igo

@@ -25,6 +25,12 @@ type AuthFromCookieRequest struct {
 	Remember bool   `json:"remember"`
 }
 
+// RefreshCookieRequest optionally supplies a new WeChat code to replace the cookie.
+type RefreshCookieRequest struct {
+	Code     string `json:"code"`
+	Remember bool   `json:"remember"`
+}
+
 // SessionWorkflowResponse is returned after login/restore/refresh.
 type SessionWorkflowResponse struct {
 	Session   SessionResponse  `json:"session"`

@@ -42,7 +42,7 @@ func (s *Service) AuthorizeCheckInFromCode(ctx context.Context, userID uint64, r
 	if err != nil {
 		return nil, err
 	}
-	token, exp, err := s.client.ExchangeCheckInCode(ctx, tpl, code)
+	token, exp, err := s.api(ctx, userID).ExchangeCheckInCode(ctx, tpl, code)
 	if err != nil {
 		return nil, wrapTrace(err)
 	}
@@ -57,7 +57,7 @@ func (s *Service) AuthorizeCheckInFromCode(ctx context.Context, userID uint64, r
 	if err := dao.UpsertCheckInSession(ctx, row); err != nil {
 		return nil, err
 	}
-	device, devErr := s.client.GetCheckInDevices(ctx, tpl, token)
+	device, devErr := s.api(ctx, userID).GetCheckInDevices(ctx, tpl, token)
 	out := &do.CheckInAuthorizationResponse{Session: *toCheckInSession(row), Device: device}
 	if devErr != nil {
 		out.DeviceRefreshWarning = devErr.Error()
@@ -78,7 +78,7 @@ func (s *Service) GetCheckInDevices(ctx context.Context, userID uint64) (*do.Che
 	if err != nil {
 		return nil, err
 	}
-	info, err := s.client.GetCheckInDevices(ctx, tpl, row.Token)
+	info, err := s.api(ctx, userID).GetCheckInDevices(ctx, tpl, row.Token)
 	return info, wrapTrace(err)
 }
 
@@ -95,11 +95,11 @@ func (s *Service) SignCheckIn(ctx context.Context, userID uint64, req do.CheckIn
 	if err != nil {
 		return nil, err
 	}
-	ts, err := s.client.GetCheckInServerTime(ctx, tpl)
+	ts, err := s.api(ctx, userID).GetCheckInServerTime(ctx, tpl)
 	if err != nil {
 		return nil, wrapTrace(err)
 	}
-	res, err := s.client.SignCheckIn(ctx, tpl, row.Token, req, ts)
+	res, err := s.api(ctx, userID).SignCheckIn(ctx, tpl, row.Token, req, ts)
 	return res, wrapTrace(err)
 }
 

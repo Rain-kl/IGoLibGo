@@ -107,3 +107,11 @@ func FillSeat(template, seatKey string, libraryID int) string {
 	out := strings.ReplaceAll(template, consts.PlaceholderSeatKey, seatKey)
 	return FillLibID(out, libraryID)
 }
+
+// TomorrowSeatKey appends the trailing "." required by TraceInt prereserve save.
+func TomorrowSeatKey(seatKey string) string {
+	if strings.HasSuffix(seatKey, ".") {
+		return seatKey
+	}
+	return seatKey + "."
+}

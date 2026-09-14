@@ -193,6 +193,21 @@ func TestTaskLaunchHistoryFingerprintUniquePerUser(t *testing.T) {
 	assert.Equal(t, "r2", u2[0].RecordID)
 }
 
+func TestTaskLaunchHistoryPrunesToFive(t *testing.T) {
+	_ = openMigratedDB(t)
+	ctx := context.Background()
+	now := time.Now().UTC()
+	for i := 0; i < 7; i++ {
+		require.NoError(t, dao.UpsertTaskLaunchHistory(ctx, &entity.TaskLaunchHistory{
+			UserID: 3, RecordID: "r" + string(rune('a'+i)), Kind: consts.TaskKindGrab,
+			Fingerprint: "fp" + string(rune('a'+i)), RecordedAt: now, PayloadJSON: `{}`,
+		}))
+	}
+	rows, err := dao.ListTaskLaunchHistory(ctx, 3, consts.TaskKindGrab, 20)
+	require.NoError(t, err)
+	assert.LessOrEqual(t, len(rows), 5)
+}
+
 func TestVenueAndSettingsUpsertByUser(t *testing.T) {
 	_ = openMigratedDB(t)
 	ctx := context.Background()

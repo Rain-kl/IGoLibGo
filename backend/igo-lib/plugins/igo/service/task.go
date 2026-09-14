@@ -14,6 +14,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/rand/v2"
+	"net/http"
 	"time"
 )
 
@@ -166,6 +168,11 @@ func (s *Service) SaveGlobalLeakSelectedLibraries(ctx context.Context, userID ui
 }
 
 func (s *Service) startKind(ctx context.Context, userID uint64, kind, message string, plan any) error {
+	if existing, err := dao.GetTaskRun(ctx, userID, kind); err != nil {
+		return err
+	} else if existing != nil && existing.State == stateRunning {
+		return consts.NewError(http.StatusConflict, consts.CodeConflict, kindTitle(kind)+"任务已在运行")
+	}
 	raw, err := json.Marshal(plan)
 	if err != nil {
 		return err
@@ -245,7 +252,18 @@ func (s *Service) runTick(ctx context.Context, userID uint64, kind string) error
 	run.LastRequestAt = &now
 	run.LastUpdatedAt = &now
 	if err != nil {
-		return s.failRun(ctx, run, err.Error())
+		if isAuthFailure(err.Error()) {
+			return s.failRun(ctx, run, err.Error())
+		}
+		run.Message = err.Error()
+		if err := dao.UpsertTaskRun(ctx, run); err != nil {
+			return err
+		}
+		if err := s.waitTick(ctx, kind, run.PlanJSON); err != nil {
+			return err
+		}
+		s.dispatchTick(ctx, userID, kind)
+		return nil
 	}
 	if ok {
 		run.State = stateSuccess
@@ -257,6 +275,9 @@ func (s *Service) runTick(ctx context.Context, userID uint64, kind string) error
 	}
 	run.Message = msg
 	if err := dao.UpsertTaskRun(ctx, run); err != nil {
+		return err
+	}
+	if err := s.waitTick(ctx, kind, run.PlanJSON); err != nil {
 		return err
 	}
 	s.dispatchTick(ctx, userID, kind)
@@ -295,9 +316,12 @@ func (s *Service) tickOnce(ctx context.Context, userID uint64, kind, cookie stri
 }
 
 func (s *Service) tickGrab(ctx context.Context, userID uint64, tpl do.ProtocolTemplatesResponse, cookie string, plan do.GrabStartRequest) (bool, string, error) {
+	if wait, msg := scheduledWait(plan.ScheduledStart); wait {
+		return false, msg, nil
+	}
 	if plan.ReservationStrategy == "reserve_directly" {
 		for _, seat := range plan.Seats {
-			ok, err := s.client.ReserveSeat(ctx, tpl, cookie, plan.LibraryID, seat.SeatKey)
+			ok, err := s.api(ctx, userID).ReserveSeat(ctx, tpl, cookie, plan.LibraryID, seat.SeatKey)
 			if err != nil {
 				return false, "", err
 			}
@@ -309,7 +333,7 @@ func (s *Service) tickGrab(ctx context.Context, userID uint64, tpl do.ProtocolTe
 		}
 		return false, "直接预约未命中，继续", nil
 	}
-	layout, err := s.client.GetLayout(ctx, tpl, cookie, plan.LibraryID)
+	layout, err := s.api(ctx, userID).GetLayout(ctx, tpl, cookie, plan.LibraryID)
 	if err != nil {
 		return false, "", err
 	}
@@ -322,7 +346,7 @@ func (s *Service) tickGrab(ctx context.Context, userID uint64, tpl do.ProtocolTe
 			continue
 		}
 		if target, ok := wanted[snap.SeatKey]; ok {
-			ok, err := s.client.ReserveSeat(ctx, tpl, cookie, plan.LibraryID, snap.SeatKey)
+			ok, err := s.api(ctx, userID).ReserveSeat(ctx, tpl, cookie, plan.LibraryID, snap.SeatKey)
 			if err != nil {
 				return false, "", err
 			}
@@ -341,41 +365,50 @@ func (s *Service) tickGrab(ctx context.Context, userID uint64, tpl do.ProtocolTe
 }
 
 func (s *Service) tickOccupy(ctx context.Context, userID uint64, tpl do.ProtocolTemplatesResponse, cookie string, plan do.OccupyStartRequest) (bool, string, error) {
-	info, err := s.client.GetReservation(ctx, tpl, cookie)
+	info, err := s.api(ctx, userID).GetReservation(ctx, tpl, cookie)
 	if err != nil {
 		return false, "", err
 	}
 	if info == nil || !info.HasReservation {
-		return false, "当前没有预约，占座空闲等待", nil
-	}
-	delay := time.Duration(plan.ReReserveDelaySeconds) * time.Second
-	if delay <= 0 {
-		delay = 3 * time.Minute
+		return false, "", fmt.Errorf("当前没有可续占的预约")
 	}
 	exp, err := time.Parse(time.RFC3339, info.ExpirationTime)
 	if err != nil {
-		return false, "已有预约，等待下一次检查", nil
+		return false, "", fmt.Errorf("预约到期时间无效")
 	}
-	if time.Until(exp) > delay {
+	if time.Until(exp) > 60*time.Second {
 		return false, "预约仍有效，等待重预约窗口", nil
 	}
-	ok, err := s.client.CancelReservation(ctx, tpl, cookie, info.ReservationToken)
+	ok, err := s.api(ctx, userID).CancelReservation(ctx, tpl, cookie, info.ReservationToken)
 	if err != nil {
 		return false, "", err
 	}
 	if !ok {
-		return false, "取消预约未成功，稍后重试", nil
+		return false, "", fmt.Errorf("取消预约失败")
 	}
-	ok, err = s.client.ReserveSeat(ctx, tpl, cookie, info.LibraryID, info.SeatKey)
-	if err != nil {
-		return false, "", err
+	pause := time.Duration(plan.ReReserveDelaySeconds) * time.Second
+	if pause > 0 {
+		if err := sleepCtx(ctx, pause); err != nil {
+			return false, "", err
+		}
 	}
-	if ok {
-		msg := info.SeatName + " 重新预约成功"
-		s.notifySuccess(ctx, userID, consts.TaskKindOccupy, info.LibraryName, info.SeatName, msg)
-		return true, msg, nil
+	for attempt := 1; attempt <= 3; attempt++ {
+		ok, err = s.api(ctx, userID).ReserveSeat(ctx, tpl, cookie, info.LibraryID, info.SeatKey)
+		if err != nil {
+			return false, "", err
+		}
+		if ok {
+			msg := info.SeatName + " 重新预约成功"
+			s.notifySuccess(ctx, userID, consts.TaskKindOccupy, info.LibraryName, info.SeatName, msg)
+			return false, msg, nil
+		}
+		if attempt < 3 {
+			if err := sleepCtx(ctx, time.Second); err != nil {
+				return false, "", err
+			}
+		}
 	}
-	return false, "重新预约未成功，继续占座", nil
+	return false, "", fmt.Errorf("重新预约失败，已达到重试上限")
 }
 
 func (s *Service) tickLeak(ctx context.Context, userID uint64, tpl do.ProtocolTemplatesResponse, cookie string, plan do.GlobalLeakStartRequest) (bool, string, error) {
@@ -386,7 +419,7 @@ func (s *Service) tickLeak(ctx context.Context, userID uint64, tpl do.ProtocolTe
 		}
 	}
 	for _, lib := range plan.Libraries {
-		layout, err := s.client.GetLayout(ctx, tpl, cookie, lib.LibraryID)
+		layout, err := s.api(ctx, userID).GetLayout(ctx, tpl, cookie, lib.LibraryID)
 		if err != nil {
 			continue
 		}
@@ -397,7 +430,7 @@ func (s *Service) tickLeak(ctx context.Context, userID uint64, tpl do.ProtocolTe
 			if _, skip := blocked[fmt.Sprintf("%d:%s", lib.LibraryID, seat.SeatKey)]; skip {
 				continue
 			}
-			ok, err := s.client.ReserveSeat(ctx, tpl, cookie, lib.LibraryID, seat.SeatKey)
+			ok, err := s.api(ctx, userID).ReserveSeat(ctx, tpl, cookie, lib.LibraryID, seat.SeatKey)
 			if err != nil {
 				return false, "", err
 			}
@@ -412,19 +445,15 @@ func (s *Service) tickLeak(ctx context.Context, userID uint64, tpl do.ProtocolTe
 }
 
 func (s *Service) tickTomorrow(ctx context.Context, userID uint64, tpl do.ProtocolTemplatesResponse, cookie string, plan do.TomorrowStartRequest) (bool, string, error) {
-	if !plan.ExecuteImmediately && plan.ScheduledStart != "" {
-		if t, err := time.Parse("15:04:05", plan.ScheduledStart); err == nil {
-			now := time.Now()
-			fire := time.Date(now.Year(), now.Month(), now.Day(), t.Hour(), t.Minute(), t.Second(), 0, now.Location())
-			if now.Before(fire) {
-				return false, "等待触发时间 " + plan.ScheduledStart, nil
-			}
+	if !plan.ExecuteImmediately {
+		if wait, msg := scheduledWait(plan.ScheduledStart); wait {
+			return false, msg, nil
 		}
 	}
-	if err := s.client.WarmUpTomorrow(ctx, tpl, cookie, plan.LibraryID); err != nil {
+	if err := s.api(ctx, userID).WarmUpTomorrow(ctx, tpl, cookie, plan.LibraryID); err != nil {
 		return false, "", err
 	}
-	if err := s.client.SaveTomorrow(ctx, tpl, cookie, plan.LibraryID, plan.Seat.SeatKey); err != nil {
+	if err := s.api(ctx, userID).SaveTomorrow(ctx, tpl, cookie, plan.LibraryID, plan.Seat.SeatKey); err != nil {
 		return false, "", err
 	}
 	msg := plan.Seat.SeatName + " 明日预约已提交"
@@ -477,6 +506,139 @@ func toStatus(r entity.TaskRun) do.CoordinatorStatus {
 		st.LastRequestAt = r.LastRequestAt.UTC().Format(time.RFC3339)
 	}
 	return st
+}
+
+func (s *Service) waitTick(ctx context.Context, kind, planJSON string) error {
+	return sleepCtx(ctx, tickDelay(kind, planJSON))
+}
+
+func sleepCtx(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return nil
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		return nil
+	}
+}
+
+func tickDelay(kind, planJSON string) time.Duration {
+	switch kind {
+	case consts.TaskKindGrab:
+		var plan do.GrabStartRequest
+		_ = json.Unmarshal([]byte(planJSON), &plan)
+		if wait, _ := scheduledWait(plan.ScheduledStart); wait {
+			return minDuration(30*time.Second, timeUntilClock(plan.ScheduledStart))
+		}
+		minMS, maxMS := grabDelayMS(plan)
+		if maxMS < minMS {
+			maxMS = minMS
+		}
+		if maxMS == minMS {
+			return time.Duration(minMS) * time.Millisecond
+		}
+		return time.Duration(minMS+rand.IntN(maxMS-minMS+1)) * time.Millisecond
+	case consts.TaskKindOccupy:
+		var plan do.OccupyStartRequest
+		_ = json.Unmarshal([]byte(planJSON), &plan)
+		if plan.CheckIntervalMode == "random_ten_to_twenty_seconds" {
+			return time.Duration(10+rand.IntN(11)) * time.Second
+		}
+		return 10 * time.Second
+	case consts.TaskKindGlobalLeak:
+		var plan do.GlobalLeakStartRequest
+		_ = json.Unmarshal([]byte(planJSON), &plan)
+		if plan.ScanIntervalSeconds > 0 {
+			return time.Duration(plan.ScanIntervalSeconds) * time.Second
+		}
+		return 10 * time.Second
+	case consts.TaskKindTomorrow:
+		var plan do.TomorrowStartRequest
+		_ = json.Unmarshal([]byte(planJSON), &plan)
+		if !plan.ExecuteImmediately {
+			if wait, _ := scheduledWait(plan.ScheduledStart); wait {
+				return minDuration(30*time.Second, timeUntilClock(plan.ScheduledStart))
+			}
+		}
+		return time.Second
+	default:
+		return time.Second
+	}
+}
+
+func grabDelayMS(plan do.GrabStartRequest) (minMS, maxMS int) {
+	if plan.PollingMinDelayMS > 0 {
+		minMS = plan.PollingMinDelayMS
+		maxMS = plan.PollingMaxDelayMS
+		if maxMS < minMS {
+			maxMS = minMS
+		}
+		return minMS, maxMS
+	}
+	switch plan.PollingMode {
+	case "aggressive":
+		return 1000, 1000
+	case "randomized":
+		return 4000, 8000
+	default:
+		return 5000, 5000
+	}
+}
+
+func scheduledWait(clock string) (bool, string) {
+	if clock == "" {
+		return false, ""
+	}
+	until := timeUntilClock(clock)
+	if until > 0 {
+		return true, "等待定时启动 " + clock
+	}
+	return false, ""
+}
+
+func timeUntilClock(clock string) time.Duration {
+	fire, ok := parseClock(clock)
+	if !ok {
+		return 0
+	}
+	d := time.Until(fire)
+	if d < 0 {
+		return 0
+	}
+	return d
+}
+
+func parseClock(clock string) (time.Time, bool) {
+	now := time.Now()
+	for _, layout := range []string{time.RFC3339, "15:04:05", "15:04"} {
+		t, err := time.ParseInLocation(layout, clock, now.Location())
+		if err != nil {
+			t, err = time.Parse(layout, clock)
+		}
+		if err != nil {
+			continue
+		}
+		if layout == time.RFC3339 {
+			return t, true
+		}
+		fire := time.Date(now.Year(), now.Month(), now.Day(), t.Hour(), t.Minute(), t.Second(), 0, now.Location())
+		if !fire.After(now) {
+			fire = fire.Add(24 * time.Hour)
+		}
+		return fire, true
+	}
+	return time.Time{}, false
+}
+
+func minDuration(a, b time.Duration) time.Duration {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func kindTitle(kind string) string {

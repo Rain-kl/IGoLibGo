@@ -24,7 +24,8 @@ const (
 
 // Client is a TraceInt HTTP/GraphQL client.
 type Client struct {
-	HTTP *http.Client
+	HTTP       *http.Client
+	MaxRetries int
 }
 
 func (c *Client) http() *http.Client {
@@ -32,6 +33,13 @@ func (c *Client) http() *http.Client {
 		return c.HTTP
 	}
 	return &http.Client{Timeout: 15 * time.Second}
+}
+
+func (c *Client) retries() int {
+	if c != nil && c.MaxRetries > 0 {
+		return c.MaxRetries
+	}
+	return 3
 }
 
 // GetCookie exchanges a WeChat code for a TraceInt cookie header.
@@ -81,19 +89,44 @@ func (c *Client) graphql(ctx context.Context, templates do.ProtocolTemplatesResp
 	req.Header.Set("app-version", ver)
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.http().Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("TraceInt 请求失败: %w", err)
+	var lastErr error
+	attempts := c.retries()
+	for i := 0; i < attempts; i++ {
+		if i > 0 {
+			req, err = http.NewRequestWithContext(ctx, http.MethodPost, templates.GraphQLEndpointURL, bytes.NewReader([]byte(payload)))
+			if err != nil {
+				return nil, err
+			}
+			req.Header.Set("Cookie", cookie)
+			req.Header.Set("Origin", origin)
+			req.Header.Set("Referer", referer)
+			req.Header.Set("User-Agent", ua)
+			req.Header.Set("App-Version", ver)
+			req.Header.Set("app-version", ver)
+			req.Header.Set("Accept", "*/*")
+			req.Header.Set("Content-Type", "application/json")
+		}
+		resp, err := c.http().Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("TraceInt 请求失败: %w", err)
+			continue
+		}
+		body, readErr := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if readErr != nil {
+			lastErr = readErr
+			continue
+		}
+		if resp.StatusCode >= 500 && i+1 < attempts {
+			lastErr = fmt.Errorf("TraceInt HTTP %d: %s", resp.StatusCode, truncate(string(body), 200))
+			continue
+		}
+		if resp.StatusCode >= 400 {
+			return nil, fmt.Errorf("TraceInt HTTP %d: %s", resp.StatusCode, truncate(string(body), 200))
+		}
+		return body, nil
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("TraceInt HTTP %d: %s", resp.StatusCode, truncate(string(body), 200))
-	}
-	return body, nil
+	return nil, lastErr
 }
 
 // ListLibraries loads venues for a cookie.
@@ -158,8 +191,9 @@ func (c *Client) WarmUpTomorrow(ctx context.Context, templates do.ProtocolTempla
 }
 
 // SaveTomorrow submits a tomorrow reservation.
+// Original TraceInt payload appends a trailing "." to the seat key.
 func (c *Client) SaveTomorrow(ctx context.Context, templates do.ProtocolTemplatesResponse, cookie string, libraryID int, seatKey string) error {
-	raw, err := c.graphql(ctx, templates, cookie, FillSeat(templates.TomorrowReservationSaveTemplate, seatKey, libraryID), true)
+	raw, err := c.graphql(ctx, templates, cookie, FillSeat(templates.TomorrowReservationSaveTemplate, TomorrowSeatKey(seatKey), libraryID), true)
 	if err != nil {
 		return err
 	}

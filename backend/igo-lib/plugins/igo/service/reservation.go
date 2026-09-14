@@ -20,7 +20,7 @@ func (s *Service) GetReservation(ctx context.Context, userID uint64) (*do.Reserv
 	if err != nil {
 		return nil, err
 	}
-	info, err := s.client.GetReservation(ctx, tpl, cookie)
+	info, err := s.api(ctx, userID).GetReservation(ctx, tpl, cookie)
 	return info, wrapTrace(err)
 }
 
@@ -60,7 +60,7 @@ func (s *Service) CancelReservation(ctx context.Context, userID uint64, req do.C
 	if err != nil {
 		return nil, err
 	}
-	ok, err := s.client.CancelReservation(ctx, tpl, cookie, info.ReservationToken)
+	ok, err := s.api(ctx, userID).CancelReservation(ctx, tpl, cookie, info.ReservationToken)
 	if err != nil {
 		return nil, wrapTrace(err)
 	}

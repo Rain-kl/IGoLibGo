@@ -10,6 +10,7 @@ import (
 	"Wavelet/igo-lib/plugins/igo/traceint"
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"Wavelet/igo-lib/plugins/igo/consts"
@@ -45,7 +46,7 @@ func (s *Service) AuthenticateFromCode(ctx context.Context, userID uint64, req d
 	if err != nil {
 		return nil, err
 	}
-	cookie, err := s.client.GetCookie(ctx, tpl, code)
+	cookie, err := s.api(ctx, userID).GetCookie(ctx, tpl, code)
 	if err != nil {
 		return nil, wrapTrace(err)
 	}
@@ -57,8 +58,11 @@ func (s *Service) AuthenticateFromCookie(ctx context.Context, userID uint64, req
 	return s.persistCookie(ctx, userID, req.Cookie, "manual_cookie", req.Remember)
 }
 
-// RefreshCookie re-validates the stored cookie against TraceInt.
-func (s *Service) RefreshCookie(ctx context.Context, userID uint64) (*do.SessionWorkflowResponse, error) {
+// RefreshCookie re-validates the stored cookie, or exchanges a new WeChat code when provided.
+func (s *Service) RefreshCookie(ctx context.Context, userID uint64, req do.RefreshCookieRequest) (*do.SessionWorkflowResponse, error) {
+	if strings.TrimSpace(req.Code) != "" {
+		return s.AuthenticateFromCode(ctx, userID, do.AuthFromCodeRequest{Code: req.Code, Remember: true})
+	}
 	cookie, row, err := s.cookie(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -82,7 +86,7 @@ func (s *Service) persistCookie(ctx context.Context, userID uint64, cookie, sour
 	if err != nil {
 		return nil, err
 	}
-	libs, err := s.client.ListLibraries(ctx, tpl, cookie)
+	libs, err := s.api(ctx, userID).ListLibraries(ctx, tpl, cookie)
 	if err != nil {
 		return nil, wrapTrace(err)
 	}

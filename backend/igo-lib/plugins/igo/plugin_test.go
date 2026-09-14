@@ -71,6 +71,7 @@ var expectedRoutes = []struct {
 	{"POST", "/api/v1/igo/libraries/:id/preview"},
 	{"GET", "/api/v1/igo/libraries/:id/favorites"},
 	{"PUT", "/api/v1/igo/libraries/:id/favorites"},
+	{"GET", "/api/v1/igo/libraries/:id/seat-labels"},
 	{"PUT", "/api/v1/igo/libraries/:id/seat-labels"},
 	{"DELETE", "/api/v1/igo/libraries/:id/seat-labels"},
 	{"GET", "/api/v1/igo/reservation"},

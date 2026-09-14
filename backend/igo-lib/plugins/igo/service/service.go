@@ -41,6 +41,33 @@ func (s *Service) SetHTTPClient(c *http.Client) {
 // SetTasks injects the platform task dispatcher.
 func (s *Service) SetTasks(tasks contracts.TaskService) { s.tasks = tasks }
 
+func (s *Service) api(ctx context.Context, userID uint64) *traceint.Client {
+	base := s.client
+	if base == nil {
+		base = &traceint.Client{}
+	}
+	st := s.settings(ctx, userID)
+	timeout := time.Duration(st.RequestTimeoutSeconds) * time.Second
+	if timeout <= 0 {
+		timeout = 5 * time.Second
+	}
+	retries := st.NetworkMaxRetries
+	if retries <= 0 {
+		retries = 3
+	}
+	var transport http.RoundTripper
+	if base.HTTP != nil {
+		transport = base.HTTP.Transport
+	}
+	return &traceint.Client{
+		HTTP: &http.Client{
+			Timeout:   timeout,
+			Transport: transport,
+		},
+		MaxRetries: retries,
+	}
+}
+
 func wrapTrace(err error) error {
 	if err == nil {
 		return nil

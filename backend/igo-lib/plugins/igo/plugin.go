@@ -106,6 +106,7 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	g.POST("/libraries/:id/preview", ctrl.PreviewLibrary)
 	g.GET("/libraries/:id/favorites", ctrl.GetFavorites)
 	g.PUT("/libraries/:id/favorites", ctrl.SaveFavorites)
+	g.GET("/libraries/:id/seat-labels", ctrl.GetSeatLabels)
 	g.PUT("/libraries/:id/seat-labels", ctrl.SetSeatLabels)
 	g.DELETE("/libraries/:id/seat-labels", ctrl.DeleteSeatLabels)
 

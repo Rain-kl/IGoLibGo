@@ -23,7 +23,7 @@ func (s *Service) ListLibraries(ctx context.Context, userID uint64) ([]do.Librar
 	if err != nil {
 		return nil, err
 	}
-	libs, err := s.client.ListLibraries(ctx, tpl, cookie)
+	libs, err := s.api(ctx, userID).ListLibraries(ctx, tpl, cookie)
 	return libs, wrapTrace(err)
 }
 
@@ -75,7 +75,7 @@ func (s *Service) GetLibraryLayout(ctx context.Context, userID uint64, libraryID
 	if err != nil {
 		return nil, err
 	}
-	layout, err := s.client.GetLayout(ctx, tpl, cookie, libraryID)
+	layout, err := s.api(ctx, userID).GetLayout(ctx, tpl, cookie, libraryID)
 	return layout, wrapTrace(err)
 }
 
@@ -89,7 +89,7 @@ func (s *Service) GetLibraryRule(ctx context.Context, userID uint64, libraryID i
 	if err != nil {
 		return nil, err
 	}
-	rule, err := s.client.GetRule(ctx, tpl, cookie, libraryID)
+	rule, err := s.api(ctx, userID).GetRule(ctx, tpl, cookie, libraryID)
 	return rule, wrapTrace(err)
 }
 
@@ -140,6 +140,11 @@ func (s *Service) SaveFavorites(ctx context.Context, userID uint64, libraryID in
 		items = append(items, entity.Favorite{SeatKey: seat.SeatKey, SeatName: seat.SeatName})
 	}
 	return dao.ReplaceFavorites(ctx, userID, libraryID, items)
+}
+
+// GetSeatLabels returns labels for a venue.
+func (s *Service) GetSeatLabels(ctx context.Context, userID uint64, libraryID int) ([]do.SeatLabel, error) {
+	return s.listLabels(ctx, userID, libraryID)
 }
 
 // SetSeatLabels writes labels onto selected seats.

@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"time"
@@ -38,13 +39,19 @@ const (
 // ExchangeCheckInCode exchanges a WeChat code for wechatSESS_ID.
 func (c *Client) ExchangeCheckInCode(ctx context.Context, templates do.ProtocolTemplatesResponse, code string) (token string, expiresAt *time.Time, err error) {
 	reqURL := BuildAuthorizationURL(templates.RemoteCheckInAuthURLTemplate, code, templates.RemoteCheckInAuthorizationReturnURL)
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return "", nil, err
+	}
+	cli := *c.http()
+	cli.Jar = jar
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return "", nil, err
 	}
 	req.Header.Set("User-Agent", checkInAuthUA)
 	req.Header.Set("Referer", templates.RemoteCheckInAuthRefererURL)
-	resp, err := c.http().Do(req)
+	resp, err := cli.Do(req)
 	if err != nil {
 		return "", nil, fmt.Errorf("获取签到授权失败: %w", err)
 	}
@@ -163,8 +170,8 @@ func mapDevices(raw []byte) (*do.CheckInDeviceResponse, error) {
 	if err := json.Unmarshal(raw, &root); err != nil {
 		return nil, errf("设备信息响应格式无效")
 	}
-	if msg := asString(root["msg"]); root["code"] != nil && asInt(root["code"]) != 0 && msg != "" {
-		return nil, errf(msg)
+	if root["code"] != nil && asInt(root["code"]) != 0 {
+		return nil, errf(orDefault(asString(root["msg"]), "设备信息请求失败"))
 	}
 	data, _ := root["data"].(map[string]any)
 	user, _ := data["user"].(map[string]any)
@@ -190,6 +197,9 @@ func mapSign(raw []byte) (*do.CheckInSignResponse, error) {
 	var root map[string]any
 	if err := json.Unmarshal(raw, &root); err != nil {
 		return nil, errf("签到响应格式无效")
+	}
+	if root["code"] != nil && asInt(root["code"]) != 0 {
+		return nil, errf(orDefault(asString(root["msg"]), "签到失败"))
 	}
 	msg := asString(root["msg"])
 	data, _ := root["data"].(map[string]any)

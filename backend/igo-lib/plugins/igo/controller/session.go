@@ -92,8 +92,16 @@ func (ctrl *Controller) AuthenticateFromCookie(c *gin.Context) {
 // @Failure 501 {object} response.AnyError
 // @Router /api/v1/igo/session/cookie/refresh [post]
 func (ctrl *Controller) RefreshCookie(c *gin.Context) {
+	var req do.RefreshCookieRequest
+	if c.Request.ContentLength > 0 {
+		bound, ok := bindJSON[do.RefreshCookieRequest](c)
+		if !ok {
+			return
+		}
+		req = bound
+	}
 	ctrl.withUser(c, func(userID uint64) {
-		res, err := ctrl.svc.RefreshCookie(c.Request.Context(), userID)
+		res, err := ctrl.svc.RefreshCookie(c.Request.Context(), userID, req)
 		ctrl.jsonOK(c, res, err)
 	})
 }
