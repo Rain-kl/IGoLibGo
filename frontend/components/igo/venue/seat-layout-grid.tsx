@@ -11,7 +11,9 @@ import {
   BookmarkCheck,
   CheckSquare,
   Grid3X3,
+  Move,
   Rocket,
+  RotateCcw,
   Tag,
   Trash2,
   ZoomIn,
@@ -56,6 +58,13 @@ export function SeatLayoutGrid({
   const router = useRouter();
 
   const [zoomLevel, setZoomLevel] = React.useState<number>(1);
+  const [panPosition, setPanPosition] = React.useState<{
+    x: number;
+    y: number;
+  }>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragStartRef = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const panStartRef = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // 映射收藏 Set
   const favoriteKeysSet = React.useMemo(() => {
@@ -84,6 +93,39 @@ export function SeatLayoutGrid({
 
     return { seatsByCoord: map, maxX: mx, maxY: my };
   }, [layout]);
+
+  // 鼠标拖动画布事件处理
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // 仅响应鼠标左键或中键按在画布背景上
+    if (e.button !== 0 && e.button !== 1) return;
+    // 如果点击目标是按钮或者座位，不启动拖拽
+    if ((e.target as HTMLElement).closest('button')) return;
+
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    panStartRef.current = { ...panPosition };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    setPanPosition({
+      x: panStartRef.current.x + dx,
+      y: panStartRef.current.y + dy,
+    });
+  };
+
+  const handleMouseUpOrLeave = () => {
+    if (isDragging) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleResetView = () => {
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+  };
 
   // 切换座位选中状态
   const handleToggleSeat = (seat: SeatSnapshot) => {
@@ -180,60 +222,80 @@ export function SeatLayoutGrid({
               <Tag className='size-3 text-primary' />
               <span>{t('labelsBtn')}</span>
             </Button>
-            <div className='flex items-center border rounded-md p-0.5 ml-2'>
+            <div className='flex items-center border rounded-md p-0.5 ml-2 bg-background'>
               <Button
                 variant='ghost'
                 size='icon'
                 aria-label='缩小座位图'
-                onClick={() => setZoomLevel((z) => Math.max(0.75, z - 0.1))}
+                onClick={() =>
+                  setZoomLevel((z) => Math.max(0.5, +(z - 0.1).toFixed(2)))
+                }
                 className='size-7'
               >
                 <ZoomOut className='size-3.5' />
               </Button>
-              <span className='text-[10px] font-mono px-1 select-none text-muted-foreground'>
+              <span className='text-[10px] font-mono px-1 select-none text-muted-foreground min-w-8 text-center'>
                 {Math.round(zoomLevel * 100)}%
               </span>
               <Button
                 variant='ghost'
                 size='icon'
                 aria-label='放大座位图'
-                onClick={() => setZoomLevel((z) => Math.min(1.5, z + 0.1))}
+                onClick={() =>
+                  setZoomLevel((z) => Math.min(2.0, +(z + 0.1).toFixed(2)))
+                }
                 className='size-7'
               >
                 <ZoomIn className='size-3.5' />
+              </Button>
+              <Button
+                variant='ghost'
+                size='icon'
+                aria-label='重置画布视图'
+                title='重置缩放与位置'
+                onClick={handleResetView}
+                className='size-7 ml-0.5 text-muted-foreground hover:text-foreground'
+              >
+                <RotateCcw className='size-3' />
               </Button>
             </div>
           </div>
         </div>
 
         {/* 图例栏 */}
-        <div className='flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground pt-2'>
-          <div className='flex items-center gap-1.5'>
-            <span className='size-3.5 rounded border border-border bg-card' />
-            <span>{t('legendAvailable')}</span>
+        <div className='flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground pt-2 border-t border-dashed mt-2'>
+          <div className='flex flex-wrap items-center gap-3.5'>
+            <div className='flex items-center gap-1.5'>
+              <span className='size-3 rounded border border-border bg-card' />
+              <span>{t('legendAvailable')}</span>
+            </div>
+            <div className='flex items-center gap-1.5'>
+              <span className='size-3 rounded bg-muted/60 border border-border/40' />
+              <span>{t('legendOccupied')}</span>
+            </div>
+            <div className='flex items-center gap-1.5'>
+              <span className='size-3 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-[7px]'>
+                1
+              </span>
+              <span>{t('legendSelected')}</span>
+            </div>
+            <div className='flex items-center gap-1.5'>
+              <Bookmark className='size-3 fill-amber-500 text-amber-500' />
+              <span>已收藏</span>
+            </div>
+            <div className='flex items-center gap-1.5'>
+              <Tag className='size-3 text-primary' />
+              <span>有备注</span>
+            </div>
           </div>
-          <div className='flex items-center gap-1.5'>
-            <span className='size-3.5 rounded bg-muted/60 border border-border/40' />
-            <span>{t('legendOccupied')}</span>
-          </div>
-          <div className='flex items-center gap-1.5'>
-            <span className='size-3.5 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-[8px]'>
-              1
-            </span>
-            <span>{t('legendSelected')}</span>
-          </div>
-          <div className='flex items-center gap-1.5'>
-            <Bookmark className='size-3 fill-amber-500 text-amber-500' />
-            <span>已收藏</span>
-          </div>
-          <div className='flex items-center gap-1.5'>
-            <Tag className='size-3 text-primary' />
-            <span>有备注</span>
+          <div className='flex items-center gap-1 text-[10px] text-muted-foreground/80 select-none'>
+            <Move className='size-3' />
+            <span>按住空白区域可自由拖动画布</span>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className='space-y-4'>
+      <CardContent className='space-y-3'>
         {/* 选座工具栏 */}
         {selectedSeats.length > 0 && (
           <div className='flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20 text-xs'>
@@ -292,20 +354,29 @@ export function SeatLayoutGrid({
           </div>
         )}
 
-        {/* 座位排布网格渲染 */}
-        <div className='border border-dashed shadow-none rounded-lg bg-muted/15 p-4 overflow-auto min-h-96 max-h-[640px]'>
+        {/* 座位排布网格渲染容器 */}
+        <div
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
+          className={`
+            relative border border-dashed shadow-none rounded-lg bg-muted/15 p-4 overflow-hidden min-h-80 max-h-[580px] select-none
+            ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
+          `}
+        >
           <div
             style={{
-              transform: `scale(${zoomLevel})`,
-              transformOrigin: 'top left',
-              transition: 'transform 0.15s ease-out',
+              transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel})`,
+              transformOrigin: '0 0',
+              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
             }}
             className='inline-block'
           >
             <div
-              className='grid gap-1.5'
+              className='grid gap-1'
               style={{
-                gridTemplateColumns: `repeat(${Math.max(maxX, 1)}, minmax(40px, 1fr))`,
+                gridTemplateColumns: `repeat(${Math.max(maxX, 1)}, minmax(32px, 32px))`,
               }}
             >
               {Array.from({ length: maxY }, (_, yIdx) => {
@@ -316,9 +387,7 @@ export function SeatLayoutGrid({
 
                   if (!seat) {
                     // 空过道或空白占位
-                    return (
-                      <div key={`empty-${x}-${y}`} className='w-10 h-10' />
-                    );
+                    return <div key={`empty-${x}-${y}`} className='w-8 h-8' />;
                   }
 
                   const selectedIdx = selectedSeats.findIndex(

@@ -12,10 +12,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 )
+
+var checkInSessRE = regexp.MustCompile(`(?i)(?:wechatSESS_ID|t)=([A-Za-z0-9]{32,64})`)
 
 // GetCheckInSession returns the remote-check-in session.
 func (s *Service) GetCheckInSession(ctx context.Context, userID uint64) (*do.CheckInSessionResponse, error) {
@@ -38,20 +41,40 @@ func (s *Service) GetCheckInAuthQRCode(ctx context.Context, userID uint64) (*do.
 	}, nil
 }
 
-// AuthorizeCheckInFromCode exchanges a WeChat code for a check-in session.
+// AuthorizeCheckInFromCode exchanges a WeChat code or sets a check-in session directly.
 func (s *Service) AuthorizeCheckInFromCode(ctx context.Context, userID uint64, req do.CheckInAuthFromCodeRequest) (*do.CheckInAuthorizationResponse, error) {
-	code, ok := traceint.ExtractCode(req.Code)
-	if !ok {
-		return nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "签到授权链接中未找到 32 位 code")
+	raw := strings.TrimSpace(req.Code)
+	if raw == "" {
+		return nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "请输入授权链接或 32 位授权码")
 	}
+
 	tpl, err := s.templates(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	token, exp, err := s.api(ctx, userID).ExchangeCheckInCode(ctx, tpl, code)
-	if err != nil {
-		return nil, wrapTrace(err)
+
+	var token string
+	var exp *time.Time
+
+	const minSubmatchLen = 2
+	const minRawTokenLen = 32
+	const maxRawTokenLen = 64
+
+	if code, ok := traceint.ExtractCode(raw); ok {
+		tok, expiry, err := s.api(ctx, userID).ExchangeCheckInCode(ctx, tpl, code)
+		if err != nil {
+			return nil, wrapTrace(err)
+		}
+		token = tok
+		exp = expiry
+	} else if m := checkInSessRE.FindStringSubmatch(raw); len(m) >= minSubmatchLen {
+		token = m[1]
+	} else if len(raw) >= minRawTokenLen && len(raw) <= maxRawTokenLen && !strings.Contains(raw, "/") && !strings.Contains(raw, "?") && !strings.Contains(raw, " ") {
+		token = raw
+	} else {
+		return nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "授权链接或凭据无效，未解析到有效的 code 或 wechatSESS_ID")
 	}
+
 	now := time.Now().UTC()
 	row := &entity.CheckInSession{
 		UserID:         userID,
