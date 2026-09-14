@@ -6,6 +6,7 @@ package igo_test
 import (
 	"context"
 	"encoding/json"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -153,6 +154,20 @@ func TestPlugin_ApplyRequiresAuthService(t *testing.T) {
 	err := igo.New().Apply(ctx)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "AuthService")
+}
+
+func TestPlugin_RegistersMigrations(t *testing.T) {
+	ctx := applyPlugin(t)
+	entry, ok := ctx.Migrations().Get(consts.PluginName)
+	require.True(t, ok)
+	require.NotNil(t, entry.FS)
+
+	matches, err := fs.Glob(entry.FS, "migrations/*/*.sql")
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []string{
+		"migrations/postgres/00001_initial.sql",
+		"migrations/sqlite/00001_initial.sql",
+	}, matches)
 }
 
 func TestPlugin_NotImplementedEnvelope(t *testing.T) {

@@ -10,13 +10,13 @@ IGoLibrary-Ex 是单机 Avalonia 客户端。要挂到 Wavelet 上，必须先�
 
 IGoLibrary 业务作为单个 Cordis 插件 `igo` 放在 `backend/igo-lib/plugins/igo`。所有 HTTP 都挂在 `/api/v1/igo/` 下，由 `contracts.AuthService` 鉴权，数据按 Wavelet `user_id` 隔离。手机控制、cloudflared、通知渠道配置和桌面专属能力不进入这个插件。
 
-阶段 1 只注册路由和 DTO，Service 返回 `not_implemented`（HTTP 501）。实体、TraceInt 客户端和协调器尚未落地。
+HTTP 仍是 501 桩。表与 DAO 已落地：13 张 `w_igo_*` 表，按 `user_id` 隔离，双方言 Goose 在 `migrations/{postgres,sqlite}/00001_initial.sql`。TraceInt 客户端和协调器尚未落地。Cookie / WebDAV 密码列目前明文存储，加密随阶段 3 接入。
 
 ## Package 拓扑
 
 - 入口：`backend/igo-lib/plugins/igo/plugin.go`，在 `cmd/app.go` 于 domain 插件之后、`driver_http` 之前 `app.Use(igo.New())`
-- 调用方只依赖 `core`、`contracts`、`pkg/response`；never import `plugins/domain/*`
-- 表前缀约定 `w_igo_*`（阶段 2 才建）
+- 调用方只依赖 `core`、`contracts`、`pkg/response`、`pkg/idgen`；never import `plugins/domain/*`
+- 表前缀 `w_igo_*`，无物理外键，主键为 snowflake `BIGINT`
 - 模板 `custom_example` 仍留在 `backend/igo-lib/plugins/custom_example`，不注册进 App
 
 ## Alternatives considered
@@ -32,4 +32,4 @@ IGoLibrary 业务作为单个 Cordis 插件 `igo` 放在 `backend/igo-lib/plugin
 
 ## Verification
 
-`go test ./igo-lib/plugins/igo/...` 核对 50 条路由和 501 信封。`go test ./cmd/ -run TestNewWaveletAppProfiles` 插件数含 `igo`。
+`go test ./igo-lib/plugins/igo/...` 核对 50 条路由、501 信封、13 张表 Goose 落地，以及 session/favorites/task-history 的 user_id 隔离。`go test ./cmd/ -run TestNewWaveletAppProfiles` 插件数含 `igo`。

@@ -33,7 +33,38 @@ const (
 	TaskKindGlobalLeak = "global-leak"
 	// TaskKindTomorrow is the tomorrow-reservation coordinator.
 	TaskKindTomorrow = "tomorrow"
+
+	TableSessions            = "w_igo_sessions"
+	TableVenues              = "w_igo_venues"
+	TableFavorites           = "w_igo_favorites"
+	TableSeatLabels          = "w_igo_seat_labels"
+	TableProtocolOverrides   = "w_igo_protocol_overrides"
+	TableSettings            = "w_igo_settings"
+	TableTaskRuns            = "w_igo_task_runs"
+	TableTaskLaunchHistory   = "w_igo_task_launch_history"
+	TableGlobalLeakTargets   = "w_igo_global_leak_targets"
+	TableGlobalLeakBlacklist = "w_igo_global_leak_blacklist"
+	TableCheckInSessions     = "w_igo_checkin_sessions"
+	TableDashboardMetrics    = "w_igo_dashboard_metrics"
+	TableWebDAV              = "w_igo_webdav"
 )
+
+// OwnedTables is the igo plugin's single-owner table list (must match Goose SQL).
+var OwnedTables = []string{
+	TableSessions,
+	TableVenues,
+	TableFavorites,
+	TableSeatLabels,
+	TableProtocolOverrides,
+	TableSettings,
+	TableTaskRuns,
+	TableTaskLaunchHistory,
+	TableGlobalLeakTargets,
+	TableGlobalLeakBlacklist,
+	TableCheckInSessions,
+	TableDashboardMetrics,
+	TableWebDAV,
+}
 
 // ErrNotImplemented is returned by service stubs before business logic is migrated.
 var ErrNotImplemented = errors.New("not_implemented")

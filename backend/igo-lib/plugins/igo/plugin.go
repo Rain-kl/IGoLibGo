@@ -11,12 +11,17 @@ import (
 	"Wavelet/core/contracts"
 	"Wavelet/igo-lib/plugins/igo/consts"
 	"Wavelet/igo-lib/plugins/igo/controller"
+	"Wavelet/igo-lib/plugins/igo/dao"
 	"Wavelet/igo-lib/plugins/igo/service"
+	"embed"
 	"errors"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
+
+//go:embed migrations/*/*.sql
+var MigrationsFS embed.FS
 
 // Plugin implements core.Plugin for IGoLibrary.
 type Plugin struct {
@@ -33,8 +38,11 @@ func (p *Plugin) Name() string {
 	return consts.PluginName
 }
 
-// Apply registers authenticated /api/v1/igo routes. Stage 1 handlers return 501.
+// Apply registers migrations, DAO, and authenticated /api/v1/igo routes.
 func (p *Plugin) Apply(ctx *core.Context) error {
+	ctx.Migrations().Register(consts.PluginName, MigrationsFS)
+	ctx.Bind(dao.SetDBService)
+
 	authSvc, err := ctx.Inject[contracts.AuthService]()
 	if err != nil || authSvc == nil {
 		return fmt.Errorf("igo: resolve AuthService: %w", err)

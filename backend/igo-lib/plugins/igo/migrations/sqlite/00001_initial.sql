@@ -1,0 +1,173 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE IF NOT EXISTS w_igo_sessions (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    cookie TEXT NOT NULL,
+    source VARCHAR(32) NOT NULL DEFAULT '',
+    saved_at DATETIME NOT NULL,
+    expires_at DATETIME,
+    can_auto_restore BOOLEAN NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_sessions_user ON w_igo_sessions (user_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_venues (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    library_id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    floor VARCHAR(64) NOT NULL DEFAULT '',
+    is_open BOOLEAN NOT NULL DEFAULT 0,
+    total_seats INTEGER NOT NULL DEFAULT 0,
+    used_seats INTEGER NOT NULL DEFAULT 0,
+    booked_seats INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_venues_user ON w_igo_venues (user_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_favorites (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    library_id INTEGER NOT NULL,
+    seat_key VARCHAR(64) NOT NULL,
+    seat_name VARCHAR(128) NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_favorites_user_lib_seat ON w_igo_favorites (user_id, library_id, seat_key);
+CREATE INDEX IF NOT EXISTS idx_w_igo_favorites_user_lib ON w_igo_favorites (user_id, library_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_seat_labels (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    library_id INTEGER NOT NULL,
+    seat_key VARCHAR(64) NOT NULL,
+    seat_name VARCHAR(128) NOT NULL DEFAULT '',
+    label_text VARCHAR(64) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_seat_labels_user_lib_seat ON w_igo_seat_labels (user_id, library_id, seat_key);
+CREATE INDEX IF NOT EXISTS idx_w_igo_seat_labels_user_lib ON w_igo_seat_labels (user_id, library_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_protocol_overrides (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    overrides TEXT NOT NULL DEFAULT '{}',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_protocol_overrides_user ON w_igo_protocol_overrides (user_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_settings (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    payload TEXT NOT NULL DEFAULT '{}',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_settings_user ON w_igo_settings (user_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_task_runs (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    kind VARCHAR(32) NOT NULL,
+    state VARCHAR(32) NOT NULL,
+    title VARCHAR(128) NOT NULL DEFAULT '',
+    message TEXT NOT NULL DEFAULT '',
+    plan_json TEXT NOT NULL DEFAULT '{}',
+    started_at DATETIME,
+    last_updated_at DATETIME,
+    last_request_at DATETIME,
+    poll_count INTEGER NOT NULL DEFAULT 0,
+    request_count INTEGER NOT NULL DEFAULT 0,
+    reason VARCHAR(64) NOT NULL DEFAULT ''
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_task_runs_user_kind ON w_igo_task_runs (user_id, kind);
+
+CREATE TABLE IF NOT EXISTS w_igo_task_launch_history (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    record_id VARCHAR(64) NOT NULL,
+    kind VARCHAR(32) NOT NULL,
+    fingerprint VARCHAR(128) NOT NULL,
+    recorded_at DATETIME NOT NULL,
+    payload_json TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_task_history_record ON w_igo_task_launch_history (user_id, record_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_task_history_fingerprint ON w_igo_task_launch_history (user_id, kind, fingerprint);
+CREATE INDEX IF NOT EXISTS idx_w_igo_task_history_user_kind ON w_igo_task_launch_history (user_id, kind);
+
+CREATE TABLE IF NOT EXISTS w_igo_global_leak_targets (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    library_id INTEGER NOT NULL,
+    library_name VARCHAR(255) NOT NULL DEFAULT '',
+    floor VARCHAR(64) NOT NULL DEFAULT '',
+    scan_priority INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_leak_targets_user_lib ON w_igo_global_leak_targets (user_id, library_id);
+CREATE INDEX IF NOT EXISTS idx_w_igo_leak_targets_user_prio ON w_igo_global_leak_targets (user_id, scan_priority);
+
+CREATE TABLE IF NOT EXISTS w_igo_global_leak_blacklist (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    library_id INTEGER NOT NULL,
+    seat_key VARCHAR(64) NOT NULL,
+    seat_name VARCHAR(128) NOT NULL DEFAULT ''
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_leak_blacklist_user_lib_seat ON w_igo_global_leak_blacklist (user_id, library_id, seat_key);
+CREATE INDEX IF NOT EXISTS idx_w_igo_leak_blacklist_user_lib ON w_igo_global_leak_blacklist (user_id, library_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_checkin_sessions (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    token TEXT NOT NULL,
+    saved_at DATETIME NOT NULL,
+    expires_at DATETIME,
+    can_auto_restore BOOLEAN NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_checkin_sessions_user ON w_igo_checkin_sessions (user_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_dashboard_metrics (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    historical_success_count INTEGER NOT NULL DEFAULT 0,
+    total_guard_seconds BIGINT NOT NULL DEFAULT 0,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_dashboard_metrics_user ON w_igo_dashboard_metrics (user_id);
+
+CREATE TABLE IF NOT EXISTS w_igo_webdav (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    endpoint VARCHAR(1024) NOT NULL DEFAULT '',
+    remote_directory VARCHAR(512) NOT NULL DEFAULT '',
+    username VARCHAR(255) NOT NULL DEFAULT '',
+    password TEXT NOT NULL DEFAULT '',
+    tls_verify_mode VARCHAR(32) NOT NULL DEFAULT 'default',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_w_igo_webdav_user ON w_igo_webdav (user_id);
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE IF EXISTS w_igo_webdav;
+DROP TABLE IF EXISTS w_igo_dashboard_metrics;
+DROP TABLE IF EXISTS w_igo_checkin_sessions;
+DROP TABLE IF EXISTS w_igo_global_leak_blacklist;
+DROP TABLE IF EXISTS w_igo_global_leak_targets;
+DROP TABLE IF EXISTS w_igo_task_launch_history;
+DROP TABLE IF EXISTS w_igo_task_runs;
+DROP TABLE IF EXISTS w_igo_settings;
+DROP TABLE IF EXISTS w_igo_protocol_overrides;
+DROP TABLE IF EXISTS w_igo_seat_labels;
+DROP TABLE IF EXISTS w_igo_favorites;
+DROP TABLE IF EXISTS w_igo_venues;
+DROP TABLE IF EXISTS w_igo_sessions;
+-- +goose StatementEnd
