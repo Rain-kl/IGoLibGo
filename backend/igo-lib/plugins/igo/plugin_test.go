@@ -6,6 +6,7 @@ package igo_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
@@ -46,6 +47,10 @@ func (m *mockAuthService) RequireAuthMiddleware() any {
 
 func (m *mockAuthService) GetCurrentUserID(context.Context) (uint64, error) {
 	return 1, nil
+}
+
+func (m *mockAuthService) GetCurrentUser(context.Context) (*contracts.UserDTO, error) {
+	return &contracts.UserDTO{ID: 1, Username: "test_user"}, nil
 }
 
 var expectedRoutes = []struct {
@@ -294,3 +299,54 @@ func TestPlugin_ValidStartBodyStillNotImplemented(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
 	assert.Contains(t, w.Body.String(), "service_unavailable")
 }
+
+func TestPlugin_DashboardAuthenticationResolvesUser(t *testing.T) {
+	t.Run("authenticated user reaches dashboard logic without 401", func(t *testing.T) {
+		ctx := applyPlugin(t)
+		engine := mountRoutes(t, ctx.Router().Routes())
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/igo/dashboard", nil)
+		w := httptest.NewRecorder()
+		engine.ServeHTTP(w, req)
+
+		// Without DB initialized in this mock context, it should hit service_unavailable (503), NEVER 401 Unauthorized!
+		assert.NotEqual(t, http.StatusUnauthorized, w.Code)
+		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+	})
+
+	t.Run("unauthenticated request returns 401", func(t *testing.T) {
+		coreCtx := core.NewContext(context.Background())
+		unauthMock := &unauthenticatedAuthService{}
+		core.Provide[contracts.AuthService](coreCtx, unauthMock)
+
+		p := igo.New()
+		require.NoError(t, p.Apply(coreCtx))
+		engine := mountRoutes(t, coreCtx.Router().Routes())
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/igo/dashboard", nil)
+		w := httptest.NewRecorder()
+		engine.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Contains(t, w.Body.String(), "未登录")
+	})
+}
+
+type unauthenticatedAuthService struct {
+	contracts.AuthService
+}
+
+func (m *unauthenticatedAuthService) RequireAuthMiddleware() any {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		c.Next()
+	})
+}
+
+func (m *unauthenticatedAuthService) GetCurrentUserID(context.Context) (uint64, error) {
+	return 0, errors.New("unauthorized")
+}
+
+func (m *unauthenticatedAuthService) GetCurrentUser(context.Context) (*contracts.UserDTO, error) {
+	return nil, errors.New("unauthorized")
+}
+

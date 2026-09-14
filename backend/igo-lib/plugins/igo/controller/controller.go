@@ -29,12 +29,23 @@ func New(svc *service.Service, authSvc contracts.AuthService) *Controller {
 }
 
 func (ctrl *Controller) withUser(c *gin.Context, fn func(userID uint64)) {
-	id, err := ctrl.authSvc.GetCurrentUserID(c.Request.Context())
-	if err != nil || id == 0 {
-		response.AbortUnauthorized(c, "未登录")
+	if user, err := ctrl.authSvc.GetCurrentUser(c.Request.Context()); err == nil && user != nil && user.ID > 0 {
+		fn(user.ID)
 		return
 	}
-	fn(id)
+	if user, err := ctrl.authSvc.GetCurrentUser(c); err == nil && user != nil && user.ID > 0 {
+		fn(user.ID)
+		return
+	}
+	if id, err := ctrl.authSvc.GetCurrentUserID(c); err == nil && id > 0 {
+		fn(id)
+		return
+	}
+	if id, err := ctrl.authSvc.GetCurrentUserID(c.Request.Context()); err == nil && id > 0 {
+		fn(id)
+		return
+	}
+	response.AbortUnauthorized(c, "未登录")
 }
 
 func (ctrl *Controller) reply(c *gin.Context, err error) bool {
@@ -84,6 +95,14 @@ func bindJSON[T any](c *gin.Context) (T, bool) {
 		return zero, false
 	}
 	return req, true
+}
+
+func bindOptionalJSON[T any](c *gin.Context) (T, bool) {
+	var req T
+	if c.Request.ContentLength == 0 {
+		return req, true
+	}
+	return bindJSON[T](c)
 }
 
 func parseLibraryID(c *gin.Context) (int, bool) {
