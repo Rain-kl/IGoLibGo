@@ -156,7 +156,7 @@ export default function GlobalLeakPage() {
       />
 
       {/* 3. 扫描参数与黑名单配置 */}
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -169,7 +169,7 @@ export default function GlobalLeakPage() {
               variant='outline'
               size='sm'
               onClick={() => setBlacklistOpen(true)}
-              className='h-7 text-xs gap-1'
+              className='h-7 text-xs gap-1 border-dashed shadow-none'
             >
               <Ban className='size-3 text-destructive' />
               <span>{t('editBlacklist')}</span>
@@ -190,7 +190,7 @@ export default function GlobalLeakPage() {
               }
               min={1}
               max={60}
-              className='h-9 text-xs font-mono'
+              className='h-8 text-xs font-mono shadow-none bg-background'
             />
             <p className='text-[10px] text-muted-foreground'>
               推荐设为 3~10 秒，在平稳请求与极速命中之间取得平衡
