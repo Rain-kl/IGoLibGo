@@ -65,11 +65,11 @@ else
 fi
 
 # 1.2 core/ 禁止导入任何插件
-CORE_PLUGIN_IMPORTS=$(rg -n "\"${MODULE}/plugins/|\"${MODULE}/downstream/" \
+CORE_PLUGIN_IMPORTS=$(rg -n "\"${MODULE}/plugins/|\"${MODULE}/igo-lib/" \
     "${BACKEND_DIR}/core/" --glob '*.go' -g '!*_test.go' || true)
 
 if [ -n "${CORE_PLUGIN_IMPORTS}" ]; then
-    log_fail "backend/core/ 严禁直接依赖具体插件 (plugins/ 或 downstream/):"
+    log_fail "backend/core/ 严禁直接依赖具体插件 (plugins/ 或 igo-lib/):"
     echo "${CORE_PLUGIN_IMPORTS}" >&2
 else
     log_pass "backend/core/ 零插件反向依赖"
@@ -80,7 +80,7 @@ fi
 # ==============================================================================
 log_check "2. 检查契约层 (backend/core/contracts/) 抽象纯洁度..."
 
-CONTRACTS_PLUGIN_IMPORTS=$(rg -n "\"${MODULE}/plugins/|\"${MODULE}/downstream/|\"github.com/gin-gonic/gin\"|\"github.com/hibiken/asynq\"" \
+CONTRACTS_PLUGIN_IMPORTS=$(rg -n "\"${MODULE}/plugins/|\"${MODULE}/igo-lib/|\"github.com/gin-gonic/gin\"|\"github.com/hibiken/asynq\"" \
     "${BACKEND_DIR}/core/contracts/" --glob '*.go' || true)
 
 if [ -n "${CONTRACTS_PLUGIN_IMPORTS}" ]; then
@@ -169,15 +169,15 @@ for category_dir in "${BACKEND_DIR}"/plugins/*/; do
     done
 done
 
-# 检查 downstream/ 下的下游插件
-if [ -d "${BACKEND_DIR}/downstream/plugins" ]; then
-    for downstream_dir in "${BACKEND_DIR}"/downstream/plugins/*/; do
-        [ -d "$downstream_dir" ] || continue
-        downstream_name=$(basename "$downstream_dir")
-        downstream_cross=$(rg -n "\"${MODULE}/plugins/" "${downstream_dir}" \
+# 检查 igo-lib/ 下的下游插件
+if [ -d "${BACKEND_DIR}/igo-lib/plugins" ]; then
+    for igolib_dir in "${BACKEND_DIR}"/igo-lib/plugins/*/; do
+        [ -d "$igolib_dir" ] || continue
+        igolib_name=$(basename "$igolib_dir")
+        igolib_cross=$(rg -n "\"${MODULE}/plugins/" "${igolib_dir}" \
             -g '*.go' -g '!*_test.go' 2>/dev/null || true)
-        if [ -n "$downstream_cross" ]; then
-            CROSS_PLUGIN_IMPORTS="${CROSS_PLUGIN_IMPORTS}\n[downstream/${downstream_name} 违规直接引用内部插件实现]:\n${downstream_cross}\n"
+        if [ -n "$igolib_cross" ]; then
+            CROSS_PLUGIN_IMPORTS="${CROSS_PLUGIN_IMPORTS}\n[igo-lib/${igolib_name} 违规直接引用内部插件实现]:\n${igolib_cross}\n"
         fi
     done
 fi
@@ -261,7 +261,7 @@ for root, dirs, files in os.walk(backend_dir):
             path = os.path.join(root, f)
             rel = os.path.relpath(path, backend_dir)
             parts = rel.split(os.sep)
-            if parts[0] in ("plugins", "downstream") and len(parts) >= 3:
+            if parts[0] in ("plugins", "igo-lib") and len(parts) >= 3:
                 owner = parts[0] + "/" + parts[1] + "/" + parts[2]
             else:
                 continue
@@ -285,7 +285,7 @@ for root, dirs, files in os.walk(backend_dir):
             rel = os.path.relpath(path, backend_dir)
             parts = rel.split(os.sep)
             caller = parts[0]
-            if parts[0] in ("plugins", "downstream") and len(parts) >= 3:
+            if parts[0] in ("plugins", "igo-lib") and len(parts) >= 3:
                 caller = parts[0] + "/" + parts[1] + "/" + parts[2]
 
             try:

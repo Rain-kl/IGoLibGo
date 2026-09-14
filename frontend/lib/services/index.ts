@@ -30,6 +30,7 @@ import {
 import { PushService } from './push';
 import { AdminUploadService, UploadService } from './upload';
 import { UserService } from './user';
+import { IGoService } from './igo';
 
 const services = {
   auth: AuthService,
@@ -49,6 +50,7 @@ const services = {
   push: PushService,
   adminMessageGateway: AdminMessageGatewayService,
   userMessageGateway: UserMessageGatewayService,
+  igo: IGoService,
 } as const;
 
 export default services;
@@ -209,3 +211,6 @@ export type {
   ListPushHistoriesRequest,
   ListPushHistoriesResponse,
 } from './push';
+
+export { IGoService } from './igo';
+export * from './igo/types';

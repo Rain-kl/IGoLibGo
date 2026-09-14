@@ -46,6 +46,8 @@ import {
 import {
   ArrowUpRight,
   Bell,
+  Building2,
+  Calendar,
   ChevronDown,
   Code,
   CreditCard,
@@ -56,7 +58,10 @@ import {
   Home,
   Layers,
   LogOut,
+  MapPin,
   MessagesSquare,
+  Radio,
+  Rocket,
   Settings,
   ShieldCheck,
   Terminal,
@@ -74,8 +79,18 @@ type NavItem = {
   external?: boolean;
 };
 
+const igoNavItems: NavItem[] = [
+  { titleKey: 'home', url: '/', icon: Home },
+  { titleKey: 'venue', url: '/venue', icon: Building2 },
+  { titleKey: 'grab', url: '/grab', icon: Rocket },
+  { titleKey: 'leak', url: '/leak', icon: Radio },
+  { titleKey: 'tomorrow', url: '/tomorrow', icon: Calendar },
+  { titleKey: 'occupy', url: '/occupy', icon: ShieldCheck },
+  { titleKey: 'checkin', url: '/checkin', icon: MapPin },
+  { titleKey: 'settings', url: '/igo-settings', icon: Settings },
+];
+
 const navMainItems: NavItem[] = [
-  { titleKey: 'home', url: '/home', icon: Home },
   { titleKey: 'myFiles', url: '/files', icon: FolderOpen },
 ];
 
@@ -145,6 +160,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { config } = usePublicConfig();
   const t = useTranslations('layout');
   const tCommon = useTranslations('common');
+  const tIgo = useTranslations('igo.nav');
   const [showLogoutDialog, setShowLogoutDialog] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const pathname = usePathname();
@@ -372,6 +388,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </DropdownMenu>
         </SidebarHeader>
         <SidebarContent className='group-data-[collapsible=icon]'>
+          <SidebarGroup className='py-0'>
+            <SidebarGroupContent className='py-1'>
+              <SidebarMenu className='gap-1'>
+                {igoNavItems.map((item) => {
+                  const title = tIgo(item.titleKey);
+                  const isActive =
+                    item.url === '/'
+                      ? pathname === '/'
+                      : pathname === item.url ||
+                        pathname.startsWith(`${item.url}/`);
+
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        tooltip={title}
+                        isActive={isActive}
+                        asChild
+                      >
+                        <Link href={item.url} onClick={handleCloseSidebar}>
+                          {item.icon && <item.icon />}
+                          <span>{title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
           {navMainFiltered.length > 0 && (
             <SidebarGroup className='py-0'>
               <SidebarGroupContent className='py-1'>
