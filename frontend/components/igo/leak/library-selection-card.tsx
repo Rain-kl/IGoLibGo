@@ -64,7 +64,7 @@ export function LibrarySelectionCard({
   };
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <div className='flex items-center gap-2'>
@@ -82,7 +82,7 @@ export function LibrarySelectionCard({
               variant='outline'
               size='sm'
               onClick={handleSelectAll}
-              className='h-7 text-xs gap-1'
+              className='h-7 text-xs gap-1 border-dashed shadow-none'
             >
               <CheckSquare className='size-3' />
               <span>{t('selectAll')}</span>
@@ -91,7 +91,7 @@ export function LibrarySelectionCard({
               variant='ghost'
               size='sm'
               onClick={handleClearAll}
-              className='h-7 text-xs text-muted-foreground'
+              className='h-7 text-xs text-muted-foreground shadow-none'
             >
               <Square className='size-3 mr-1' />
               <span>{t('clearAll')}</span>
@@ -111,7 +111,7 @@ export function LibrarySelectionCard({
                 key={lib.library_id}
                 onClick={() => handleToggle(lib)}
                 className={`
-                  p-2.5 rounded-lg border text-xs cursor-pointer transition-all flex items-start gap-2.5 select-none
+                  p-2.5 rounded-lg border border-dashed shadow-none text-xs cursor-pointer transition-all flex items-start gap-2.5 select-none
                   ${
                     isChecked
                       ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
