@@ -92,7 +92,7 @@ export function OccupyControlCard({
               variant='default'
               size='sm'
               onClick={onStart}
-              disabled={starting || !canStart}
+              disabled={starting || loading || !canStart}
               className='gap-1.5 shadow-none'
             >
               {starting ? (

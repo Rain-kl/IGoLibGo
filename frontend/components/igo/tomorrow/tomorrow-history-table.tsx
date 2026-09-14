@@ -26,7 +26,7 @@ export function TomorrowHistoryTable({ records }: TomorrowHistoryTableProps) {
   const t = useTranslations('igo.tomorrow');
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <History className='size-4 text-primary' />
@@ -44,10 +44,10 @@ export function TomorrowHistoryTable({ records }: TomorrowHistoryTableProps) {
             {t('historyEmpty')}
           </div>
         ) : (
-          <div className='border rounded-lg overflow-hidden'>
+          <div className='border border-dashed shadow-none rounded-lg overflow-hidden bg-background'>
             <Table className='text-xs'>
               <TableHeader className='bg-muted/40'>
-                <TableRow>
+                <TableRow className='border-dashed hover:bg-transparent'>
                   <TableHead className='w-40'>记录时间</TableHead>
                   <TableHead>场馆</TableHead>
                   <TableHead>目标座位</TableHead>
@@ -56,7 +56,10 @@ export function TomorrowHistoryTable({ records }: TomorrowHistoryTableProps) {
               </TableHeader>
               <TableBody>
                 {records.map((rec) => (
-                  <TableRow key={rec.record_id}>
+                  <TableRow
+                    key={rec.record_id}
+                    className='border-dashed hover:bg-muted/10 transition-colors'
+                  >
                     <TableCell className='font-mono text-muted-foreground text-[11px]'>
                       {rec.recorded_at}
                     </TableCell>
@@ -71,7 +74,7 @@ export function TomorrowHistoryTable({ records }: TomorrowHistoryTableProps) {
                     <TableCell className='text-right'>
                       <Badge
                         variant='outline'
-                        className='text-[10px] font-normal'
+                        className='text-[10px] font-medium rounded-full py-0 px-2'
                       >
                         已归档
                       </Badge>

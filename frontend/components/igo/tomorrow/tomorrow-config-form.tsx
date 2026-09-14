@@ -36,7 +36,7 @@ export function TomorrowConfigForm({
   const bound = boundInfo?.library;
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center gap-2'>
           <Clock className='size-4 text-primary' />
@@ -104,7 +104,7 @@ export function TomorrowConfigForm({
             value={scheduledTime}
             onChange={(e) => onScheduledTimeChange(e.target.value)}
             placeholder={t('scheduledTimePlaceholder')}
-            className='h-9 text-xs font-mono'
+            className='h-8 text-xs font-mono shadow-none bg-background'
           />
           <p className='text-[10px] text-muted-foreground'>
             请输入标准时间字符串 (HH:mm:ss)，系统将在准点提前 10

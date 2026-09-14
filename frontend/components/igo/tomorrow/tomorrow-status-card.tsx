@@ -47,7 +47,7 @@ export function TomorrowStatusCard({
   const isRunning = state === 'running' || state === 'starting';
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
@@ -77,14 +77,14 @@ export function TomorrowStatusCard({
             </div>
           </div>
           <div>
-            <div className='text-muted-foreground'>预约提交</div>
-            <div className='font-mono font-semibold text-foreground mt-0.5'>
+            <div className='text-muted-foreground'>尝试提交</div>
+            <div className='font-mono font-semibold text-primary mt-0.5'>
               {status?.request_count ?? 0} 次
             </div>
           </div>
           <div>
-            <div className='text-muted-foreground'>最近心跳</div>
-            <div className='font-mono font-semibold text-foreground mt-0.5'>
+            <div className='text-muted-foreground'>最近请求</div>
+            <div className='font-mono text-muted-foreground mt-0.5'>
               {status?.last_request_at
                 ? status.last_request_at.slice(11, 19)
                 : '--:--:--'}
@@ -99,7 +99,7 @@ export function TomorrowStatusCard({
               size='sm'
               onClick={onStart}
               disabled={!canStart || starting || loading}
-              className='gap-1.5'
+              className='gap-1.5 shadow-none'
             >
               {starting ? (
                 <Spinner className='size-3.5' />
@@ -114,7 +114,7 @@ export function TomorrowStatusCard({
               size='sm'
               onClick={onCancel}
               disabled={cancelling}
-              className='gap-1.5'
+              className='gap-1.5 shadow-none'
             >
               {cancelling ? (
                 <Spinner className='size-3.5' />
@@ -130,7 +130,7 @@ export function TomorrowStatusCard({
             size='sm'
             onClick={onRunNow}
             disabled={!canStart || runningNow}
-            className='gap-1.5 border-primary/40 text-primary hover:bg-primary/10'
+            className='gap-1.5 border-dashed shadow-none border-primary/40 text-primary hover:bg-primary/10'
           >
             {runningNow ? (
               <Spinner className='size-3.5' />
