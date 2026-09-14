@@ -232,6 +232,7 @@ func (s *Service) runTick(ctx context.Context, userID uint64, kind string) error
 	if err != nil {
 		return s.failRun(ctx, run, err.Error())
 	}
+	s.maybeCookieAlert(ctx, userID, cookie)
 	tpl, err := s.templates(ctx, userID)
 	if err != nil {
 		return s.failRun(ctx, run, err.Error())
@@ -269,13 +270,13 @@ func (s *Service) tickOnce(ctx context.Context, userID uint64, kind, cookie stri
 		if err := json.Unmarshal([]byte(planJSON), &plan); err != nil {
 			return false, "", err
 		}
-		return s.tickGrab(ctx, tpl, cookie, plan)
+		return s.tickGrab(ctx, userID, tpl, cookie, plan)
 	case consts.TaskKindOccupy:
 		var plan do.OccupyStartRequest
 		if err := json.Unmarshal([]byte(planJSON), &plan); err != nil {
 			return false, "", err
 		}
-		return s.tickOccupy(ctx, tpl, cookie, plan)
+		return s.tickOccupy(ctx, userID, tpl, cookie, plan)
 	case consts.TaskKindGlobalLeak:
 		var plan do.GlobalLeakStartRequest
 		if err := json.Unmarshal([]byte(planJSON), &plan); err != nil {
@@ -287,13 +288,13 @@ func (s *Service) tickOnce(ctx context.Context, userID uint64, kind, cookie stri
 		if err := json.Unmarshal([]byte(planJSON), &plan); err != nil {
 			return false, "", err
 		}
-		return s.tickTomorrow(ctx, tpl, cookie, plan)
+		return s.tickTomorrow(ctx, userID, tpl, cookie, plan)
 	default:
 		return false, "", fmt.Errorf("unknown kind %s", kind)
 	}
 }
 
-func (s *Service) tickGrab(ctx context.Context, tpl do.ProtocolTemplatesResponse, cookie string, plan do.GrabStartRequest) (bool, string, error) {
+func (s *Service) tickGrab(ctx context.Context, userID uint64, tpl do.ProtocolTemplatesResponse, cookie string, plan do.GrabStartRequest) (bool, string, error) {
 	if plan.ReservationStrategy == "reserve_directly" {
 		for _, seat := range plan.Seats {
 			ok, err := s.client.ReserveSeat(ctx, tpl, cookie, plan.LibraryID, seat.SeatKey)
@@ -301,7 +302,9 @@ func (s *Service) tickGrab(ctx context.Context, tpl do.ProtocolTemplatesResponse
 				return false, "", err
 			}
 			if ok {
-				return true, seat.SeatName + " 预约成功", nil
+				msg := seat.SeatName + " 预约成功"
+				s.notifySuccess(ctx, userID, consts.TaskKindGrab, plan.LibraryName, seat.SeatName, msg)
+				return true, msg, nil
 			}
 		}
 		return false, "直接预约未命中，继续", nil
@@ -328,14 +331,16 @@ func (s *Service) tickGrab(ctx context.Context, tpl do.ProtocolTemplatesResponse
 				if name == "" {
 					name = snap.SeatName
 				}
-				return true, name + " 预约成功", nil
+				msg := name + " 预约成功"
+				s.notifySuccess(ctx, userID, consts.TaskKindGrab, plan.LibraryName, name, msg)
+				return true, msg, nil
 			}
 		}
 	}
 	return false, "目标座位暂不可用，继续监控", nil
 }
 
-func (s *Service) tickOccupy(ctx context.Context, tpl do.ProtocolTemplatesResponse, cookie string, plan do.OccupyStartRequest) (bool, string, error) {
+func (s *Service) tickOccupy(ctx context.Context, userID uint64, tpl do.ProtocolTemplatesResponse, cookie string, plan do.OccupyStartRequest) (bool, string, error) {
 	info, err := s.client.GetReservation(ctx, tpl, cookie)
 	if err != nil {
 		return false, "", err
@@ -366,7 +371,9 @@ func (s *Service) tickOccupy(ctx context.Context, tpl do.ProtocolTemplatesRespon
 		return false, "", err
 	}
 	if ok {
-		return true, info.SeatName + " 重新预约成功", nil
+		msg := info.SeatName + " 重新预约成功"
+		s.notifySuccess(ctx, userID, consts.TaskKindOccupy, info.LibraryName, info.SeatName, msg)
+		return true, msg, nil
 	}
 	return false, "重新预约未成功，继续占座", nil
 }
@@ -395,14 +402,16 @@ func (s *Service) tickLeak(ctx context.Context, userID uint64, tpl do.ProtocolTe
 				return false, "", err
 			}
 			if ok {
-				return true, lib.LibraryName + " " + seat.SeatName + " 捡漏成功", nil
+				msg := lib.LibraryName + " " + seat.SeatName + " 捡漏成功"
+				s.notifySuccess(ctx, userID, consts.TaskKindGlobalLeak, lib.LibraryName, seat.SeatName, msg)
+				return true, msg, nil
 			}
 		}
 	}
 	return false, "本轮未发现可预约空座", nil
 }
 
-func (s *Service) tickTomorrow(ctx context.Context, tpl do.ProtocolTemplatesResponse, cookie string, plan do.TomorrowStartRequest) (bool, string, error) {
+func (s *Service) tickTomorrow(ctx context.Context, userID uint64, tpl do.ProtocolTemplatesResponse, cookie string, plan do.TomorrowStartRequest) (bool, string, error) {
 	if !plan.ExecuteImmediately && plan.ScheduledStart != "" {
 		if t, err := time.Parse("15:04:05", plan.ScheduledStart); err == nil {
 			now := time.Now()
@@ -418,7 +427,9 @@ func (s *Service) tickTomorrow(ctx context.Context, tpl do.ProtocolTemplatesResp
 	if err := s.client.SaveTomorrow(ctx, tpl, cookie, plan.LibraryID, plan.Seat.SeatKey); err != nil {
 		return false, "", err
 	}
-	return true, plan.Seat.SeatName + " 明日预约已提交", nil
+	msg := plan.Seat.SeatName + " 明日预约已提交"
+	s.notifySuccess(ctx, userID, consts.TaskKindTomorrow, plan.LibraryName, plan.Seat.SeatName, msg)
+	return true, msg, nil
 }
 
 func (s *Service) failRun(ctx context.Context, run *entity.TaskRun, msg string) error {
@@ -426,6 +437,7 @@ func (s *Service) failRun(ctx context.Context, run *entity.TaskRun, msg string) 
 	run.State = stateFailed
 	run.Message = msg
 	run.LastUpdatedAt = &now
+	s.notifyFailure(ctx, run.UserID, run.Kind, msg)
 	return dao.UpsertTaskRun(ctx, run)
 }
 

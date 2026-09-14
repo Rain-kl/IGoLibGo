@@ -4,6 +4,7 @@
 package do
 
 import (
+	"Wavelet/core/contracts"
 	"Wavelet/plugins/domain/msg_gateway/consts"
 	pkgpush "Wavelet/plugins/domain/msg_gateway/push"
 	"maps"
@@ -148,14 +149,8 @@ type PushHistoryListFilter struct {
 	PageSize  int
 }
 
-// PushNotificationEvent defines the payload for eventbus notification trigger.
-type PushNotificationEvent struct {
-	UserID   uint64         `json:"user_id,string"`
-	Channel  string         `json:"channel"`
-	Title    string         `json:"title"`
-	Content  string         `json:"content"`
-	Metadata map[string]any `json:"metadata,omitempty"`
-}
+// PushNotificationEvent is the EventBus payload for notification:push.
+type PushNotificationEvent = contracts.PushNotificationEvent
 
 //nolint:goconst,dupl // Static push channel form definitions table
 var defaultPushDefinitions = []PushDefinition{

@@ -22,6 +22,7 @@ import (
 type Service struct {
 	client *traceint.Client
 	tasks  contracts.TaskService
+	events Emitter
 }
 
 // New creates a Service with the default TraceInt HTTP client.

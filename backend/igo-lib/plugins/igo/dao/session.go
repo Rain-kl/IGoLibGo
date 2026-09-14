@@ -42,6 +42,17 @@ func UpsertSession(ctx context.Context, row *entity.Session) error {
 	}).Create(row).Error
 }
 
+// ListSessions returns all stored TraceInt sessions.
+func ListSessions(ctx context.Context) ([]entity.Session, error) {
+	gdb, err := db(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var rows []entity.Session
+	err = gdb.Find(&rows).Error
+	return rows, err
+}
+
 // DeleteSession removes the session for userID.
 func DeleteSession(ctx context.Context, userID uint64) error {
 	gdb, err := db(ctx)

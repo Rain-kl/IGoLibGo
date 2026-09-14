@@ -53,7 +53,18 @@ const (
 	CodeTraceInt        = "traceint_error"
 	CodeConflict        = "conflict"
 
-	TaskTypeTick = "igo:tick"
+	TaskTypeTick        = "igo:tick"
+	TaskTypeCookieWatch = "igo:cookie_watch"
+
+	PushGrabSucceeded       = "igo.grab_succeeded"
+	PushOccupySucceeded     = "igo.occupy_succeeded"
+	PushGlobalLeakSucceeded = "igo.global_leak_succeeded"
+	PushTomorrowSucceeded   = "igo.tomorrow_succeeded"
+	PushTaskFailed          = "igo.task_failed"
+	PushCookieExpiring      = "igo.cookie_expiring"
+	PushSessionInvalid      = "igo.session_invalid"
+
+	CookieExpiringLead = 10 * 60 // seconds
 
 	PlaceholderCode      = "ReplaceMeByCode"
 	PlaceholderReturnURL = "ReplaceMeByReturnUrl"

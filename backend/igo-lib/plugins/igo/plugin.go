@@ -54,9 +54,13 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 
 	p.svc = service.New()
+	p.svc.SetEmitter(ctx.Events())
 	if taskSvc, err := ctx.Inject[contracts.TaskService](); err == nil && taskSvc != nil {
 		p.svc.SetTasks(taskSvc)
 	}
+	ctx.Bind(func(reg contracts.PushRegistry) {
+		service.RegisterPushEvents(reg)
+	})
 	ctx.Task().Register(consts.TaskTypeTick, p.svc.HandleTick,
 		extpoints.WithTaskType("igo_tick"),
 		extpoints.WithTaskName("IGo 任务节拍"),
@@ -66,6 +70,16 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		extpoints.WithTaskQueue("default"),
 		extpoints.WithTaskRetryable(true),
 	)
+	ctx.Task().Register(consts.TaskTypeCookieWatch, p.svc.HandleCookieWatch,
+		extpoints.WithTaskType("igo_cookie_watch"),
+		extpoints.WithTaskName("IGo Cookie 到期扫描"),
+		extpoints.WithTaskDescription("扫描即将过期的 TraceInt Cookie 并触发通知中心事件"),
+		extpoints.WithTaskCategory("igo"),
+		extpoints.WithTaskRetry(1),
+		extpoints.WithTaskQueue("default"),
+		extpoints.WithTaskRetryable(true),
+	)
+	ctx.Schedule().RegisterCron("*/5 * * * *", consts.TaskTypeCookieWatch, map[string]any{"action": "scan"})
 	ctx.Provide[*service.Service](p.svc)
 	ctrl := controller.New(p.svc, authSvc)
 

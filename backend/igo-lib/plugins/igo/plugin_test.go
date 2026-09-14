@@ -28,6 +28,16 @@ type mockAuthService struct {
 	contracts.AuthService
 }
 
+type mockPushRegistry struct {
+	events []contracts.PushEventMeta
+}
+
+func (m *mockPushRegistry) RegisterBuiltInEvent(meta contracts.PushEventMeta) {
+	m.events = append(m.events, meta)
+}
+
+func (m *mockPushRegistry) SyncEvents(context.Context) error { return nil }
+
 func (m *mockAuthService) RequireAuthMiddleware() any {
 	return gin.HandlerFunc(func(c *gin.Context) {
 		c.Next()
@@ -98,6 +108,7 @@ func applyPlugin(t *testing.T) *core.Context {
 	t.Helper()
 	ctx := core.NewContext(context.Background())
 	ctx.Provide[contracts.AuthService](&mockAuthService{})
+	ctx.Provide[contracts.PushRegistry](&mockPushRegistry{})
 	p := igo.New()
 	require.Equal(t, consts.PluginName, p.Name())
 	require.NoError(t, p.Apply(ctx))
@@ -154,6 +165,33 @@ func TestPlugin_ApplyRequiresAuthService(t *testing.T) {
 	err := igo.New().Apply(ctx)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "AuthService")
+}
+
+func TestPlugin_RegistersPushEvents(t *testing.T) {
+	reg := &mockPushRegistry{}
+	ctx := core.NewContext(context.Background())
+	ctx.Provide[contracts.AuthService](&mockAuthService{})
+	ctx.Provide[contracts.PushRegistry](reg)
+	require.NoError(t, igo.New().Apply(ctx))
+
+	keys := map[string]struct{}{}
+	for _, ev := range reg.events {
+		keys[ev.Key] = struct{}{}
+		assert.NotEmpty(t, ev.Name)
+		assert.NotEmpty(t, ev.DefaultTemplate.Content)
+	}
+	for _, key := range []string{
+		consts.PushGrabSucceeded,
+		consts.PushOccupySucceeded,
+		consts.PushGlobalLeakSucceeded,
+		consts.PushTomorrowSucceeded,
+		consts.PushTaskFailed,
+		consts.PushCookieExpiring,
+		consts.PushSessionInvalid,
+	} {
+		_, ok := keys[key]
+		assert.True(t, ok, "missing push event %s", key)
+	}
 }
 
 func TestPlugin_RegistersMigrations(t *testing.T) {
