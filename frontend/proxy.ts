@@ -163,8 +163,11 @@ async function proxyApiToBackend(request: NextRequest): Promise<NextResponse> {
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const sessionCookieName =
-    process.env.WAVELET_SESSION_COOKIE_NAME || 'wavelet_session_id';
-  const sessionCookie = request.cookies.get(sessionCookieName);
+    process.env.WAVELET_SESSION_COOKIE_NAME || 'wavelet_session';
+  const sessionCookie =
+    request.cookies.get(sessionCookieName) ||
+    request.cookies.get('wavelet_session') ||
+    request.cookies.get('wavelet_session_id');
 
   // WebSocket upgrades must pass through to rewrites untouched.
   if (request.headers.get('upgrade')?.toLowerCase() === 'websocket') {
