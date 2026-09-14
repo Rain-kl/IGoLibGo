@@ -179,38 +179,23 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	ctx.Schedule().RegisterCron("*/10 * * * *", consts.TaskCleanupPairingCodes, map[string]any{"action": "cleanup"})
 
 	// 7. Register EventBus listeners for decoupled push triggers
-	ctx.Events().On(contracts.EventTopicNotificationPush, func(c context.Context, e contracts.PushNotificationEvent) error {
-		key := e.EventKey
-		if key == "" {
-			key = e.Channel
+	ctx.Events().On("notification:push", func(c context.Context, e do.PushNotificationEvent) error {
+		meta := do.EventMetadata{
+			Key:  "eventbus:" + e.Channel,
+			Name: e.Title,
+			DefaultTemplate: do.NotificationMessage{
+				Title:   e.Title,
+				Content: e.Content,
+				Level:   consts.DefaultLevelInfo,
+				Ext:     e.Metadata,
+			},
+			Description: "EventBus triggered notification",
 		}
-		if key == "" {
-			return nil
-		}
-		meta, ok := service.FindBuiltInEvent(key)
-		if !ok {
-			meta = do.EventMetadata{
-				Key:  key,
-				Name: e.Title,
-				DefaultTemplate: do.NotificationMessage{
-					Title:   e.Title,
-					Content: e.Content,
-					Level:   consts.DefaultLevelInfo,
-					Ext:     e.Metadata,
-				},
-				Description: "EventBus triggered notification",
-			}
-		}
-		body := map[string]any{
-			"user":    map[string]any{"id": e.UserID},
+		service.DefaultTrigger.Trigger(c, meta, map[string]any{
+			"user.id": e.UserID,
 			"title":   e.Title,
 			"content": e.Content,
-			"time":    time.Now().Format("2006-01-02 15:04:05"),
-		}
-		for k, v := range e.Metadata {
-			body[k] = v
-		}
-		service.DefaultTrigger.Trigger(c, meta, body)
+		})
 		return nil
 	})
 
