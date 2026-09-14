@@ -122,6 +122,8 @@ func GetUserFromRequest(c *gin.Context, d *dao.DAO) (*contracts.UserDTO, error) 
 }
 
 // LoginRequiredMiddleware returns a Gin handler function for authentication check.
+//
+// Note: 认证中间件注入 context.Context 登录态 — 见 .agents/notes/implemented/bug-fix/2026-09-14-auth-request-context-propagation.md
 func LoginRequiredMiddleware(whitelist *extpoints.PathWhitelist, d *dao.DAO) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if whitelist != nil && whitelist.Match(c.Request.URL.Path) {
@@ -140,6 +142,9 @@ func LoginRequiredMiddleware(whitelist *extpoints.PathWhitelist, d *dao.DAO) gin
 
 		LogForAudit(c.Request.Context(), user, c)
 		ginutil.SetToContext(c, contracts.AuthUserObjKey, user)
+		reqCtx := context.WithValue(c.Request.Context(), contracts.AuthUserObjKey, user)
+		reqCtx = context.WithValue(reqCtx, contracts.AuthUserIDKey, user.ID)
+		c.Request = c.Request.WithContext(reqCtx)
 		c.Next()
 	}
 }
@@ -171,6 +176,9 @@ func AdminRequiredMiddleware(d *dao.DAO) gin.HandlerFunc {
 
 		LogForAudit(c.Request.Context(), user, c)
 		ginutil.SetToContext(c, contracts.AuthUserObjKey, user)
+		reqCtx := context.WithValue(c.Request.Context(), contracts.AuthUserObjKey, user)
+		reqCtx = context.WithValue(reqCtx, contracts.AuthUserIDKey, user.ID)
+		c.Request = c.Request.WithContext(reqCtx)
 		c.Next()
 	}
 }
