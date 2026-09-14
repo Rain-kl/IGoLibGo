@@ -101,3 +101,25 @@ func TestAuthenticateFromCookieAndListLibraries(t *testing.T) {
 	raw, _ := json.Marshal(libs)
 	assert.Contains(t, string(raw), "二楼")
 }
+
+func TestGetAuthQRCode(t *testing.T) {
+	svc := setupService(t, func(w http.ResponseWriter, r *http.Request) {})
+	ctx := context.Background()
+
+	qr, err := svc.GetAuthQRCode(ctx, 42)
+	require.NoError(t, err)
+	require.NotNil(t, qr)
+	assert.NotEmpty(t, qr.AuthURL)
+	assert.True(t, strings.HasPrefix(qr.ImageDataURL, "data:image/png;base64,"))
+}
+
+func TestGetCheckInAuthQRCode(t *testing.T) {
+	svc := setupService(t, func(w http.ResponseWriter, r *http.Request) {})
+	ctx := context.Background()
+
+	qr, err := svc.GetCheckInAuthQRCode(ctx, 42)
+	require.NoError(t, err)
+	require.NotNil(t, qr)
+	assert.NotEmpty(t, qr.AuthURL)
+	assert.True(t, strings.HasPrefix(qr.ImageDataURL, "data:image/png;base64,"))
+}
