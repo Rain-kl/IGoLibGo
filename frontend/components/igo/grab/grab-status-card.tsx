@@ -43,7 +43,7 @@ export function GrabStatusCard({
   const isRunning = state === 'running' || state === 'starting';
 
   return (
-    <Card className='border-border/60 shadow-sm'>
+    <Card className='border-dashed shadow-none'>
       <CardHeader className='pb-3'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
@@ -74,7 +74,7 @@ export function GrabStatusCard({
           </div>
           <div>
             <div className='text-muted-foreground'>请求次数</div>
-            <div className='font-mono font-semibold text-foreground mt-0.5'>
+            <div className='font-mono font-semibold text-primary mt-0.5'>
               {status?.request_count ?? 0} 次
             </div>
           </div>
@@ -95,7 +95,7 @@ export function GrabStatusCard({
               size='sm'
               onClick={onStart}
               disabled={!canStart || starting || loading}
-              className='gap-1.5'
+              className='gap-1.5 shadow-none'
             >
               {starting ? (
                 <Spinner className='size-3.5' />
@@ -110,7 +110,7 @@ export function GrabStatusCard({
               size='sm'
               onClick={onCancel}
               disabled={cancelling}
-              className='gap-1.5'
+              className='gap-1.5 shadow-none'
             >
               {cancelling ? (
                 <Spinner className='size-3.5' />

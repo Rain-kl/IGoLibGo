@@ -62,7 +62,7 @@ export function GrabConfigForm({
   return (
     <div className='space-y-4'>
       {/* 1. 目标场馆卡片 */}
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -75,7 +75,7 @@ export function GrabConfigForm({
               variant='ghost'
               size='sm'
               asChild
-              className='h-7 text-xs text-primary gap-1'
+              className='h-7 text-xs text-primary gap-1 shadow-none'
             >
               <Link href='/venue'>
                 <span>去切换场馆</span>
@@ -88,7 +88,7 @@ export function GrabConfigForm({
           {bound ? (
             <div className='p-3 rounded-lg bg-muted/40 flex items-center justify-between text-xs'>
               <div className='flex items-center gap-3'>
-                <div className='size-8 rounded bg-primary/10 text-primary flex items-center justify-center font-bold'>
+                <div className='size-8 rounded bg-primary/10 text-primary flex items-center justify-center font-semibold'>
                   {bound.name.charAt(0)}
                 </div>
                 <div>
@@ -119,7 +119,7 @@ export function GrabConfigForm({
       </Card>
 
       {/* 2. 优选座位优先级队列 */}
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -132,7 +132,7 @@ export function GrabConfigForm({
               variant='outline'
               size='sm'
               asChild
-              className='h-7 text-xs gap-1'
+              className='h-7 text-xs gap-1 border-dashed shadow-none'
             >
               <Link href='/venue'>
                 <span>从座位图添加</span>
@@ -153,7 +153,7 @@ export function GrabConfigForm({
       </Card>
 
       {/* 3. 策略与定时参数 */}
-      <Card className='border-border/60 shadow-sm'>
+      <Card className='border-dashed shadow-none'>
         <CardHeader className='pb-3'>
           <div className='flex items-center gap-2'>
             <Sliders className='size-4 text-primary' />
@@ -173,7 +173,7 @@ export function GrabConfigForm({
                 value={scheduledStart}
                 onChange={(e) => onScheduledStartChange(e.target.value)}
                 placeholder='留空即立即启动 (如 07:00:00)'
-                className='h-9 text-xs font-mono'
+                className='h-8 text-xs font-mono shadow-none bg-background'
               />
               <p className='text-[10px] text-muted-foreground'>
                 {t('scheduledStartHelp')}
@@ -183,7 +183,7 @@ export function GrabConfigForm({
             <div className='space-y-1.5'>
               <Label className='text-xs font-medium'>{t('strategyMode')}</Label>
               <Select value={strategy} onValueChange={onStrategyChange}>
-                <SelectTrigger className='h-9 text-xs'>
+                <SelectTrigger className='h-8 text-xs shadow-none bg-background'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,7 +210,7 @@ export function GrabConfigForm({
                 onChange={(e) => onMinDelayChange(Number(e.target.value))}
                 min={0}
                 max={5000}
-                className='h-9 text-xs font-mono'
+                className='h-8 text-xs font-mono shadow-none bg-background'
               />
             </div>
             <div className='space-y-1.5'>
@@ -224,7 +224,7 @@ export function GrabConfigForm({
                 onChange={(e) => onMaxDelayChange(Number(e.target.value))}
                 min={0}
                 max={5000}
-                className='h-9 text-xs font-mono'
+                className='h-8 text-xs font-mono shadow-none bg-background'
               />
             </div>
           </div>
