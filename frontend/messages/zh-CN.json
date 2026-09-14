@@ -2201,7 +2201,18 @@
       "enterCustomBeacon": "输入 32/36 位 Beacon UUID",
       "loadingProfile": "正在加载场馆配置...",
       "venueNotLocked": "请先在【账户与场馆】中锁定目标场馆",
-      "reservationMismatch": "当前预约场馆与锁定场馆不一致，请核对后再签到"
+      "reservationMismatch": "当前预约场馆与锁定场馆不一致，请核对后再签到",
+      "manualInputBtn": "手动录入链接 / Code",
+      "manualDialogTitle": "录入签到授权凭据",
+      "manualDialogDesc": "微信扫码跳转后，复制页面完整网址或 32 位 code 粘贴到下方：",
+      "qrLinkTip": "微信扫码授权后，复制微信中跳转出的页面网址（含 code=...）粘贴到下方",
+      "qrLinkInputLabel": "粘贴微信授权链接或 32 位 Code：",
+      "qrLinkPlaceholder": "如 https://web.traceint.com/web/index.html?code=... 或直接输入 32 位 code",
+      "parseAndLoginBtn": "解析并授权打卡",
+      "rememberSession": "在此设备上持久化保存凭据",
+      "pasteClipboard": "粘贴剪贴板",
+      "pasteSuccess": "已从剪贴板粘贴",
+      "authSuccess": "签到微信授权绑定成功！"
     },
     "settings": {
       "title": "IGo 系统设置",

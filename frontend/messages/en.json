@@ -2201,7 +2201,18 @@
       "enterCustomBeacon": "Enter 32/36-digit Beacon UUID",
       "loadingProfile": "Loading venue configuration...",
       "venueNotLocked": "Please lock a target venue in [Account & Venues] first",
-      "reservationMismatch": "Current reservation does not match locked venue"
+      "reservationMismatch": "Current reservation does not match locked venue",
+      "manualInputBtn": "Enter Link / Code",
+      "manualDialogTitle": "Enter Check-In Auth Credentials",
+      "manualDialogDesc": "After scanning QR in WeChat, copy the redirected URL or 32-character code and paste below:",
+      "qrLinkTip": "After scanning in WeChat, copy the redirected page URL (with code=...) and paste below",
+      "qrLinkInputLabel": "Paste WeChat Auth URL or 32-char Code:",
+      "qrLinkPlaceholder": "e.g. https://web.traceint.com/web/index.html?code=... or 32-character code",
+      "parseAndLoginBtn": "Parse & Authorize",
+      "rememberSession": "Persist credentials on this device",
+      "pasteClipboard": "Paste Clipboard",
+      "pasteSuccess": "Pasted from clipboard",
+      "authSuccess": "Check-in WeChat authorization successful!"
     },
     "settings": {
       "title": "IGo System Settings",
