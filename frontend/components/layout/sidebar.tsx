@@ -87,7 +87,6 @@ const igoNavItems: NavItem[] = [
   { titleKey: 'tomorrow', url: '/tomorrow', icon: Calendar },
   { titleKey: 'occupy', url: '/occupy', icon: ShieldCheck },
   { titleKey: 'checkin', url: '/checkin', icon: MapPin },
-  { titleKey: 'settings', url: '/igo-settings', icon: Settings },
 ];
 
 const navMainItems: NavItem[] = [];

@@ -64,6 +64,11 @@ const SystemStatusManager = dynamic(
   { loading: () => tabFallback },
 );
 
+const IGoTab = dynamic(
+  () => import('@/components/igo/settings/igo-tab').then((mod) => mod.IGoTab),
+  { loading: () => tabFallback },
+);
+
 function systemConfigMap(configs: SystemConfig[]) {
   return configs.reduce<Record<string, SystemConfig>>((accumulator, config) => {
     accumulator[config.key] = config;
@@ -83,6 +88,7 @@ export function AdminSettingsPageClient() {
       'security',
       'operation',
       'system',
+      'igo',
       'other',
       'status',
       'info',
@@ -158,6 +164,9 @@ export function AdminSettingsPageClient() {
           >
             {t('tabs.system')}
           </TabsTrigger>
+          <TabsTrigger value='igo' className='px-0 pb-2 text-xs font-semibold'>
+            {t('tabs.igo')}
+          </TabsTrigger>
           <TabsTrigger
             value='other'
             className='px-0 pb-2 text-xs font-semibold'
@@ -192,6 +201,9 @@ export function AdminSettingsPageClient() {
             configs={configs}
             systemConfigsQuery={systemConfigsQuery}
           />
+        </TabsContent>
+        <TabsContent value='igo' className='focus-visible:outline-none'>
+          <IGoTab />
         </TabsContent>
         <TabsContent value='status' className='focus-visible:outline-none'>
           <SystemStatusManager />
