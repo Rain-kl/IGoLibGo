@@ -142,7 +142,9 @@ func LoginRequiredMiddleware(whitelist *extpoints.PathWhitelist, d *dao.DAO) gin
 
 		LogForAudit(c.Request.Context(), user, c)
 		ginutil.SetToContext(c, contracts.AuthUserObjKey, user)
+		//nolint:staticcheck // context keys shared across plugins via contracts.Auth* string constants
 		reqCtx := context.WithValue(c.Request.Context(), contracts.AuthUserObjKey, user)
+		//nolint:staticcheck // context keys shared across plugins via contracts.Auth* string constants
 		reqCtx = context.WithValue(reqCtx, contracts.AuthUserIDKey, user.ID)
 		c.Request = c.Request.WithContext(reqCtx)
 		c.Next()
@@ -176,7 +178,9 @@ func AdminRequiredMiddleware(d *dao.DAO) gin.HandlerFunc {
 
 		LogForAudit(c.Request.Context(), user, c)
 		ginutil.SetToContext(c, contracts.AuthUserObjKey, user)
+		//nolint:staticcheck // context keys shared across plugins via contracts.Auth* string constants
 		reqCtx := context.WithValue(c.Request.Context(), contracts.AuthUserObjKey, user)
+		//nolint:staticcheck // context keys shared across plugins via contracts.Auth* string constants
 		reqCtx = context.WithValue(reqCtx, contracts.AuthUserIDKey, user.ID)
 		c.Request = c.Request.WithContext(reqCtx)
 		c.Next()
