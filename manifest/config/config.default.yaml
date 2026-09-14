@@ -9,7 +9,7 @@ app:
   addr: ":8000"
   node_id: 1                  # Snowflake node ID (0-1023). Must be unique per instance.
   graceful_shutdown_timeout: 30
-  session_cookie_name: "wavelet_session_id"  # Change to something unique before deploy
+  session_cookie_name: "wavelet_session"     # Session Cookie 键名（默认：wavelet_session）
   session_secret: "<uniq-random-string>"         # Cannot be changed after first start
   session_domain: ""                             # e.g. ".yourdomain.com"
   session_age: 86400                             # Session lifetime in seconds (default: 24h)

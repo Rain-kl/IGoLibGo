@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -44,6 +44,7 @@ export function LoginForm({
 }: {
   onOTPStateChange?: (show: boolean) => void;
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser } = useAuth();
   const t = useTranslations('auth.login');
@@ -105,6 +106,18 @@ export function LoginForm({
     },
     onSuccess: (user) => {
       setUser(user);
+      const callbackUrl = searchParams.get('callbackUrl');
+      const storedRedirect =
+        typeof window !== 'undefined'
+          ? sessionStorage.getItem('redirect_after_login')
+          : null;
+      if (typeof window !== 'undefined' && storedRedirect) {
+        sessionStorage.removeItem('redirect_after_login');
+      }
+      const target = safeRedirectTarget(
+        callbackUrl || storedRedirect || '/home',
+      );
+      router.replace(target);
       toast.success(t('success'));
     },
     onError: (error: Error) => {
