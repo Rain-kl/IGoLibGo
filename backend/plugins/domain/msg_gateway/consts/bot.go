@@ -25,3 +25,11 @@ const (
 	CodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 	CodeLength   = 8
 )
+
+// Bot slash-command names. Lookup is case-insensitive.
+const (
+	CommandHelp   = "help"
+	CommandStart  = "start"
+	CommandMe     = "me"
+	CommandCancel = "cancel"
+)

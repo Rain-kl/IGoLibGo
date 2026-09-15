@@ -24,6 +24,7 @@
 | `wv-logstore` | 日志/分析用途表、`plugins/domain/risk_control/logstore`、切换日志主库、PG/SQLite 回落 |
 | `wv-file-upload` | 业务上传文件、Worker 程序化摄取、`upload.Ingest` / `contracts.StorageService`、文件访问与统计 |
 | `wv-push-notification` | 系统通知推送事件、统一触发器投递、带消息推送的业务功能 |
+| `wv-new-bot-command` | 业务插件注册 Bot 斜杠命令与多轮对话、`contracts.BotCommandRegistry`、自带 /help /me /cancel |
 | `wv-logging` | 结构化日志与链路追踪（`backend/pkg/logger` 基于 Zap + otelzap + 5000 行环形缓冲区，支持 Admin WebSocket 日志流）及 `contracts.LoggerService` |
 | `wv-release-guide` | 根据自上一正式版本 Tag 以来的提交整理 Version Bump 提交信息以触发双语 Release |
 | `code-review-skill` | 进行代码审查（Code Review）、PR 评审、代码质量与安全性审查、检查代码坏味道 |

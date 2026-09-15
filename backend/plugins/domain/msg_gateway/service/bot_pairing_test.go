@@ -118,5 +118,5 @@ func TestHandleInboundMessage_BoundUser(t *testing.T) {
 
 	err = service.HandleInboundMessage(ctx, inbound, sendFn)
 	require.NoError(t, err)
-	assert.Contains(t, sentText, "您的账号已成功绑定 Wavelet 平台")
+	assert.Equal(t, "", sentText)
 }
