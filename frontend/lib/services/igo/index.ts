@@ -4,6 +4,7 @@
 import { IGoCheckInService } from './checkin';
 import { IGoConfigService } from './config';
 import { IGoDashboardService } from './dashboard';
+import { IGoPipelineService } from './pipeline';
 import { IGoReservationService } from './reservation';
 import { IGoSessionService } from './session';
 import { IGoTaskService } from './tasks';
@@ -17,6 +18,7 @@ export * from './reservation';
 export * from './tasks';
 export * from './checkin';
 export * from './config';
+export * from './pipeline';
 
 export const IGoService = {
   dashboard: IGoDashboardService,
@@ -26,6 +28,7 @@ export const IGoService = {
   task: IGoTaskService,
   checkin: IGoCheckInService,
   config: IGoConfigService,
+  pipeline: IGoPipelineService,
 } as const;
 
 export default IGoService;

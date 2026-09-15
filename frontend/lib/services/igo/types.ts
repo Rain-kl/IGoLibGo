@@ -377,3 +377,110 @@ export interface BackupImportRequest {
   password: string;
   content: string;
 }
+
+export interface PipelineConfigDTO {
+  id: string;
+  name: string;
+  cookie?: string;
+  cookie_expires_at?: string;
+  cookie_valid?: boolean;
+  library_id: number;
+  library_name: string;
+  floor: string;
+  seat_key: string;
+  seat_name: string;
+  auto_checkin: boolean;
+  checkin_token?: string;
+  checkin_expires_at?: string;
+  checkin_token_valid?: boolean;
+  beacon_lat: string;
+  beacon_lng: string;
+  beacon_mac: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePipelineConfigRequest {
+  id: string;
+  name: string;
+  cookie?: string;
+  auth_code?: string;
+  auth_url?: string;
+  library_id: number;
+  library_name: string;
+  floor: string;
+  seat_key: string;
+  seat_name: string;
+  auto_checkin: boolean;
+  checkin_token?: string;
+  checkin_code?: string;
+  checkin_url?: string;
+  beacon_lat?: string;
+  beacon_lng?: string;
+  beacon_mac?: string;
+}
+
+export interface UpdatePipelineConfigRequest {
+  name?: string;
+  cookie?: string;
+  auth_code?: string;
+  auth_url?: string;
+  library_id?: number;
+  library_name?: string;
+  floor?: string;
+  seat_key?: string;
+  seat_name?: string;
+  auto_checkin?: boolean;
+  checkin_token?: string;
+  checkin_code?: string;
+  checkin_url?: string;
+  beacon_lat?: string;
+  beacon_lng?: string;
+  beacon_mac?: string;
+}
+
+export interface RunPipelineRequest {
+  cookie?: string;
+  auth_code?: string;
+  auth_url?: string;
+  checkin_token?: string;
+  checkin_code?: string;
+  checkin_url?: string;
+}
+
+export interface PipelineExecutionResult {
+  config_id: string;
+  name: string;
+  success: boolean;
+  need_auth?: string; // "LOGIN" | "CHECKIN"
+  auth_url?: string;
+  message: string;
+  reservation_status?: string;
+  checkin_status?: string;
+  executed_at: string;
+}
+
+export interface PipelineHelperVerifySessionRequest {
+  cookie?: string;
+  auth_code?: string;
+  auth_url?: string;
+}
+
+export interface PipelineHelperVerifySessionResponse {
+  valid: boolean;
+  cookie: string;
+  expires_at?: string;
+}
+
+export interface PipelineHelperVerifyCheckinRequest {
+  checkin_token?: string;
+  checkin_code?: string;
+  checkin_url?: string;
+}
+
+export interface PipelineHelperVerifyCheckinResponse {
+  valid: boolean;
+  token: string;
+  expires_at?: string;
+}
+
