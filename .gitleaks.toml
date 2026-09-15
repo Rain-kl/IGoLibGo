@@ -1,0 +1,49 @@
+# Copyright 2026 Arctel.net
+# SPDX-License-Identifier: Apache-2.0
+#
+# Note: 默认 gitleaks telegram 规则要求附近出现 telegr 标识符，会漏掉测试/配置里的裸 Bot Token — 见 .agents/notes/implemented/process/2026-09-15-gitleaks-code-check.md
+
+title = "Wavelet"
+
+[extend]
+useDefault = true
+
+# Telegram Bot API tokens are `<bot_id>:<secret>` where the secret is 35
+# url-safe chars starting with A. The bundled `telegram-bot-api-token` rule
+# also requires a nearby `telegr` identifier, so a map value like
+# `{"token": "123456789:A..."}` in tests or YAML is invisible to it.
+[[rules]]
+id = "telegram-bot-api-token-raw"
+description = "Telegram Bot API token without requiring a nearby telegram identifier"
+regex = '''(?:^|[^0-9])([0-9]{5,16}:A[A-Za-z0-9_-]{34})(?:$|[^A-Za-z0-9_-])'''
+tags = ["telegram", "token", "secret"]
+
+[[allowlists]]
+description = "local, generated, and vendor trees that are not source of record"
+paths = [
+    '''(^|/)\.git(/|$)''',
+    '''(^|/)node_modules(/|$)''',
+    '''(^|/)\.next(/|$)''',
+    '''(^|/)frontend/out(/|$)''',
+    '''(^|/)vendor(/|$)''',
+    '''(^|/)dist(/|$)''',
+    '''(^|/)bin(/|$)''',
+    '''(^|/)\.cache(/|$)''',
+    '''(^|/)uploads(/|$)''',
+    '''(^|/)data(/|$)''',
+    '''(^|/)backend/data(/|$)''',
+    '''(^|/)\.worktrees(/|$)''',
+    '''(^|/)\.idea(/|$)''',
+    '''(^|/)\.dmux(/|$)''',
+    '''(^|/)\.superpowers(/|$)''',
+]
+
+# Truncated UI examples (`at_xxx...`) and well-known dummy keys in skill docs.
+# Real credentials never use a trailing ellipsis or these short Stripe-shaped samples.
+[[allowlists]]
+description = "documentation placeholders that are not live credentials"
+regexTarget = "secret"
+regexes = [
+    '''\.\.\.$''',
+    '''(?i)^sk_live_(12345|abc123)$''',
+]

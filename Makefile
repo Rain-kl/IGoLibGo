@@ -1,4 +1,4 @@
-.PHONY: swagger license license-check build-embedded build-test cross-build code-check format canary
+.PHONY: swagger license license-check build-embedded build-test cross-build code-check security-check format canary
 
 VERSION ?= dev
 BUILD_DATE ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -36,8 +36,12 @@ build-embedded:
 		-o ../bin/wavelet \
 		main.go
 
+security-check:
+	@scripts/security_check.sh
+
 code-check:
 	@scripts/check_cordis_architecture.sh
+	@scripts/security_check.sh
 	cd backend && golangci-lint run
 	cd frontend && bunx tsc --noEmit --jsx preserve && bunx eslint . --max-warnings 0
 

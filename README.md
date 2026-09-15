@@ -231,7 +231,7 @@ make swagger
 # Format all backend Go code and frontend code
 make format
 
-# Run comprehensive architecture check, golangci-lint, TypeScript typecheck & ESLint
+# Run architecture check, gitleaks secret scan, golangci-lint, TypeScript typecheck & ESLint
 make code-check
 
 # Compile single embedded binary (frontend bundled inside backend)

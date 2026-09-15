@@ -66,6 +66,7 @@
 - 保持 `backend/pkg/` 绝对纯净，属于底层通用基础库，**严禁依赖项目上层包（如 `Wavelet/core/*`、`Wavelet/plugins/*`）**；保持 `backend/pkg/util/` 绝对纯净无状态，禁止导入 Gin、GORM、sessions 等 Web/数据库框架包。
 - 测试用例禁止硬编码相对路径创建临时目录，统一使用 Go 内置 `t.TempDir()`。
 - 修改 API Handler 后运行 `make swagger`，完成代码开发后必须依次运行 `make code-check` 与 `make format`。
+- **密钥与敏感信息禁入 Git**：严禁将真实 API Key、Token、私钥、密码、Webhook Secret 或云厂商凭据写入源代码、**测试文件**、示例/文档，或把含真实凭据的 `config.yaml` / `.env` 提交进 Git。测试与示例必须使用一眼可辨的占位符（如 `mock_token`、`test-secret`）；本地敏感配置保持 gitignore。提交前由 `make code-check` 调用 `scripts/security_check.sh`（gitleaks）拦截；确认为文档假阳性时可在该行加 `gitleaks:allow`。
 
 ### Cordis 架构核心防线与分层规范
 - **微内核 (`backend/core/`)**：

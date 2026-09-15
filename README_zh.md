@@ -231,7 +231,7 @@ make swagger
 # 格式化前后端代码（Go fmt + Biome format）
 make format
 
-# 执行全量质量门禁：Cordis 架构检查、golangci-lint、TypeScript 类型检查与 ESLint
+# 执行全量质量门禁：Cordis 架构检查、gitleaks 密钥扫描、golangci-lint、TypeScript 类型检查与 ESLint
 make code-check
 
 # 构建内嵌前端的独立单二进制执行程序
