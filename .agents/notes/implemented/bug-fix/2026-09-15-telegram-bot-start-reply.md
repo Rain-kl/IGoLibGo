@@ -13,6 +13,8 @@ Status: implemented
 1. **通用未鉴权私聊自动回复**：不注册单独的 `/start` 命令，对所有来自未绑定平台身份（`PlatformUserID`）的私聊消息，自动生成/复用 15 分钟内有效的 8 位配对码（如 `ABCD-EFGH`）并回复指导信息。对于已绑定的身份回复“账号已成功绑定”。
 2. **Bot Runner 生命周期管理**：在 `bot_runner.go` 中实现全量 Channel 加载、连接与平滑重启 (`Reload`)；默认在 `msg_gateway` 插件加载时启动 Runner，并在 Channel CRUD 提交后触发热加载。
 
+3. **`MessagePairingCode` 实体与 Goose SQL 迁移 Schema 严格对齐**：修复 Go 模型 `entity.MessagePairingCode` 错配包含不存在的 `id` 与 `user_id` 字段的问题，使其严格与 Goose SQL 迁移 `00001_initial.sql` 中 `code VARCHAR(16) PRIMARY KEY` 保持一致，消除 `no such column: w_message_pairing_codes.id` 数据库报错。
+
 ## Alternatives considered
 
 - **只硬编码处理 `/start` 命令**：否决。用户可能发送 `help`、`hello` 或点击 Telegram 内置按钮，统一对所有未鉴权/未绑定私聊消息回复配对码操作更加直观且不容易因指令拼写不同产生漏洞。
@@ -22,3 +24,4 @@ Status: implemented
 
 - 任何未绑定用户向 Bot 发送任何私聊消息都能立即拿到配对码进行绑定。
 - 后台 Bot 能够在服务启动及频道配置更新时平滑开启/热加载长轮询通道。
+- `w_message_pairing_codes` 表操作完全符合 Goose DDL 定义。
