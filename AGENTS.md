@@ -51,14 +51,6 @@
 | `deployment-patterns` | CI/CD Pipeline 设计、发布流程、金丝雀与回滚策略时 |
 | `e2e-testing` | 编写 Playwright 端到端测试、Page Object Model 与回归套件时 |
 | `tdd-workflow` | 执行测试驱动开发（TDD）完整 Red-Green-Refactor 流程与高覆盖率保证时 |
-| `using-superpowers` | 每次对话开始、面临任何开发任务前，优先检索与匹配可用 Skills 并规范执行 |
-| `brainstorming` | 接到新需求、做新特性/组件设计前，深入探索用户意图、技术权衡与架构边界 |
-| `systematic-debugging` | 遭遇代码缺陷、测试失败或意外行为时，强制按“重现-分析-假说证伪-修复”四步科学排错 |
-| `writing-plans` | 收到多步骤复杂任务时，动手写代码前先撰写带检查点与可验证步骤的结构化执行计划 |
-| `executing-plans` | 配合执行实现计划，分步验证，并在关键检查点与用户对齐确认 |
-| `verification-before-completion` | 声称修复/完成或 Git 提交前，强制运行验证命令并检查控制台真实输出证据 |
-| `receiving-code-review` | 收到 Code Review 反馈时，进行理性技术推导与实际验证，杜绝盲目认同或机械盲改 |
-| `using-git-worktrees` | 开启需要高度隔离的特性开发或执行多任务计划时，使用 Git Worktree 创建干净工作区 |
 
 ## 严格遵循事项 (Guardrails)
 

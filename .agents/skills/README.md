@@ -6,12 +6,11 @@
 
 ## 一、技能总览与上游分类
 
-本项目采用**目录源码直入（非 Git Submodule）**方式引入外部技能，确保仓库轻量、自包含且不受子模块指针冲突影响。当前共收录 **45 个技能**，来源分为以下五大类：
+本项目采用**目录源码直入（非 Git Submodule）**方式引入外部技能，确保仓库轻量、自包含且不受子模块指针冲突影响。当前共收录 **37 个技能**，来源分为以下四大类：
 
 | 来源分类 | 技能数量 | 官方仓库地址 | 仓库内路径 |
 | :--- | :---: | :--- | :--- |
 | **ECC 社区体系** | 25 | `https://github.com/affaan-m/ECC` | `skills/<skill-name>` |
-| **Superpowers 开发流程** | 8 | `https://github.com/obra/superpowers` | `skills/<skill-name>` |
 | **DeepSeek 决策沉淀** | 1 | `https://github.com/czm15053/write-notes-like-deepseek` | 根目录全包 |
 | **自动化目标循环** | 1 | `https://github.com/dave1010/autoresearch` | 根目录全包 |
 | **Wavelet 自研/内核业务** | 10 | `https://github.com/Rain-kl/Wavelet` (当前项目) | `.agents/skills/<skill-name>` |
@@ -20,24 +19,7 @@
 
 ## 二、全量 Skills 详细索引表
 
-### 1. Superpowers 开发流程治理体系 (8 个)
-
-上游仓库统一为：[`https://github.com/obra/superpowers`](https://github.com/obra/superpowers)
-
-| Skill 名称 | 上游路径 | 核心作用与职责 | 更新说明 |
-| :--- | :--- | :--- | :--- |
-| `using-superpowers` | `skills/using-superpowers` | **总开关与元技能**：强制 Agent 治愈懒惰与自作主张，在开始任何任务前优先检索、激活并规范执行匹配的 Skills。 | 覆盖更新 `SKILL.md` 与 `references/` |
-| `brainstorming` | `skills/brainstorming` | 需求与方案头脑风暴：在动手编写代码前，与开发者互动探索深层意图、多方案对比与架构权衡（契合 Think Before Coding）。 | 覆盖更新 `SKILL.md` 与子目录 |
-| `systematic-debugging` | `skills/systematic-debugging` | 系统化科学排错：严禁病急乱投医乱改代码，强制按“①最小复现 → ②根因链诊断 → ③假说证伪 → ④验证修复”执行。 | 覆盖更新 `SKILL.md` 与脚本文档 |
-| `writing-plans` | `skills/writing-plans` | 编写落地计划：面对多步骤复杂任务时，在动工前产出带检查点（Checkpoints）、可验证步骤的结构化执行计划。 | 覆盖更新 `SKILL.md` 与评审提示 |
-| `executing-plans` | `skills/executing-plans` | 执行实现计划：分步推进任务，按计划执行并在关键检查点暂停与用户对齐确认。 | 覆盖更新 `SKILL.md` |
-| `verification-before-completion` | `skills/verification-before-completion` | **完成前硬性实证验证**：声称修复/完成或 Git 提交前，必须在终端执行测试/验证命令，用控制台真实输出作为证据。 | 覆盖更新 `SKILL.md` |
-| `receiving-code-review` | `skills/receiving-code-review` | 理性响应代码审查反馈：严禁无脑附和或机械盲改，要求经过技术推导与实证验证后有理有据地采纳或反驳。 | 覆盖更新 `SKILL.md` |
-| `using-git-worktrees` | `skills/using-git-worktrees` | Git Worktree 环境隔离：为新特性或计划执行创建独立的物理目录分支，避免污染主工作树。 | 覆盖更新 `SKILL.md` |
-
----
-
-### 2. ECC 社区技能体系 (24 个)
+### 1. ECC 社区技能体系 (25 个)
 
 上游仓库统一为：[`https://github.com/affaan-m/ECC`](https://github.com/affaan-m/ECC)
 
@@ -71,7 +53,7 @@
 
 ---
 
-### 3. 独立开源 Agent 生态技能 (2 个)
+### 2. 独立开源 Agent 生态技能 (2 个)
 
 | Skill 名称 | 官方仓库地址 | 仓库内路径 | 核心作用与职责 | 更新说明 |
 | :--- | :--- | :--- | :--- | :--- |
@@ -80,7 +62,7 @@
 
 ---
 
-### 4. Wavelet 自研/核心业务与框架技能 (10 个)
+### 3. Wavelet 自研/核心业务与框架技能 (10 个)
 
 上游仓库统一为当前开源主仓库：[`https://github.com/Rain-kl/Wavelet`](https://github.com/Rain-kl/Wavelet)  
 存放路径：`.agents/skills/<skill-name>`  
@@ -124,19 +106,13 @@ bash scripts/update_skills.sh --help
 # 查看所有技能及其对应仓库
 bash scripts/update_skills.sh --list
 
-# 更新单个 Superpowers 技能（例：systematic-debugging）
-bash scripts/update_skills.sh systematic-debugging
-
-# 一键更新全部 8 个 Superpowers 技能
-bash scripts/update_skills.sh --all-sp
-
 # 更新单个 ECC 技能（例：golang-patterns）
 bash scripts/update_skills.sh golang-patterns
 
 # 一键更新全部 25 个 ECC 技能
 bash scripts/update_skills.sh --all-ecc
 
-# 一键更新所有外部依赖技能 (Superpowers + ECC + DeepSeek + Autoresearch)
+# 一键更新所有外部依赖技能 (ECC + DeepSeek + Autoresearch)
 bash scripts/update_skills.sh --all
 ```
 
@@ -144,18 +120,7 @@ bash scripts/update_skills.sh --all
 
 ### 方法 B：单项手动更新命令（Shell 快速执行）
 
-#### 场景 1：更新 Superpowers 仓库中的技能
-```bash
-git clone --depth 1 https://github.com/obra/superpowers /tmp/sp-temp
-
-# 拷贝指定技能
-cp -R /tmp/sp-temp/skills/systematic-debugging .agents/skills/
-cp -R /tmp/sp-temp/skills/verification-before-completion .agents/skills/
-
-rm -rf /tmp/sp-temp
-```
-
-#### 场景 2：更新 ECC 仓库中的技能
+#### 场景：更新 ECC 仓库中的技能
 ```bash
 git clone --depth 1 https://github.com/affaan-m/ECC /tmp/ECC-temp
 
