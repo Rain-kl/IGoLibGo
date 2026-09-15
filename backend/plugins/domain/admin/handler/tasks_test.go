@@ -7,6 +7,7 @@ import (
 	"Wavelet/core"
 	"Wavelet/core/contracts"
 	"Wavelet/core/extpoints"
+	"Wavelet/pkg/response"
 	"Wavelet/plugins/domain/admin/handler"
 	"Wavelet/plugins/domain/admin/service"
 	"Wavelet/plugins/drivers/driver_asynq_worker"
@@ -21,8 +22,8 @@ import (
 )
 
 type listTaskTypesResponse struct {
-	ErrorMsg string                  `json:"error_msg"`
-	Data     []contracts.TaskMetaDTO `json:"data"`
+	Error *response.ErrorBody     `json:"error"`
+	Data  []contracts.TaskMetaDTO `json:"data"`
 }
 
 func TestListTaskTypesHandler(t *testing.T) {
@@ -65,7 +66,7 @@ func TestListTaskTypesHandler(t *testing.T) {
 
 	var resp listTaskTypesResponse
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Empty(t, resp.ErrorMsg)
+	assert.Nil(t, resp.Error)
 	require.NotEmpty(t, resp.Data)
 
 	var found bool

@@ -1,7 +1,7 @@
 /**
  * Wavelet 统一 API 响应信封解析。
  * 与后端 pkg/response.Response 及 axios api-client 约定一致。
- * 全面支持 api-design 标准结构化错误 { error: { code, message, details } } 与兼容字段 error_msg。
+ * 全面支持 api-design 标准结构化错误 { error: { code, message, details } }。
  */
 
 export interface ApiEnvelope<T = unknown> {
@@ -11,7 +11,6 @@ export interface ApiEnvelope<T = unknown> {
     message: string;
     details?: unknown;
   };
-  error_msg?: string;
   meta?: {
     total?: number;
     page?: number;
@@ -36,12 +35,12 @@ function hasEnvelopeShape(value: unknown): value is ApiEnvelope<unknown> {
   if (!value || typeof value !== 'object') {
     return false;
   }
-  return 'data' in value || 'error' in value || 'error_msg' in value;
+  return 'data' in value || 'error' in value;
 }
 
 /**
  * 解析 fetch 响应体中的 API 信封。
- * - 优先提取 error.message，回退至 error_msg
+ * - 提取 error.message
  * - HTTP 非 2xx：以业务错误或回退文案抛错
  * - HTTP 200 但存在错误体：视为业务失败
  */
@@ -61,7 +60,7 @@ export async function readApiEnvelope<T>(
   }
 
   const envelope = body as ApiEnvelope<T>;
-  const errMsg = envelope.error?.message || envelope.error_msg;
+  const errMsg = envelope.error?.message;
   const errCode = envelope.error?.code;
 
   if (!res.ok) {

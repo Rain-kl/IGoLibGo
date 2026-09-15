@@ -1312,9 +1312,6 @@ definitions:
   response.Any:
     properties:
       data: {}
-      error_msg:
-        example: ""
-        type: string
     type: object
   response.AnyError:
     properties:

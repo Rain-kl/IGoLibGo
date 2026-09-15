@@ -73,7 +73,8 @@ func TestErrorHandlerMiddleware_APIErrorStatusCodes(t *testing.T) {
 
 			var body Response[any]
 			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-			assert.Equal(t, tc.message, body.ErrorMsg)
+			require.NotNil(t, body.Error)
+			assert.Equal(t, tc.message, body.Error.Message)
 			assert.Nil(t, body.Data)
 		})
 	}
@@ -95,7 +96,7 @@ func TestErrorHandlerMiddleware_SkipsWhenNoErrors(t *testing.T) {
 	var body Response[string]
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
 	assert.Equal(t, "success", body.Data)
-	assert.Empty(t, body.ErrorMsg)
+	assert.Nil(t, body.Error)
 }
 
 func TestErrorHandlerMiddleware_SkipsWhenResponseAlreadyWritten(t *testing.T) {
@@ -114,7 +115,7 @@ func TestErrorHandlerMiddleware_SkipsWhenResponseAlreadyWritten(t *testing.T) {
 
 	var body Response[any]
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-	assert.Empty(t, body.ErrorMsg)
+	assert.Nil(t, body.Error)
 	assert.Nil(t, body.Data)
 }
 
@@ -133,7 +134,8 @@ func TestErrorHandlerMiddleware_FallbackForNonAPIError(t *testing.T) {
 
 	var body Response[any]
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-	assert.Equal(t, "内部系统错误", body.ErrorMsg)
+	require.NotNil(t, body.Error)
+	assert.Equal(t, "内部系统错误", body.Error.Message)
 	assert.Nil(t, body.Data)
 }
 

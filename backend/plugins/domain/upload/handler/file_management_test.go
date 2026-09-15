@@ -5,6 +5,7 @@ package handler
 
 import (
 	"Wavelet/core/contracts"
+	"Wavelet/pkg/response"
 	"Wavelet/plugins/domain/upload/models"
 	"Wavelet/plugins/domain/upload/shared"
 	"encoding/json"
@@ -48,15 +49,15 @@ func TestGetDistinctUploadTypes(t *testing.T) {
 	}
 
 	var resp struct {
-		ErrorMsg string   `json:"error_msg"`
-		Data     []string `json:"data"`
+		Error *response.ErrorBody `json:"error"`
+		Data  []string            `json:"data"`
 	}
 	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("failed to parse JSON: %v", err)
 	}
 
-	if resp.ErrorMsg != "" {
-		t.Fatalf("unexpected error: %s", resp.ErrorMsg)
+	if resp.Error != nil {
+		t.Fatalf("unexpected error: %+v", resp.Error)
 	}
 
 	if len(resp.Data) != 1 || resp.Data[0] != "custom_type_xyz" {

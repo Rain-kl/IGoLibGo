@@ -155,9 +155,9 @@ function initiateLogin(currentPath: string): Promise<never> {
   return new Promise<never>(() => {});
 }
 
-/** 从响应体中安全提取错误信息，优先使用 api-design 标准错误体，回退至兼容字段 */
+/** 从响应体中安全提取错误信息，使用 api-design 标准错误体 */
 function extractErrorMessage(data?: ApiError, fallback = '操作失败'): string {
-  return data?.error?.message || data?.error_msg || fallback;
+  return data?.error?.message || fallback;
 }
 
 /** 从响应体中安全提取错误代码 */
@@ -181,7 +181,7 @@ apiClient.interceptors.response.use(
     pendingRequests.delete(requestKey);
 
     const resData = response.data as ApiError & ApiResponse;
-    if (resData && (resData.error || resData.error_msg)) {
+    if (resData && resData.error) {
       const errMsg = extractErrorMessage(resData);
       const errCode = extractErrorCode(resData);
       return Promise.reject(new ApiErrorBase(errMsg, errCode));
@@ -291,10 +291,7 @@ apiClient.interceptors.response.use(
     }
 
     /* 其他后端返回的结构化错误 */
-    if (
-      error.response?.data &&
-      (error.response.data.error || error.response.data.error_msg)
-    ) {
+    if (error.response?.data && error.response.data.error) {
       const message = extractErrorMessage(error.response.data);
       const errCode = extractErrorCode(error.response.data);
       const details = extractErrorDetails(error.response.data);

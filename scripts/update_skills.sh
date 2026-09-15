@@ -3,7 +3,6 @@
 # Wavelet Agent Skills 离线拉取与更新工具
 # 用法:
 #   ./scripts/update_skills.sh <skill-name>
-#   ./scripts/update_skills.sh --all-sp
 #   ./scripts/update_skills.sh --all-ecc
 #   ./scripts/update_skills.sh --all
 #   ./scripts/update_skills.sh --list
@@ -14,21 +13,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SKILLS_DIR="$ROOT_DIR/.agents/skills"
 
-SP_REPO="https://github.com/obra/superpowers"
 ECC_REPO="https://github.com/affaan-m/ECC"
 DSH_REPO="https://github.com/czm15053/write-notes-like-deepseek"
 AUTORESEARCH_REPO="https://github.com/dave1010/autoresearch"
-
-SP_SKILLS=(
-  "using-superpowers"
-  "brainstorming"
-  "systematic-debugging"
-  "writing-plans"
-  "executing-plans"
-  "verification-before-completion"
-  "receiving-code-review"
-  "using-git-worktrees"
-)
 
 ECC_SKILLS=(
   "accessibility"
@@ -64,15 +51,12 @@ Wavelet Agent Skills 离线更新工具
 
 用法:
   $0 <skill-name>        更新指定的单个 Skill
-  $0 --all-sp            批量更新所有 8 个 Superpowers 流程治理技能
   $0 --all-ecc           批量更新所有 25 个 ECC 社区技能
-  $0 --all               更新所有外部技能 (Superpowers + ECC + DeepSeek + Autoresearch)
+  $0 --all               更新所有外部技能 (ECC + DeepSeek + Autoresearch)
   $0 --list              列出本地已安装技能及其上游来源
   $0 --help              显示本帮助信息
 
 示例:
-  $0 systematic-debugging
-  $0 verification-before-completion
   $0 golang-patterns
   $0 write-notes-like-deepseek
 USAGE
@@ -83,9 +67,7 @@ list_skills() {
   for d in "$SKILLS_DIR"/*; do
     if [ -d "$d" ]; then
       s="$(basename "$d")"
-      if [[ " ${SP_SKILLS[*]} " =~ " ${s} " ]]; then
-        printf "  %-32s -> %s\n" "$s" "[Superpowers] $SP_REPO"
-      elif [[ " ${ECC_SKILLS[*]} " =~ " ${s} " ]]; then
+      if [[ " ${ECC_SKILLS[*]} " =~ " ${s} " ]]; then
         printf "  %-32s -> %s\n" "$s" "[ECC] $ECC_REPO"
       elif [ "$s" = "write-notes-like-deepseek" ]; then
         printf "  %-32s -> %s\n" "$s" "[DeepSeek Notes] $DSH_REPO"
@@ -96,47 +78,6 @@ list_skills() {
       fi
     fi
   done
-}
-
-update_sp_skill() {
-  local target="$1"
-  local tmp_dir
-  tmp_dir="$(mktemp -d -t sp_update_XXXXXX)"
-  trap 'rm -rf "$tmp_dir"' EXIT
-
-  echo "==> 正在拉取 Superpowers 仓库 (浅克隆)..."
-  git clone --depth 1 "$SP_REPO" "$tmp_dir/SP"
-
-  if [ ! -d "$tmp_dir/SP/skills/$target" ]; then
-    echo "❌ 错误: Superpowers 仓库中未找到技能 '$target'" >&2
-    exit 1
-  fi
-
-  echo "==> 覆盖更新 $target ..."
-  rm -rf "$SKILLS_DIR/$target"
-  cp -R "$tmp_dir/SP/skills/$target" "$SKILLS_DIR/$target"
-  echo "✓ 技能 '$target' 已成功更新至最新版本！"
-}
-
-update_all_sp() {
-  local tmp_dir
-  tmp_dir="$(mktemp -d -t sp_update_XXXXXX)"
-  trap 'rm -rf "$tmp_dir"' EXIT
-
-  echo "==> 正在拉取 Superpowers 仓库最新代码..."
-  git clone --depth 1 "$SP_REPO" "$tmp_dir/SP"
-
-  echo "==> 批量更新 8 个 Superpowers 技能..."
-  for s in "${SP_SKILLS[@]}"; do
-    if [ -d "$tmp_dir/SP/skills/$s" ]; then
-      rm -rf "$SKILLS_DIR/$s"
-      cp -R "$tmp_dir/SP/skills/$s" "$SKILLS_DIR/$s"
-      echo "  ✓ 已更新: $s"
-    else
-      echo "  ⚠ 警告: 上游未找到 $s"
-    fi
-  done
-  echo "✓ 全部 Superpowers 流程技能更新完成！"
 }
 
 update_ecc_skill() {
@@ -231,14 +172,10 @@ main() {
     --list|-l)
       list_skills
       ;;
-    --all-sp)
-      update_all_sp
-      ;;
     --all-ecc)
       update_all_ecc
       ;;
     --all)
-      update_all_sp
       update_all_ecc
       update_deepseek_note
       update_autoresearch
@@ -251,9 +188,7 @@ main() {
       update_autoresearch
       ;;
     *)
-      if [[ " ${SP_SKILLS[*]} " =~ " $1 " ]]; then
-        update_sp_skill "$1"
-      elif [[ " ${ECC_SKILLS[*]} " =~ " $1 " ]]; then
+      if [[ " ${ECC_SKILLS[*]} " =~ " $1 " ]]; then
         update_ecc_skill "$1"
       else
         echo "❌ 技能 '$1' 不是外部管理的第三方技能，或不存在于已知技能列表中。"

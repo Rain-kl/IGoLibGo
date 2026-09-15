@@ -51,14 +51,6 @@
 | `deployment-patterns` | CI/CD Pipeline 设计、发布流程、金丝雀与回滚策略时 |
 | `e2e-testing` | 编写 Playwright 端到端测试、Page Object Model 与回归套件时 |
 | `tdd-workflow` | 执行测试驱动开发（TDD）完整 Red-Green-Refactor 流程与高覆盖率保证时 |
-| `using-superpowers` | 每次对话开始、面临任何开发任务前，优先检索与匹配可用 Skills 并规范执行 |
-| `brainstorming` | 接到新需求、做新特性/组件设计前，深入探索用户意图、技术权衡与架构边界 |
-| `systematic-debugging` | 遭遇代码缺陷、测试失败或意外行为时，强制按“重现-分析-假说证伪-修复”四步科学排错 |
-| `writing-plans` | 收到多步骤复杂任务时，动手写代码前先撰写带检查点与可验证步骤的结构化执行计划 |
-| `executing-plans` | 配合执行实现计划，分步验证，并在关键检查点与用户对齐确认 |
-| `verification-before-completion` | 声称修复/完成或 Git 提交前，强制运行验证命令并检查控制台真实输出证据 |
-| `receiving-code-review` | 收到 Code Review 反馈时，进行理性技术推导与实际验证，杜绝盲目认同或机械盲改 |
-| `using-git-worktrees` | 开启需要高度隔离的特性开发或执行多任务计划时，使用 Git Worktree 创建干净工作区 |
 
 ## 严格遵循事项 (Guardrails)
 
@@ -122,8 +114,8 @@
 - **标准信封**：
   - 成功数据：`{ "data": ... }`
   - 分页数据：`{ "data": [...], "meta": { "total": ..., "page": ..., "per_page": ... } }`
-  - 错误数据：`{ "error": { "code": "...", "message": "...", "details": [...] } }`
-  - 兼容字段：`error_msg` 会在错误响应中继续透出，无缝向下兼容老前端调用。
+  - 错误数据：`{ "error": { "code": "...", "message": "...", "details": [...] }, "data": null }`
+  - 统一规范：全面收敛至 `error` 结构体，彻底移除旧版顶层 `error_msg` 字段。
 - **错误文案**：使用语义化、清晰的错误文案或错误码（snake_case，如 `validation_error`, `user_not_found`），禁止暴露底层数据库/系统错误细节给客户端。
 - **Service/Logics 分工**：业务逻辑层只接受 `context.Context`，返回 `(result, error)`，严禁依赖 `*gin.Context` 或调用 `c.JSON`/`Abort*`。
 - **错误日志**：底层错误在 Handler/Logic 边界用 `backend/pkg/logger` 打印日志，禁止使用 `_ = ...` 静默吞掉关键错误。
@@ -167,7 +159,7 @@
     - 支持语言：`zh-CN`、`en`；默认 `zh-CN`。
     - 解析优先级：cookie `NEXT_LOCALE`（用户显式选择）→ 浏览器语言 → 默认 `zh-CN`。
     - 文案统一放在 `frontend/messages/{locale}.json`，按命名空间嵌套（`common` / `layout` / `auth` / `settings` / 业务域）。
-    - 组件内用户可见文案必须通过 `useTranslations()` / `getTranslations()` 读取；**禁止**新增中英硬编码 UI 字符串（后端返回的 `error_msg`、日志、调试信息除外）。
+    - 组件内用户可见文案必须通过 `useTranslations()` / `getTranslations()` 读取；**禁止**新增中英硬编码 UI 字符串（后端返回的 `error.message`、日志、调试信息除外）。
     - key 使用 camelCase 分层（如 `auth.login.submit`）；完整短语作为 value，禁止在组件内拼接句子。
     - 新增或修改文案时必须**同步**更新 `zh-CN.json` 与 `en.json`，保持 key 树一致。
     - 语言选项展示用自称：`中文` / `English`（不随当前 UI 语言翻译）。

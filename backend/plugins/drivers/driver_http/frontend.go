@@ -10,6 +10,8 @@ import (
 	"path"
 	"strings"
 
+	"Wavelet/pkg/response"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,7 +34,7 @@ func registerFrontend(engine *gin.Engine, assets fs.FS) {
 		}
 
 		if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead {
-			c.JSON(http.StatusMethodNotAllowed, gin.H{"error_msg": "Method not allowed"})
+			c.JSON(http.StatusMethodNotAllowed, response.ErrWithCode("method_not_allowed", "Method not allowed"))
 			return
 		}
 

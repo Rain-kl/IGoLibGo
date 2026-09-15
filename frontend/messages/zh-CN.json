@@ -1572,7 +1572,6 @@
         "desc": "所有 API 响应遵循统一信封格式。",
         "responseFormat": "响应格式",
         "responseFormatDesc": "所有接口均返回以下 JSON 结构：",
-        "errorMsgDesc": "成功时为空字符串，失败时为可读错误信息",
         "dataDesc": "业务数据，结构因接口而异",
         "successExample": "成功响应示例",
         "failExample": "失败响应示例",

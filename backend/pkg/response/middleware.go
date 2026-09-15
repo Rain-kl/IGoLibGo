@@ -35,7 +35,6 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 				errCode = httpStatusToErrorCode(apiErr.Code)
 			}
 			c.JSON(apiErr.Code, ErrorResponse{
-				ErrorMsg: apiErr.Msg,
 				Error: ErrorBody{
 					Code:    errCode,
 					Message: apiErr.Msg,
@@ -47,7 +46,6 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
-			ErrorMsg: "内部系统错误",
 			Error: ErrorBody{
 				Code:    "internal_server_error",
 				Message: "内部系统错误",

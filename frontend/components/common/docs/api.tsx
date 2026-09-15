@@ -73,15 +73,6 @@ export function getApiSections(t: TFn): PolicySection[] {
                   等，仅列表接口返回）
                 </DocsTableCell>
               </DocsTableRow>
-              <DocsTableRow>
-                <DocsTableCell className='font-mono text-xs'>
-                  error_msg
-                </DocsTableCell>
-                <DocsTableCell>string</DocsTableCell>
-                <DocsTableCell>
-                  {t('api.section1.errorMsgDesc')}（向下兼容字段）
-                </DocsTableCell>
-              </DocsTableRow>
             </DocsTableBody>
           </DocsTable>
 
@@ -104,7 +95,6 @@ export function getApiSections(t: TFn): PolicySection[] {
     "code": "bad_request",
     "message": "${t('api.section1.failExampleErrorMsg')}"
   },
-  "error_msg": "${t('api.section1.failExampleErrorMsg')}",
   "data": null
 }`}
             language='json'
