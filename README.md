@@ -1,6 +1,6 @@
-# wavelet
+# Wavelet - IGoLibrary
 
-🚀 A modern, production-ready full-stack boilerplate for building scalable web applications
+🚀 A modern, production-ready full-stack library automation and intelligent service platform
 
 [中文](./README_zh.md)
 
@@ -11,34 +11,40 @@
 
 ## 📖 Introduction
 
-**wavelet** is a generic, production-ready full-stack boilerplate built on **Go (Gin + GORM)** with a **Cordis-inspired microkernel plugin architecture** on the backend and **Next.js (App Router + Shadcn UI + Tailwind CSS 4)** on the frontend. It ships with everything you need to bootstrap a modern SaaS, internal tool, or developer platform — without the boilerplate headaches.
+**Wavelet - IGoLibrary** is a production-ready full-stack application built on top of the **Cordis microkernel pluggable architecture**, powered by **Go (Gin + GORM)** on the backend and **Next.js 16 (App Router + React 19 + Shadcn UI + Tailwind CSS 4)** on the frontend. The project is dedicated to providing high-performance, reliable experiences for library automated seat reservations, seat grabbing, auto-renewal, global seat leak scanning, and remote iBeacon check-ins.
 
-The project was designed from the ground up to be **framework-first and business-agnostic**: plug in your own domain logic or downstream custom plugins while reusing the battle-tested infrastructure that comes out of the box.
+The project adopts a layered design of **Microkernel + Self-contained Plugins**: the lower layer relies on Wavelet's general infrastructure (dual database dialects, multi-tier caching, message gateway, task queue) to provide solid foundation support, while the upper layer implements the complete IGoLibrary business ecosystem in `backend/igo-lib/plugins/igo`.
 
 ### ✨ Key Features
 
-- 🧩 **Cordis Microkernel Architecture** — Decoupled design with kernel lifecycle, service contracts (`contracts`), domain event bus, and modular plugins (`drivers`, `infra`, `domain`, `downstream`)
-- 🔐 **Multi-auth System** — Local password login/registration + pluggable OIDC/OAuth2 providers (supports multiple auth sources simultaneously)
-- 🗝️ **Personal Access Tokens (PAT)** — API key management for programmatic access; supports `Authorization: Bearer` and `X-Access-Token` headers
-- 👤 **User & Access Management** — Admin panel for listing, searching, filtering, and enabling/disabling user accounts
-- ⚙️ **Dynamic System Config & Settings** — Declarative schema with live reload and admin UI control
-- 📋 **Async Task Queue & Scheduler** — Background job processing with [Asynq](https://github.com/hibiken/asynq) (Redis-backed) and in-process cron scheduler with execution dashboard
-- 💾 **Dual-Dialect Database** — PostgreSQL support with zero-config SQLite fallback, embedded dual-dialect Goose SQL migrations, plus ClickHouse for analytics and log stores
-- ⚡ **Multi-tier Cache** — High-performance 3-layer cache (RAM L1 + Redis L2 + DB L3) with distributed Pub/Sub cache invalidation
-- 📁 **Unified Storage** — S3-compatible, Aliyun OSS, Local disk, and WebDAV storage engines with local disk caching
-- 📊 **Observability** — Structured logging (Zap) + distributed tracing (OpenTelemetry) + ring buffer log streaming
-- 🌐 **Internationalization (i18n)** — Built-in bilingual support (`zh-CN` / `en`) powered by `next-intl`
-- 🎨 **Modern UI** — Responsive, dark-mode-ready design system built with Next.js 16, React 19, Tailwind CSS 4, and Shadcn UI
-- 📦 **Single Embedded Binary** — Compile frontend and backend into a single self-contained binary with zero deployment dependencies
-- 📖 **Built-in Documentation** — Integrated docs portal with usage guides, Swagger API reference, privacy policy, and terms of service
+- ⚡ **"All-in-One" Automation Pipeline** — Multi-account/card-based automated seat reservation and remote check-in, completing "seat lookup $\rightarrow$ seat locking $\rightarrow$ iBeacon-based simulated check-in" in one click. Built-in credential validity probing, re-authorization guidance on expiration, and an execution dashboard.
+- 🤖 **Message Gateway & Bot Integration** — Supports slash commands (`/help`, `/show`, `/run [ID]`) across Telegram / QQ bot platforms, automatically pushes WeChat OAuth authorization links on credential expiration, and supports interactive credential entry.
+- 🚀 **4 Automation Engines** — 
+  - **Seat Grabbing Engine**: Second-level scheduled polling and concurrent reservation strategies;
+  - **Seat Occupation Engine**: Monitors seated status and automatically renews seats before release;
+  - **Global Seat Leak Engine**: Scans across multiple venues and locks available seats in real time;
+  - **Tomorrow Reservation Engine**: Preloads tomorrow's open seats and triggers scheduled reservation.
+- 🏛️ **Interactive Venue Navigation** — Fetches real-time seat layout diagrams, supporting quick seat search, selection, favorite seat lists, and custom seat remark tags.
+- 🧩 **Cordis Microkernel Architecture** — Decoupled design with kernel lifecycle, service contracts (`contracts`), domain event bus, and modular plugins (`drivers`, `infra`, `domain`, `igo`).
+- 🔐 **Multi-Authentication System** — Local username/password login/registration + WeChat OAuth authorization binding, supporting token masking and live refresh.
+- ⚙️ **Dynamic System Config & Settings** — Declarative schema configuration management with live hot-reloading, controllable directly via the admin UI.
+- 📋 **Async Task Queue & Cron Scheduling** — Background task processing based on [Asynq](https://github.com/hibiken/asynq) (Redis-backed) and in-process Cron scheduler with a task execution dashboard.
+- 💾 **Dual-Dialect Database Support** — Deep support for PostgreSQL with zero-config SQLite fallback, embedded dual-dialect Goose SQL migrations; supports ClickHouse analytics and log storage.
+- ⚡ **Multi-Tier Cache System** — High-performance 3-layer caching (RAM L1 + Redis L2 + DB L3) with distributed Pub/Sub cache invalidation broadcasting.
+- 📊 **Full Observability** — Structured logging (Zap) + distributed tracing (OpenTelemetry) + real-time memory ring buffer log streaming.
+- 🌐 **Full Internationalization (i18n)** — Bilingual support (`zh-CN` / `en`) powered by `next-intl`.
+- 🎨 **Modern UI** — Responsive, dark-mode-ready design system built with Next.js 16, React 19, Tailwind CSS 4, and Shadcn UI.
+- 📦 **Single Embedded Binary Deployment** — Full embedded frontend build assets into Go binary for zero-dependency single-file deployment.
 
 ## 🏗️ Architecture Overview
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                     Frontend (Next.js 16)                    │
-│   • React 19          • Tailwind CSS 4      • Shadcn UI      │
-│   • TypeScript        • next-intl (i18n)    • TanStack Query │
+│                    Frontend (Next.js 16 App Router)          │
+│   • All-in-One Pipeline (/pipeline) • Seat Grabbing (/grab)   │
+│   • Seat Occupation (/occupy)       • Seat Leak (/leak)      │
+│   • Tomorrow Reserve (/tomorrow)    • Venue Guide (/venue)   │
+│   • React 19 / Tailwind CSS 4 / Shadcn UI / next-intl        │
 └──────────────────────────────┬───────────────────────────────┘
                                │ HTTP / WebSocket (Port: 8000)
 ┌──────────────────────────────▼───────────────────────────────┐
@@ -52,16 +58,16 @@ The project was designed from the ground up to be **framework-first and business
 │  └──────────────────────────┬─────────────────────────────┘  │
 │                             │                                │
 │  ┌──────────────────────────▼─────────────────────────────┐  │
-│  │              Modular Plugins (plugins/ & downstream/)  │  │
+│  │           Modular Plugins (plugins/ & igo-lib/)        │  │
 │  │  • Drivers: HTTP (Gin + Embed UI), Asynq Worker, Cron  │  │
 │  │  • Infra: Database (Goose), Redis, Cache, Storage      │  │
-│  │  • Domain: Auth, User, Admin, Upload, System, Risk     │  │
-│  │  • Downstream: Custom business plugins                 │  │
+│  │  • Domain: Auth, User, Admin, Upload, MsgGateway, Risk │  │
+│  │  • Business: IGoLibrary downstream plugin (igo)        │  │
 │  └────────────────────────────────────────────────────────┘  │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │                     CLI Commands (cmd/)                │  │
-│  │  • all (Default)   • api     • worker     • scheduler  │  │
+│  │  • all (Fusion Mode) • api    • worker   • scheduler   │  │
 │  └────────────────────────────────────────────────────────┘  │
 └──────────────────────────────┬───────────────────────────────┘
                                │
@@ -100,13 +106,14 @@ The project was designed from the ground up to be **framework-first and business
 - **[Shadcn UI](https://github.com/shadcn-ui/ui)** & **[Radix UI](https://www.radix-ui.com/)** — Accessible, composable component library
 - **[next-intl](https://next-intl-docs.vercel.app/)** — Type-safe internationalization without URL routing prefixes
 - **[Bun](https://bun.sh/)** — Fast JavaScript package manager and runtime
+- **[Playwright](https://playwright.dev/)** — End-to-End (E2E) automated testing suite
 
 ## 📋 Requirements
 
 - **Go** >= 1.25
-- **Bun** >= 1.2 (for frontend dependency management and builds)
+- **Bun** >= 1.2 (for frontend dependency management, builds, and Playwright E2E testing)
 - **Node.js** >= 18.0 (optional when using Bun)
-- **PostgreSQL** >= 14 (optional; SQLite fallback works out of the box with zero external dependencies)
+- **PostgreSQL** >= 14 (optional; SQLite fallback works out of the box with zero external database dependencies)
 - **Redis** >= 6.0 or **Valkey** >= 7.0 (optional for single-process development)
 
 ## 🚀 Quick Start
@@ -114,8 +121,8 @@ The project was designed from the ground up to be **framework-first and business
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Rain-kl/Wavelet.git
-cd Wavelet
+git clone https://github.com/Rain-kl/IGoLibGo.git
+cd IGoLibGo
 ```
 
 ### 2. Configure Environment
@@ -130,7 +137,7 @@ cp manifest/config/config.default.yaml config.yaml
 cp .env.example .env
 ```
 
-Edit `config.yaml` or `.env` as needed. If PostgreSQL and Redis are disabled, Wavelet automatically falls back to SQLite (`wavelet.db`) and in-memory caching.
+Edit `config.yaml` or `.env` as needed. If PostgreSQL and Redis are disabled, the application automatically falls back to SQLite (`wavelet.db`) and in-memory caching.
 
 ### 3. Start Local Dependencies (Optional)
 
@@ -144,7 +151,7 @@ docker compose --profile clickhouse up -d
 # If using an external PostgreSQL instance, create the database:
 createdb -h <host> -p 5432 -U postgres wavelet
 
-# Database migrations run automatically on application startup via embedded Goose SQL migrations.
+# Database schema migrations run automatically on application startup via embedded Goose scripts.
 ```
 
 ### 4. Start Development Servers
@@ -199,74 +206,10 @@ bun dev
 | Swagger API Docs | http://localhost:8000/swagger/index.html |
 | Health Check | http://localhost:8000/api/health |
 
-## ⚙️ Configuration
-
-Key configuration options (see `manifest/config/config.default.yaml` and `.env.example` for the complete reference):
-
-| YAML Key | Environment Variable | Description | Default |
-|---|---|---|---|
-| `app.addr` | `APP_ADDR` | Backend listening address | `:8000` |
-| `app.env` | `APP_ENV` | Environment mode (`development` / `production`) | `production` |
-| `database.enabled` | `DB_ENABLED` | Enable PostgreSQL (`false` falls back to SQLite) | `true` |
-| `database.host` | `DB_HOST` | PostgreSQL host | `127.0.0.1` |
-| `database.database` | `DB_NAME` | Database name | `wavelet` |
-| `database.sqlite_path` | `SQLITE_PATH` | SQLite file path (when SQLite is used) | `wavelet.db` |
-| `redis.enabled` | `REDIS_ENABLED` | Enable Redis/Valkey cache and task queue | `true` |
-| `redis.addrs` | `REDIS_ADDR` | Redis address | `127.0.0.1:6379` |
-| `storage.type` | `STORAGE_TYPE` | Storage engine (`s3`, `oss`, `local`, `webdav`) | `local` |
-
-## 🔧 Development Guide
-
-### Makefile Commands
-
-From the repository root:
-
-```bash
-# Run both frontend & backend concurrently in development
-make dev
-
-# Regenerate Swagger API documentation
-make swagger
-
-# Format all backend Go code and frontend code
-make format
-
-# Run comprehensive architecture check, golangci-lint, TypeScript typecheck & ESLint
-make code-check
-
-# Compile single embedded binary (frontend bundled inside backend)
-make build-embedded
-
-# Cross-compile release binaries for Linux / macOS / Windows
-make cross-build
-```
-
-### Frontend Commands
-
-```bash
-cd frontend
-
-# Development server (Turbopack)
-bun dev
-
-# Production build
-bun run build
-
-# Production build with static export (for embedding into Go binary)
-bun run build:embed
-
-# Start production server
-bun start
-
-# Lint & format
-bun run lint
-bun run format
-```
-
 ## 📁 Project Structure
 
 ```
-wavelet/
+IGoLibGo/
 ├── Makefile                 # Automation scripts (dev, swagger, format, code-check, build)
 ├── docker-compose.yml       # Local infrastructure services (PostgreSQL 18, Valkey, Jaeger, ClickHouse)
 ├── manifest/                # Deployment and configuration manifests
@@ -282,14 +225,17 @@ wavelet/
 │   ├── plugins/             # Pluggable modular plugins
 │   │   ├── drivers/         # Runtime drivers (HTTP with embedded frontend, Asynq, Cron)
 │   │   ├── infra/           # Infrastructure plugins (database, redis, cache, storage, config)
-│   │   └── domain/          # Business domain plugins (auth, user, admin, upload, system)
-│   ├── downstream/          # Downstream deployment-specific custom plugins & extensions
+│   │   └── domain/          # Business domain plugins (auth, user, admin, upload, system, msg_gateway)
+│   ├── igo-lib/             # IGoLibrary downstream domain plugin and custom features
+│   │   └── plugins/igo/     # IGo primary business plugin (pipeline, grab, occupy, leak, tomorrow, venue)
 │   └── docs/                # Swagger auto-generated documentation
 └── frontend/                # Next.js frontend application
     ├── app/                 # Next.js App Router pages and layouts
-    ├── components/          # Reusable UI components (ui, common, layout, theme)
+    │   └── (main)/          # Business primary routes (/pipeline, /grab, /occupy, /leak, /tomorrow, /venue)
+    ├── components/          # Reusable UI components (ui, igo, common, layout, theme)
+    ├── e2e/                 # Playwright End-to-End automated test suite
     ├── hooks/               # Custom React hooks
-    ├── lib/                 # Base service classes, API services, and utilities
+    ├── lib/                 # Base service classes, API service layer (services/igo), and utilities
     ├── messages/            # i18n translation catalogs (zh-CN.json, en.json)
     └── types/               # TypeScript definitions
 ```
@@ -311,21 +257,27 @@ The built-in documentation portal at `/docs` contains:
 ## 🧪 Testing & Code Quality
 
 ```bash
-# Backend test suite
+# 1. Full backend unit & integration tests
 cd backend && go test ./...
 
-# Full project static analysis & architecture guardrail verification
+# 2. Frontend Playwright End-to-End (E2E) tests
+cd frontend && bunx playwright test
+
+# 3. Frontend typecheck & ESLint validation
+cd frontend && bunx tsc --noEmit && bun run lint
+
+# 4. Full architecture guardrail & code check (Cordis guardrails, golangci-lint, TypeScript & ESLint)
 make code-check
 
-# Frontend linting
-cd frontend && bun run lint
+# 5. Global automatic formatting (Biome + gofumpt)
+make format
 ```
 
 ## 🚀 Deployment
 
 ### 1. Self-Contained Embedded Binary (Recommended)
 
-Build a single static executable with the compiled frontend embedded inside:
+Build a single static executable with the compiled frontend embedded inside with one command:
 
 ```bash
 # Build binary -> ./bin/wavelet
@@ -352,33 +304,17 @@ make cross-build VERSION=v1.0.0
 make cross-build GOOS=linux GOARCH=amd64
 ```
 
-### 3. Docker
+### 3. Docker Containerization
 
 ```bash
 # Build container image
-docker build -f manifest/docker/Dockerfile -t wavelet .
+docker build -f manifest/docker/Dockerfile -t igolib .
 
-# Run with environment variables or mounted configuration
+# Run container (pass environment file)
 docker run -d -p 8000:8000 \
   --env-file .env \
-  wavelet all
+  igolib all
 ```
-
-## 🤝 Contributing
-
-We welcome contributions! Please read the following before submitting code:
-
-- [Contributing Guidelines](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Contributor License Agreement](CLA.md)
-
-### Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -am 'feat: add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
 
 ## 📄 License
 

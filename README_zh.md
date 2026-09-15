@@ -1,6 +1,6 @@
-# wavelet
+# Wavelet - IGoLibrary
 
-🚀 现代化、生产就绪的全栈应用脚手架
+🚀 现代化、生产就绪的全栈图书馆自动化与智能化服务平台
 
 [English](./README.md)
 
@@ -11,38 +11,44 @@
 
 ## 📖 项目简介
 
-**wavelet** 是一个通用型、生产就绪的现代全栈脚手架，后端基于 **Go (Gin + GORM)** 并采用 **Cordis 风格微内核插件化架构**，前端采用 **Next.js (App Router + Shadcn UI + Tailwind CSS 4)**。项目开箱即用，内置构建现代 SaaS、内部工具或开发者平台所需的核心基础设施。
+**Wavelet - IGoLibrary** 是一个基于 **Cordis 微内核插件化架构** 构建的生产就绪全栈应用，后端基于 **Go (Gin + GORM)**，前端采用 **Next.js 16 (App Router + React 19 + Shadcn UI + Tailwind CSS 4)**。项目专注于提供高性能、可靠的图书馆自动化占座、抢座、自动续座、全域捡漏以及远程打卡签到全流程体验。
 
-项目设计理念是 **框架优先、业务中立**：您可以在沿用经过实战检验的底层基础设施的同时，自由接入自己的业务逻辑或下游定制插件。
+项目采用 **微内核 + 自包含插件** 的分层设计：底层借由 Wavelet 通用基础设施（数据库双方言、多级缓存、消息网关、任务队列）提供坚实支撑，上层在 `backend/igo-lib/plugins/igo` 中实现了完整的 IGoLibrary 业务生态。
 
 ### ✨ 主要特性
 
-- 🧩 **Cordis 微内核架构** — 解耦设计的内核生命周期、服务契约（`contracts`）、领域事件总线与模块化插件（`drivers`、`infra`、`domain`、`downstream`）
-- 🔐 **多认证体系** — 本地账号密码登录/注册 + 可插拔 OIDC/OAuth2 认证源（支持同时配置多个认证源）
-- 🗝️ **个人访问令牌 (PAT)** — API Key 密钥管理，支持程序化接口访问；兼容 `Authorization: Bearer` 和 `X-Access-Token` 请求头
-- 👤 **用户与权限管理** — 管理后台提供用户列表、搜索筛选、启用/禁用账号等管理功能
+- ⚡ **「一条龙」自动化全流程 (All-in-One Automation Pipeline)** — 支持多账号/卡片化自动化预定与远程签到，一键完成“查座 $\rightarrow$ 锁定座位 $\rightarrow$ 基于 iBeacon 模拟打卡”，内置凭据有效性探测、失效重授权引导与执行结果大盘。
+- 🤖 **消息网关与 Bot 智能交互 (Message Gateway & Bot Integration)** — 支持 Telegram / QQ 等多平台 Bot 斜杠命令（`/help`、`/show`、`/run [ID]`），凭据失效时自动推送微信 OAuth 授权链接并支持交互式补录凭据。
+- 🚀 **四大自动化引擎 (4 Automation Engines)** — 
+  - **抢座引擎**：秒级定时轮询抢座与并发预约策略；
+  - **在座守护引擎**：守护在座状态并在释放前自动续座；
+  - **全域捡漏引擎**：多场馆全局扫描与空余座位实时锁定；
+  - **明日预约引擎**：明日开放预约的预加载与定时秒杀。
+- 🏛️ **可视化场馆与座位排布导览 (Interactive Venue Navigation)** — 实时拉取座位布局排布图，支持快速查座、选座、收藏备选座位与自定义座位备注标签。
+- 🧩 **Cordis 微内核架构** — 解耦设计的内核生命周期、服务契约（`contracts`）、领域事件总线与模块化插件（`drivers`、`infra`、`domain`、`igo`）
+- 🔐 **多认证体系** — 本地账号密码登录/注册 + 微信 OAuth 授权绑定，支持 Token 脱敏与热更新
 - ⚙️ **动态系统配置与设置** — 声明式 Schema 配置管理，支持实时热重载，可通过管理后台界面直接操作
 - 📋 **异步任务队列与定时调度** — 基于 [Asynq](https://github.com/hibiken/asynq)（Redis 驱动）的后台任务处理系统与进程内 Cron 调度，附带任务执行看板
 - 💾 **双方言数据库支持** — 深度支持 PostgreSQL 与零配置 SQLite 回落，内置双方言 Goose SQL 迁移；支持 ClickHouse 分析库与日志存储
 - ⚡ **多级缓存体系** — 高性能三层缓存（RAM L1 + Redis L2 + DB L3），内置分布式 Pub/Sub 缓存失效广播
-- 📁 **统一多引擎存储** — 支持 S3 兼容协议、阿里云 OSS、本地磁盘及 WebDAV，支持本地磁盘缓存
 - 📊 **全链路可观测性** — 结构化日志（Zap）+ 分布式链路追踪（OpenTelemetry）+ 内存环形缓冲区日志实时流
 - 🌐 **完整国际化 (i18n)** — 基于 `next-intl` 实现的双语支持（`zh-CN` / `en`）
 - 🎨 **现代化 UI** — 基于 Next.js 16、React 19、Tailwind CSS 4 和 Shadcn UI 构建的响应式、支持深色模式的设计系统
 - 📦 **单二进制文件内嵌部署** — 支持将前端构建资源完整内嵌至 Go 二进制中，实现零外部依赖单文件部署
-- 📖 **内置文档中心** — 集成文档门户，包含使用指南、Swagger 接口文档、隐私政策和服务条款
 
 ## 🏗️ 架构概览
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                     前端 (Next.js 16)                        │
-│   • React 19          • Tailwind CSS 4      • Shadcn UI      │
-│   • TypeScript        • next-intl (i18n)    • TanStack Query │
+│                  前端界面 (Next.js 16 App Router)            │
+│   • 一条龙自动化 (/pipeline) • 抢座引擎 (/grab)             │
+│   • 在座守护 (/occupy)        • 全域捡漏 (/leak)             │
+│   • 明日预约 (/tomorrow)      • 场馆选座 (/venue)            │
+│   • React 19 / Tailwind CSS 4 / Shadcn UI / next-intl        │
 └──────────────────────────────┬───────────────────────────────┘
                                │ HTTP / WebSocket (端口: 8000)
 ┌──────────────────────────────▼───────────────────────────────┐
-│                      后端 (Go 1.25+)                         │
+│                      后端服务 (Go 1.25+)                     │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │               Cordis 微内核 (core/)                    │  │
@@ -52,11 +58,11 @@
 │  └──────────────────────────┬─────────────────────────────┘  │
 │                             │                                │
 │  ┌──────────────────────────▼─────────────────────────────┐  │
-│  │              模块化插件 (plugins/ 与 downstream/)       │  │
-│  │  • 运行时驱动: HTTP (Gin+内嵌前端), Asynq Worker, Cron  │  │
-│  │  • 基础设施层: Database (Goose), Redis, Cache, Storage │  │
-│  │  • 业务领域层: Auth, User, Admin, Upload, System, Risk  │  │
-│  │  • 下游业务层: 业务定制插件与扩展                       │  │
+│  │              自包含插件体系 (plugins/ & igo-lib/)       │  │
+│  │  • 驱动层: HTTP (Gin+内嵌前端), Asynq Worker, Cron     │  │
+│  │  • 基础层: Database (Goose), Redis, Cache, Storage     │  │
+│  │  • 领域层: Auth, User, Admin, Upload, MsgGateway, Risk  │  │
+│  │  • 业务层: IGoLibrary downstream plugin (igo)          │  │
 │  └────────────────────────────────────────────────────────┘  │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
@@ -100,11 +106,12 @@
 - **[Shadcn UI](https://github.com/shadcn-ui/ui)** & **[Radix UI](https://www.radix-ui.com/)** — 可访问、可组合的组件库
 - **[next-intl](https://next-intl-docs.vercel.app/)** — 无 URL 路由前缀的类型安全国际化
 - **[Bun](https://bun.sh/)** — 高性能 JavaScript 包管理器与运行时
+- **[Playwright](https://playwright.dev/)** — 端到端 (E2E) 自动化测试套件
 
 ## 📋 环境要求
 
 - **Go** >= 1.25
-- **Bun** >= 1.2（用于前端依赖管理与构建）
+- **Bun** >= 1.2（用于前端依赖管理、打包与 Playwright E2E 测试）
 - **Node.js** >= 18.0（使用 Bun 时可选）
 - **PostgreSQL** >= 14（可选；支持零配置 SQLite 自动回落，无需外部数据库即可直接运行）
 - **Redis** >= 6.0 或 **Valkey** >= 7.0（单进程轻量开发时可选）
@@ -114,8 +121,8 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/Rain-kl/Wavelet.git
-cd Wavelet
+git clone https://github.com/Rain-kl/IGoLibGo.git
+cd IGoLibGo
 ```
 
 ### 2. 配置环境
@@ -130,7 +137,7 @@ cp manifest/config/config.default.yaml config.yaml
 cp .env.example .env
 ```
 
-按需修改 `config.yaml` 或 `.env`。若禁用 PostgreSQL 与 Redis，Wavelet 会自动回退到 SQLite (`wavelet.db`) 和进程内存缓存。
+按需修改 `config.yaml` 或 `.env`。若禁用 PostgreSQL 与 Redis，应用会自动回退到 SQLite (`wavelet.db`) 和进程内存缓存。
 
 ### 3. 启动本地依赖服务（可选）
 
@@ -199,74 +206,10 @@ bun dev
 | Swagger 接口文档 | http://localhost:8000/swagger/index.html |
 | 健康检查 | http://localhost:8000/api/health |
 
-## ⚙️ 配置说明
-
-主要配置项（完整参数说明请参考 `manifest/config/config.default.yaml` 与 `.env.example`）：
-
-| YAML 键名 | 环境变量 | 说明 | 默认值 |
-|---|---|---|---|
-| `app.addr` | `APP_ADDR` | 后端服务监听地址 | `:8000` |
-| `app.env` | `APP_ENV` | 运行环境（`development` / `production`） | `production` |
-| `database.enabled` | `DB_ENABLED` | 是否启用 PostgreSQL（`false` 时回退至 SQLite） | `true` |
-| `database.host` | `DB_HOST` | PostgreSQL 主机地址 | `127.0.0.1` |
-| `database.database` | `DB_NAME` | 数据库名称 | `wavelet` |
-| `database.sqlite_path` | `SQLITE_PATH` | SQLite 文件存储路径（启用 SQLite 时有效） | `wavelet.db` |
-| `redis.enabled` | `REDIS_ENABLED` | 是否启用 Redis/Valkey 缓存与队列 | `true` |
-| `redis.addrs` | `REDIS_ADDR` | Redis 服务连接地址 | `127.0.0.1:6379` |
-| `storage.type` | `STORAGE_TYPE` | 存储引擎类型（`s3`、`oss`、`local`、`webdav`） | `local` |
-
-## 🔧 开发指南
-
-### Makefile 常用指令
-
-在项目根目录下执行：
-
-```bash
-# 并发启动前后端开发服务
-make dev
-
-# 修改 Handler 后重新生成 Swagger 文档
-make swagger
-
-# 格式化前后端代码（Go fmt + Biome format）
-make format
-
-# 执行全量质量门禁：Cordis 架构检查、golangci-lint、TypeScript 类型检查与 ESLint
-make code-check
-
-# 构建内嵌前端的独立单二进制执行程序
-make build-embedded
-
-# 通过 Docker 跨平台编译全量 Release 二进制包 (Linux / macOS / Windows)
-make cross-build
-```
-
-### 前端开发指令
-
-```bash
-cd frontend
-
-# 开发模式（Turbopack 极速热更新）
-bun dev
-
-# 生产环境构建
-bun run build
-
-# 导出静态资源用于嵌入 Go 二进制文件
-bun run build:embed
-
-# 运行生产构建服务
-bun start
-
-# 代码 Lint 校验与格式化
-bun run lint
-bun run format
-```
-
 ## 📁 项目结构
 
 ```
-wavelet/
+IGoLibGo/
 ├── Makefile                 # 自动化脚本（开发、Swagger、格式化、代码检查、构建）
 ├── docker-compose.yml       # 本地基础设施编排（PostgreSQL 18、Valkey、Jaeger、ClickHouse）
 ├── manifest/                # 项目清单与部署编排
@@ -282,14 +225,17 @@ wavelet/
 │   ├── plugins/             # 自包含模块化插件
 │   │   ├── drivers/         # 运行时驱动（HTTP 内嵌前端驱动、Asynq Worker、Cron）
 │   │   ├── infra/           # 基础设施插件（database、redis、cache、storage、config）
-│   │   └── domain/          # 业务领域插件（auth、user、admin、upload、system）
-│   ├── downstream/          # 下游定制化业务专属插件与扩展
+│   │   └── domain/          # 业务领域插件（auth、user、admin、upload、system、msg_gateway）
+│   ├── igo-lib/             # IGoLibrary 下游专属领域插件与商业化模块
+│   │   └── plugins/igo/     # IGo 主业务插件（一条龙、抢座、占座、捡漏、定时预约、场馆）
 │   └── docs/                # Swagger 自动生成的 API 文档
 └── frontend/                # Next.js 前端应用
     ├── app/                 # Next.js App Router 页面与布局
-    ├── components/          # 可复用组件（ui、common、layout、theme）
+    │   └── (main)/          # 业务主路由 (/pipeline, /grab, /occupy, /leak, /tomorrow, /venue)
+    ├── components/          # 可复用组件（ui、igo、common、layout、theme）
+    ├── e2e/                 # Playwright 端到端自动化测试套件
     ├── hooks/               # 自定义 React Hooks
-    ├── lib/                 # 基础服务类、API 服务层与工具库
+    ├── lib/                 # 基础服务类、API 服务层 (services/igo) 与工具库
     ├── messages/            # i18n 国际化翻译文案（zh-CN.json、en.json）
     └── types/               # TypeScript 类型定义
 ```
@@ -311,14 +257,20 @@ http://localhost:8000/swagger/index.html
 ## 🧪 测试与质量门禁
 
 ```bash
-# 后端测试用例
+# 1. 后端全量单元测试与集成测试
 cd backend && go test ./...
 
-# 全量质量门禁检查（含架构防线、Lint 与前端类型检查）
+# 2. 前端 Playwright 端到端 (E2E) 测试
+cd frontend && bunx playwright test
+
+# 3. 前端类型检查与 ESLint 校验
+cd frontend && bunx tsc --noEmit && bun run lint
+
+# 4. 全量架构防线与质量检查 (含 Cordis 架构防线、golangci-lint、TypeScript & ESLint)
 make code-check
 
-# 前端代码检查
-cd frontend && bun run lint
+# 5. 全局自动格式化 (Biome + gofumpt)
+make format
 ```
 
 ## 🚀 部署发布
@@ -356,29 +308,13 @@ make cross-build GOOS=linux GOARCH=amd64
 
 ```bash
 # 构建镜像
-docker build -f manifest/docker/Dockerfile -t wavelet .
+docker build -f manifest/docker/Dockerfile -t igolib .
 
 # 运行容器（传入环境配置）
 docker run -d -p 8000:8000 \
   --env-file .env \
-  wavelet all
+  igolib all
 ```
-
-## 🤝 贡献指南
-
-我们欢迎社区贡献！请在提交代码前阅读以下文档：
-
-- [贡献指南](CONTRIBUTING.md)
-- [行为准则](CODE_OF_CONDUCT.md)
-- [贡献者许可协议](CLA.md)
-
-### 贡献流程
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/your-feature`)
-3. 提交更改 (`git commit -am 'feat: add your feature'`)
-4. 推送到分支 (`git push origin feature/your-feature`)
-5. 打开 Pull Request
 
 ## 📄 许可证
 
