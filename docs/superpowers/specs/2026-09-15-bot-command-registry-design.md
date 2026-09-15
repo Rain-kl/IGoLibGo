@@ -391,25 +391,21 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 
 ## 14. PR plan
 
-实现按上游优先：先 Wavelet 落地契约与网关，再下游合并并迁移 igo。
+分两期。本期只做 Wavelet；IGoLibGo 业务迁移必须等本期 merge 进下游之后另开。
 
-**PR 1 — 契约与网关分发（Wavelet）**
+**本期 — Wavelet 框架**
 
-- 新增 `contracts/bot.go` 及测试用 fake
-- `service/bot_registry.go`、dispatcher、conversation occupancy
-- `bot/help.go` `me.go` `cancel.go`
-- Runner inbound 改走 dispatcher；已绑定不再自动成功文案
-- `plugin.go` Provide 注册表并注册自带指令
-- 测试：解析、查重、`/help`=`/start`、`/me`、对话、cancel、未知命令
-- 依赖：无
+- `contracts/bot.go`：`BotCommand`、`BotConversation`、`BotCommandRegistry`、请求接口
+- `msg_gateway` 注册表、入站分发、对话占位
+- `msg_gateway/bot/` 自带指令：`/help`（`/start` 同义）、`/me`、`/cancel`
+- Runner inbound 改走分发器；已绑定不再自动回复「绑定成功」
+- 技能 `.agents/skills/wv-new-bot-command/SKILL.md`，并挂到 `AGENTS.md` 与 skills README
+- 网关测试不引用任何 igo 包
 
-**PR 2 — IGo 命令迁出（IGoLibGo，merge Wavelet 之后）**
+**后续（不在本期）— IGoLibGo**
 
-- 新增 `igo/bot/{show,run,login_auth,checkin_auth}.go`
-- `igo/plugin.go` Bind 注册
-- 删除 `msg_gateway/service/bot_command_handler.go` 及测试
-- 测试：igo/bot mock 请求对象
-- 依赖：PR 1 已 merge 进下游
+- 下游 `git merge wavelet/main` 后，在 `igo/bot/` 实现 `/show` `/run` 与补录对话
+- 删除误放在网关里的 `bot_command_handler.go`
 
 ## 15. Open questions
 
