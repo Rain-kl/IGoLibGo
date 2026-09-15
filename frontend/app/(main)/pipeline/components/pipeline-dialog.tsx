@@ -129,11 +129,9 @@ export function PipelineDialog({
             : '',
         );
         setCheckinUrl('');
-        setBeaconLat(editingConfig.beacon_lat || editingConfig.latitude || '');
-        setBeaconLng(editingConfig.beacon_lng || editingConfig.longitude || '');
-        setBeaconMac(
-          editingConfig.beacon_mac || editingConfig.beacon_uuid || '',
-        );
+        setBeaconLat(editingConfig.latitude || '');
+        setBeaconLng(editingConfig.longitude || '');
+        setBeaconMac(editingConfig.beacon_uuid || '');
         if (editingConfig.library_id && editingConfig.library_name) {
           setVenueList([
             {
@@ -401,9 +399,9 @@ export function PipelineDialog({
           auto_checkin: autoCheckin,
           cookie: effectiveCookie,
           checkin_token: effectiveCheckin,
-          beacon_lat: beaconLat.trim() || undefined,
-          beacon_lng: beaconLng.trim() || undefined,
-          beacon_mac: beaconMac.trim() || undefined,
+          latitude: beaconLat.trim() || undefined,
+          longitude: beaconLng.trim() || undefined,
+          beacon_uuid: beaconMac.trim() || undefined,
         };
         await IGoService.pipeline.updateConfig(configId, req);
         toast.success('配置更新成功！');
@@ -423,9 +421,9 @@ export function PipelineDialog({
           auto_checkin: autoCheckin,
           cookie: effectiveCookie,
           checkin_token: effectiveCheckin || undefined,
-          beacon_lat: beaconLat.trim() || undefined,
-          beacon_lng: beaconLng.trim() || undefined,
-          beacon_mac: beaconMac.trim() || undefined,
+          latitude: beaconLat.trim() || undefined,
+          longitude: beaconLng.trim() || undefined,
+          beacon_uuid: beaconMac.trim() || undefined,
         };
         await IGoService.pipeline.createConfig(req);
         toast.success('一条龙自动化卡片创建成功！');

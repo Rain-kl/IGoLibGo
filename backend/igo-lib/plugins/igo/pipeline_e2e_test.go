@@ -242,9 +242,9 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 		"seat_name": "101号",
 		"auto_checkin": true,
 		"checkin_token": "valid-checkin-token-xyz",
-		"beacon_lat": "30.123456",
-		"beacon_lng": "120.123456",
-		"beacon_mac": "AA:BB:CC:DD:EE:FF"
+		"latitude": "30.123456",
+		"longitude": "120.123456",
+		"beacon_uuid": "AA:BB:CC:DD:EE:FF"
 	}`
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/configs", strings.NewReader(createBody))

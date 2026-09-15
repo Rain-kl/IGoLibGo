@@ -9556,15 +9556,6 @@ const docTemplate = `{
                 "auto_checkin": {
                     "type": "boolean"
                 },
-                "beacon_lat": {
-                    "type": "string"
-                },
-                "beacon_lng": {
-                    "type": "string"
-                },
-                "beacon_mac": {
-                    "type": "string"
-                },
                 "beacon_uuid": {
                     "type": "string"
                 },
@@ -9934,32 +9925,17 @@ const docTemplate = `{
                 "auto_checkin": {
                     "type": "boolean"
                 },
-                "beacon_lat": {
-                    "type": "string"
-                },
-                "beacon_lng": {
-                    "type": "string"
-                },
-                "beacon_mac": {
-                    "type": "string"
-                },
                 "beacon_uuid": {
                     "type": "string"
                 },
                 "checkin_expires_at": {
                     "type": "string"
                 },
-                "checkin_token_valid": {
-                    "type": "boolean"
-                },
                 "cookie_expires_at": {
                     "type": "string"
                 },
                 "cookie_masked": {
                     "type": "string"
-                },
-                "cookie_valid": {
-                    "type": "boolean"
                 },
                 "created_at": {
                     "type": "string"
@@ -10633,15 +10609,6 @@ const docTemplate = `{
             "properties": {
                 "auto_checkin": {
                     "type": "boolean"
-                },
-                "beacon_lat": {
-                    "type": "string"
-                },
-                "beacon_lng": {
-                    "type": "string"
-                },
-                "beacon_mac": {
-                    "type": "string"
                 },
                 "beacon_uuid": {
                     "type": "string"

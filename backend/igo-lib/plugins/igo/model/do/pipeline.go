@@ -7,32 +7,27 @@ import "time"
 
 // PipelineConfigDTO is the data transfer object for a pipeline configuration card.
 type PipelineConfigDTO struct {
-	ID                string     `json:"id"`
-	UserID            uint64     `json:"user_id,string"`
-	Name              string     `json:"name"`
-	HasCookie         bool       `json:"has_cookie"`
-	CookieValid       bool       `json:"cookie_valid"`
-	CookieMasked      string     `json:"cookie_masked"`
-	CookieExpiresAt   *time.Time `json:"cookie_expires_at,omitempty"`
-	LibraryID         int        `json:"library_id"`
-	LibraryName       string     `json:"library_name"`
-	Floor             string     `json:"floor"`
-	SeatKey           string     `json:"seat_key"`
-	SeatName          string     `json:"seat_name"`
-	AutoCheckin       bool       `json:"auto_checkin"`
-	HasCheckinToken   bool       `json:"has_checkin_token"`
-	CheckinTokenValid bool       `json:"checkin_token_valid"`
-	CheckinExpiresAt  *time.Time `json:"checkin_expires_at,omitempty"`
-	BeaconUUID        string     `json:"beacon_uuid"`
-	BeaconMac         string     `json:"beacon_mac"`
-	Major             int        `json:"major"`
-	Minor             int        `json:"minor"`
-	Latitude          string     `json:"latitude"`
-	BeaconLat         string     `json:"beacon_lat"`
-	Longitude         string     `json:"longitude"`
-	BeaconLng         string     `json:"beacon_lng"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
+	ID               string     `json:"id"`
+	UserID           uint64     `json:"user_id,string"`
+	Name             string     `json:"name"`
+	HasCookie        bool       `json:"has_cookie"`
+	CookieMasked     string     `json:"cookie_masked"`
+	CookieExpiresAt  *time.Time `json:"cookie_expires_at,omitempty"`
+	LibraryID        int        `json:"library_id"`
+	LibraryName      string     `json:"library_name"`
+	Floor            string     `json:"floor"`
+	SeatKey          string     `json:"seat_key"`
+	SeatName         string     `json:"seat_name"`
+	AutoCheckin      bool       `json:"auto_checkin"`
+	HasCheckinToken  bool       `json:"has_checkin_token"`
+	CheckinExpiresAt *time.Time `json:"checkin_expires_at,omitempty"`
+	BeaconUUID       string     `json:"beacon_uuid"`
+	Major            int        `json:"major"`
+	Minor            int        `json:"minor"`
+	Latitude         string     `json:"latitude"`
+	Longitude        string     `json:"longitude"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
 // CreatePipelineConfigRequest represents the payload for creating a pipeline config card.
@@ -48,13 +43,10 @@ type CreatePipelineConfigRequest struct {
 	AutoCheckin  bool   `json:"auto_checkin"`
 	CheckinToken string `json:"checkin_token"`
 	BeaconUUID   string `json:"beacon_uuid"`
-	BeaconMac    string `json:"beacon_mac"`
 	Major        int    `json:"major"`
 	Minor        int    `json:"minor"`
 	Latitude     string `json:"latitude"`
-	BeaconLat    string `json:"beacon_lat"`
 	Longitude    string `json:"longitude"`
-	BeaconLng    string `json:"beacon_lng"`
 }
 
 // UpdatePipelineConfigRequest represents the payload for updating a pipeline config card.
@@ -69,13 +61,10 @@ type UpdatePipelineConfigRequest struct {
 	AutoCheckin  bool   `json:"auto_checkin"`
 	CheckinToken string `json:"checkin_token"`
 	BeaconUUID   string `json:"beacon_uuid"`
-	BeaconMac    string `json:"beacon_mac"`
 	Major        int    `json:"major"`
 	Minor        int    `json:"minor"`
 	Latitude     string `json:"latitude"`
-	BeaconLat    string `json:"beacon_lat"`
 	Longitude    string `json:"longitude"`
-	BeaconLng    string `json:"beacon_lng"`
 }
 
 // RunPipelineRequest represents optional override credentials for execution.

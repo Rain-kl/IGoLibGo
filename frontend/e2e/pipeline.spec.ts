@@ -106,7 +106,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
               seat_name: '101号',
               auto_checkin: true,
               checkin_token: 'token-abc',
-              beacon_mac: 'AA:BB:CC:DD:EE:FF',
+              beacon_uuid: 'AA:BB:CC:DD:EE:FF',
               created_at: '2026-09-15T08:00:00Z',
               updated_at: '2026-09-15T08:00:00Z',
             },

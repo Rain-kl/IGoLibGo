@@ -54,13 +54,12 @@ export function PipelineCard({
   const t = useTranslations('igo.pipeline');
   const tCommon = useTranslations('common');
 
-  const isCookieValid =
-    config.cookie_valid !== false &&
-    Boolean(config.has_cookie || config.cookie || config.cookie_masked);
+  const isCookieValid = Boolean(
+    config.has_cookie || config.cookie || config.cookie_masked,
+  );
   const isCheckinValid =
     !config.auto_checkin ||
-    (config.checkin_token_valid !== false &&
-      Boolean(config.has_checkin_token || config.checkin_token));
+    Boolean(config.has_checkin_token || config.checkin_token);
 
   return (
     <Card className='relative flex flex-col justify-between overflow-hidden border border-border/60 bg-gradient-to-br from-card via-card/80 to-muted/20 transition-all duration-200 hover:shadow-md hover:border-primary/40'>

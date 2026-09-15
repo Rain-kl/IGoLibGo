@@ -385,7 +385,6 @@ export interface PipelineConfigDTO {
   cookie_masked?: string;
   has_cookie?: boolean;
   cookie_expires_at?: string;
-  cookie_valid?: boolean;
   library_id: number;
   library_name: string;
   floor: string;
@@ -395,13 +394,11 @@ export interface PipelineConfigDTO {
   checkin_token?: string;
   has_checkin_token?: boolean;
   checkin_expires_at?: string;
-  checkin_token_valid?: boolean;
   beacon_uuid?: string;
-  beacon_lat?: string;
+  major?: number;
+  minor?: number;
   latitude?: string;
-  beacon_lng?: string;
   longitude?: string;
-  beacon_mac?: string;
   created_at: string;
   updated_at: string;
 }
@@ -409,9 +406,7 @@ export interface PipelineConfigDTO {
 export interface CreatePipelineConfigRequest {
   id: string;
   name: string;
-  cookie?: string;
-  auth_code?: string;
-  auth_url?: string;
+  cookie: string;
   library_id: number;
   library_name: string;
   floor: string;
@@ -419,18 +414,16 @@ export interface CreatePipelineConfigRequest {
   seat_name: string;
   auto_checkin: boolean;
   checkin_token?: string;
-  checkin_code?: string;
-  checkin_url?: string;
-  beacon_lat?: string;
-  beacon_lng?: string;
-  beacon_mac?: string;
+  beacon_uuid?: string;
+  major?: number;
+  minor?: number;
+  latitude?: string;
+  longitude?: string;
 }
 
 export interface UpdatePipelineConfigRequest {
   name?: string;
   cookie?: string;
-  auth_code?: string;
-  auth_url?: string;
   library_id?: number;
   library_name?: string;
   floor?: string;
@@ -438,20 +431,16 @@ export interface UpdatePipelineConfigRequest {
   seat_name?: string;
   auto_checkin?: boolean;
   checkin_token?: string;
-  checkin_code?: string;
-  checkin_url?: string;
-  beacon_lat?: string;
-  beacon_lng?: string;
-  beacon_mac?: string;
+  beacon_uuid?: string;
+  major?: number;
+  minor?: number;
+  latitude?: string;
+  longitude?: string;
 }
 
 export interface RunPipelineRequest {
   cookie?: string;
-  auth_code?: string;
-  auth_url?: string;
   checkin_token?: string;
-  checkin_code?: string;
-  checkin_url?: string;
 }
 
 export interface PipelineExecutionResult {

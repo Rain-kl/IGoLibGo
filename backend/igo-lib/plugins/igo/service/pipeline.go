@@ -102,19 +102,6 @@ func (s *Service) CreatePipelineConfig(ctx context.Context, userID uint64, req d
 		}
 	}
 
-	beaconUUID := req.BeaconUUID
-	if beaconUUID == "" {
-		beaconUUID = req.BeaconMac
-	}
-	lat := req.Latitude
-	if lat == "" {
-		lat = req.BeaconLat
-	}
-	lng := req.Longitude
-	if lng == "" {
-		lng = req.BeaconLng
-	}
-
 	row := &entity.PipelineConfig{
 		ID:               req.ID,
 		UserID:           userID,
@@ -129,11 +116,11 @@ func (s *Service) CreatePipelineConfig(ctx context.Context, userID uint64, req d
 		AutoCheckin:      req.AutoCheckin,
 		CheckinToken:     checkinToken,
 		CheckinExpiresAt: checkinExp,
-		BeaconUUID:       beaconUUID,
+		BeaconUUID:       req.BeaconUUID,
 		Major:            req.Major,
 		Minor:            req.Minor,
-		Latitude:         lat,
-		Longitude:        lng,
+		Latitude:         req.Latitude,
+		Longitude:        req.Longitude,
 	}
 	if err := dao.CreatePipelineConfig(ctx, row); err != nil {
 		return nil, err
@@ -188,28 +175,16 @@ func applyPipelineConfigFields(row *entity.PipelineConfig, req *do.UpdatePipelin
 		row.SeatName = req.SeatName
 	}
 	row.AutoCheckin = req.AutoCheckin
-	beaconUUID := req.BeaconUUID
-	if beaconUUID == "" {
-		beaconUUID = req.BeaconMac
-	}
-	if beaconUUID != "" {
-		row.BeaconUUID = beaconUUID
+	if req.BeaconUUID != "" {
+		row.BeaconUUID = req.BeaconUUID
 	}
 	row.Major = req.Major
 	row.Minor = req.Minor
-	lat := req.Latitude
-	if lat == "" {
-		lat = req.BeaconLat
+	if req.Latitude != "" {
+		row.Latitude = req.Latitude
 	}
-	if lat != "" {
-		row.Latitude = lat
-	}
-	lng := req.Longitude
-	if lng == "" {
-		lng = req.BeaconLng
-	}
-	if lng != "" {
-		row.Longitude = lng
+	if req.Longitude != "" {
+		row.Longitude = req.Longitude
 	}
 }
 
@@ -580,34 +555,27 @@ func toPipelineDTO(row *entity.PipelineConfig) do.PipelineConfigDTO {
 	if row == nil {
 		return do.PipelineConfigDTO{}
 	}
-	hasCookie := row.Cookie != ""
-	hasCheckin := row.CheckinToken != ""
 	return do.PipelineConfigDTO{
-		ID:                row.ID,
-		UserID:            row.UserID,
-		Name:              row.Name,
-		HasCookie:         hasCookie,
-		CookieValid:       hasCookie,
-		CookieMasked:      traceint.MaskCookie(row.Cookie),
-		CookieExpiresAt:   row.CookieExpiresAt,
-		LibraryID:         row.LibraryID,
-		LibraryName:       row.LibraryName,
-		Floor:             row.Floor,
-		SeatKey:           row.SeatKey,
-		SeatName:          row.SeatName,
-		AutoCheckin:       row.AutoCheckin,
-		HasCheckinToken:   hasCheckin,
-		CheckinTokenValid: hasCheckin,
-		CheckinExpiresAt:  row.CheckinExpiresAt,
-		BeaconUUID:        row.BeaconUUID,
-		BeaconMac:         row.BeaconUUID,
-		Major:             row.Major,
-		Minor:             row.Minor,
-		Latitude:          row.Latitude,
-		BeaconLat:         row.Latitude,
-		Longitude:         row.Longitude,
-		BeaconLng:         row.Longitude,
-		CreatedAt:         row.CreatedAt,
-		UpdatedAt:         row.UpdatedAt,
+		ID:               row.ID,
+		UserID:           row.UserID,
+		Name:             row.Name,
+		HasCookie:        row.Cookie != "",
+		CookieMasked:     traceint.MaskCookie(row.Cookie),
+		CookieExpiresAt:  row.CookieExpiresAt,
+		LibraryID:        row.LibraryID,
+		LibraryName:      row.LibraryName,
+		Floor:            row.Floor,
+		SeatKey:          row.SeatKey,
+		SeatName:         row.SeatName,
+		AutoCheckin:      row.AutoCheckin,
+		HasCheckinToken:  row.CheckinToken != "",
+		CheckinExpiresAt: row.CheckinExpiresAt,
+		BeaconUUID:       row.BeaconUUID,
+		Major:            row.Major,
+		Minor:            row.Minor,
+		Latitude:         row.Latitude,
+		Longitude:        row.Longitude,
+		CreatedAt:        row.CreatedAt,
+		UpdatedAt:        row.UpdatedAt,
 	}
 }
