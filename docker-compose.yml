@@ -1,5 +1,5 @@
 services:
-  wavelet:
+  app:
     build:
       context: .
       dockerfile: manifest/docker/Dockerfile
