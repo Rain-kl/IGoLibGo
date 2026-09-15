@@ -20,35 +20,27 @@ export interface MessageChannel {
   name: string;
   type: MessageChannelType | string;
   owner_scope: string;
+  owner_id?: string;
   enabled: boolean;
-  bot_token?: string;
-  app_id?: string;
-  app_secret?: string;
-  base_url?: string;
-  portal_host?: string;
-  created_at: string;
-  updated_at: string;
+  credentials?: Record<string, string>;
+  extra?: Record<string, string>;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateMessageChannelRequest {
   name: string;
   type: string;
   enabled?: boolean;
-  bot_token?: string;
-  app_id?: string;
-  app_secret?: string;
-  base_url?: string;
-  portal_host?: string;
+  credentials: Record<string, string>;
+  extra?: Record<string, string>;
 }
 
 export interface UpdateMessageChannelRequest {
   name?: string;
   enabled?: boolean;
-  bot_token?: string;
-  app_id?: string;
-  app_secret?: string;
-  base_url?: string;
-  portal_host?: string;
+  credentials?: Record<string, string>;
+  extra?: Record<string, string>;
 }
 
 export interface PublicMessageChannel {

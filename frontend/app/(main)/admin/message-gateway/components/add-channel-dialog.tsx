@@ -75,19 +75,29 @@ export function AddChannelDialog({
 
   const handleSubmit = () => {
     if (!canSubmit || !type) return;
+    const credentials: Record<string, string> = {};
+    const extra: Record<string, string> = {};
+
+    if (type === 'telegram') {
+      credentials.token = telegram.bot_token.trim();
+      if (telegram.base_url.trim()) {
+        credentials.api_base = telegram.base_url.trim();
+      }
+    } else if (type === 'qq') {
+      credentials.app_id = qq.app_id.trim();
+      credentials.client_secret = qq.app_secret.trim();
+      if (qq.portal_host.trim()) {
+        extra.portal_host = qq.portal_host.trim();
+      }
+    }
+
     const data: CreateMessageChannelRequest = {
       name: name.trim(),
       type,
       enabled: true,
+      credentials,
+      ...(Object.keys(extra).length > 0 ? { extra } : {}),
     };
-    if (type === 'telegram') {
-      data.bot_token = telegram.bot_token.trim();
-      if (telegram.base_url.trim()) data.base_url = telegram.base_url.trim();
-    } else {
-      data.app_id = qq.app_id.trim();
-      data.app_secret = qq.app_secret.trim();
-      if (qq.portal_host.trim()) data.portal_host = qq.portal_host.trim();
-    }
     onSubmit(data);
   };
 
