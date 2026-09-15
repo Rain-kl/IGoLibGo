@@ -47,7 +47,7 @@ type Plugin struct {
 
 // New creates a new msg_gateway domain plugin.
 func New(opts ...Option) *Plugin {
-	p := &Plugin{}
+	p := &Plugin{autoStartRunner: true}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(p)
