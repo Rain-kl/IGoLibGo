@@ -14,7 +14,7 @@ Status: implemented
 ## Decision
 
 以 **“标准统一，以 Skills 为主”** 为核心原则落地整改：
-1. **API 响应全面对齐 `api-design`**：重构 `backend/pkg/response`，提供标准 RESTful 状态码（200/201/204/400/404 等）与统一信封（`Response[T]`, `PagedResponse[T]`, `ErrorResponse`），同时在错误响应中继续透出 `error_msg`；并全面同步更新前端对接层（`types.ts`、`api-client.ts`、`base.service.ts`、`api-envelope.ts` 与 `proxy.ts`），安全解包 204 No Content，结构化提取错误码与明细，确保老前端/调用方完全平滑兼容。
+1. **API 响应全面对齐 `api-design`**：重构 `backend/pkg/response`，提供标准 RESTful 状态码（200/201/204/400/404 等）与统一信封（`Response[T]`, `PagedResponse[T]`, `ErrorResponse`），同时在错误响应中继续透出 `error_msg`（注：`error_msg` 兼容字段后续已在 [remove-api-envelope-error-msg](../simplification/2026-09-15-remove-api-envelope-error-msg.md) 中彻底裁撤）；并全面同步更新前端对接层（`types.ts`、`api-client.ts`、`base.service.ts`、`api-envelope.ts` 与 `proxy.ts`），安全解包 204 No Content，结构化提取错误码与明细，确保老前端/调用方完全平滑兼容。
 2. **重构日志规范为项目专属技能 `wv-logging`**：将 `go-logging` 重命名为 `wv-logging`，全面以 `backend/pkg/logger` + `contracts.LoggerService` 结合 OTel Trace 与 5000 行 `GlobalRingBuffer` 为唯一准则。
 3. **彻底纠正 `wv-*` 架构描述**：
    - `wv-push-notification` 按 `backend/plugins/domain/msg_gateway`、物理子包与 `contracts.PushService` 重写；

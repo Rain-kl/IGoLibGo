@@ -115,8 +115,8 @@
 - **标准信封**：
   - 成功数据：`{ "data": ... }`
   - 分页数据：`{ "data": [...], "meta": { "total": ..., "page": ..., "per_page": ... } }`
-  - 错误数据：`{ "error": { "code": "...", "message": "...", "details": [...] } }`
-  - 兼容字段：`error_msg` 会在错误响应中继续透出，无缝向下兼容老前端调用。
+  - 错误数据：`{ "error": { "code": "...", "message": "...", "details": [...] }, "data": null }`
+  - 统一规范：全面收敛至 `error` 结构体，彻底移除旧版顶层 `error_msg` 字段。
 - **错误文案**：使用语义化、清晰的错误文案或错误码（snake_case，如 `validation_error`, `user_not_found`），禁止暴露底层数据库/系统错误细节给客户端。
 - **Service/Logics 分工**：业务逻辑层只接受 `context.Context`，返回 `(result, error)`，严禁依赖 `*gin.Context` 或调用 `c.JSON`/`Abort*`。
 - **错误日志**：底层错误在 Handler/Logic 边界用 `backend/pkg/logger` 打印日志，禁止使用 `_ = ...` 静默吞掉关键错误。
@@ -160,7 +160,7 @@
     - 支持语言：`zh-CN`、`en`；默认 `zh-CN`。
     - 解析优先级：cookie `NEXT_LOCALE`（用户显式选择）→ 浏览器语言 → 默认 `zh-CN`。
     - 文案统一放在 `frontend/messages/{locale}.json`，按命名空间嵌套（`common` / `layout` / `auth` / `settings` / 业务域）。
-    - 组件内用户可见文案必须通过 `useTranslations()` / `getTranslations()` 读取；**禁止**新增中英硬编码 UI 字符串（后端返回的 `error_msg`、日志、调试信息除外）。
+    - 组件内用户可见文案必须通过 `useTranslations()` / `getTranslations()` 读取；**禁止**新增中英硬编码 UI 字符串（后端返回的 `error.message`、日志、调试信息除外）。
     - key 使用 camelCase 分层（如 `auth.login.submit`）；完整短语作为 value，禁止在组件内拼接句子。
     - 新增或修改文案时必须**同步**更新 `zh-CN.json` 与 `en.json`，保持 key 树一致。
     - 语言选项展示用自称：`中文` / `English`（不随当前 UI 语言翻译）。

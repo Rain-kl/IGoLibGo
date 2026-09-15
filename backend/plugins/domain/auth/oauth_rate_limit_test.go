@@ -100,9 +100,9 @@ func TestOAuthRateLimiting(t *testing.T) {
 		router.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 
-		var resp map[string]any
+		var resp response.ErrorResponse
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		require.NoError(t, err)
-		assert.Equal(t, "请求授权过于频繁，请稍后重试", resp["error_msg"])
+		assert.Equal(t, "请求授权过于频繁，请稍后重试", resp.Error.Message)
 	}
 }

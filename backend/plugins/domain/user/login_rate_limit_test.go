@@ -100,10 +100,10 @@ func TestUserLoginRateLimiting(t *testing.T) {
 		router.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusTooManyRequests, w.Code, "6th attempt should be 429 Too Many Requests")
 
-		var resp map[string]any
+		var resp response.ErrorResponse
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		require.NoError(t, err)
-		assert.Equal(t, "登录尝试过于频繁，请稍后重试", resp["error_msg"])
+		assert.Equal(t, "登录尝试过于频繁，请稍后重试", resp.Error.Message)
 	}
 
 	// Another IP is not blocked

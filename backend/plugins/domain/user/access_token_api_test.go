@@ -5,6 +5,7 @@ package user_test
 
 import (
 	"Wavelet/core/contracts"
+	"Wavelet/pkg/response"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -17,8 +18,8 @@ import (
 )
 
 type createTokenResponseEnvelope struct {
-	ErrorMsg string `json:"error_msg"`
-	Data     struct {
+	Error *response.ErrorBody `json:"error"`
+	Data  struct {
 		Token    string          `json:"token"`
 		RawToken string          `json:"raw_token"`
 		Record   json.RawMessage `json:"record"`
@@ -62,7 +63,7 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 
 	var createEnv createTokenResponseEnvelope
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &createEnv))
-	require.Empty(t, createEnv.ErrorMsg)
+	require.Nil(t, createEnv.Error)
 	require.True(t, strings.HasPrefix(createEnv.Data.Token, "wvt_"), "token should be plaintext wvt_... string, got: %s", createEnv.Data.Token)
 	require.Equal(t, createEnv.Data.Token, createEnv.Data.RawToken)
 
@@ -83,11 +84,11 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, listRec.Code)
 	var listEnv struct {
-		ErrorMsg string           `json:"error_msg"`
-		Data     []tokenRecordDTO `json:"data"`
+		Error *response.ErrorBody `json:"error"`
+		Data  []tokenRecordDTO    `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(listRec.Body.Bytes(), &listEnv))
-	require.Empty(t, listEnv.ErrorMsg)
+	require.Nil(t, listEnv.Error)
 	require.Len(t, listEnv.Data, 1)
 	require.Equal(t, tokenID, listEnv.Data[0].ID)
 	require.Equal(t, "test-api-key", listEnv.Data[0].Name)
@@ -104,7 +105,7 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 	require.Equal(t, http.StatusOK, rotateRec.Code, "rotate token response: %s", rotateRec.Body.String())
 	var rotateEnv createTokenResponseEnvelope
 	require.NoError(t, json.Unmarshal(rotateRec.Body.Bytes(), &rotateEnv))
-	require.Empty(t, rotateEnv.ErrorMsg)
+	require.Nil(t, rotateEnv.Error)
 	require.True(t, strings.HasPrefix(rotateEnv.Data.Token, "wvt_"))
 	require.NotEqual(t, createEnv.Data.Token, rotateEnv.Data.Token, "rotated token should generate a new secret")
 
@@ -121,11 +122,11 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 	engine.ServeHTTP(listRecRotated, listReqRotated)
 	require.Equal(t, http.StatusOK, listRecRotated.Code)
 	var listEnvRotated struct {
-		ErrorMsg string           `json:"error_msg"`
-		Data     []tokenRecordDTO `json:"data"`
+		Error *response.ErrorBody `json:"error"`
+		Data  []tokenRecordDTO    `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(listRecRotated.Body.Bytes(), &listEnvRotated))
-	require.Empty(t, listEnvRotated.ErrorMsg)
+	require.Nil(t, listEnvRotated.Error)
 	require.Len(t, listEnvRotated.Data, 1)
 	require.Equal(t, rotateEnv.Data.Token, listEnvRotated.Data[0].Token, "list should return rotated plaintext token")
 
@@ -146,8 +147,8 @@ func TestAccessTokenAPILifecycle(t *testing.T) {
 	listRec2 := httptest.NewRecorder()
 	engine.ServeHTTP(listRec2, listReq2)
 	var listEnv2 struct {
-		ErrorMsg string           `json:"error_msg"`
-		Data     []tokenRecordDTO `json:"data"`
+		Error *response.ErrorBody `json:"error"`
+		Data  []tokenRecordDTO    `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(listRec2.Body.Bytes(), &listEnv2))
 	require.Empty(t, listEnv2.Data)

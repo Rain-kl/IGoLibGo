@@ -8097,11 +8097,7 @@ const docTemplate = `{
         "response.Any": {
             "type": "object",
             "properties": {
-                "data": {},
-                "error_msg": {
-                    "type": "string",
-                    "example": ""
-                }
+                "data": {}
             }
         },
         "response.AnyError": {

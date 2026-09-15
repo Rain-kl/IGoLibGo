@@ -1570,7 +1570,6 @@
         "desc": "All API responses follow a unified envelope format.",
         "responseFormat": "Response format",
         "responseFormatDesc": "All endpoints return the following JSON structure:",
-        "errorMsgDesc": "Empty string on success, human-readable error message on failure",
         "dataDesc": "Business data; structure varies by endpoint",
         "successExample": "Success response example",
         "failExample": "Failure response example",

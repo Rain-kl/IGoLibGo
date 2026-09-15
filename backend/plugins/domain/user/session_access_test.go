@@ -29,8 +29,8 @@ import (
 type stubStorageService struct{ contracts.StorageService }
 
 type loginEnvelope struct {
-	ErrorMsg string          `json:"error_msg"`
-	Data     json.RawMessage `json:"data"`
+	Error *response.ErrorBody `json:"error"`
+	Data  json.RawMessage     `json:"data"`
 }
 
 func mountUserAuthEngine(t *testing.T) (*gin.Engine, contracts.UserService) {
@@ -189,8 +189,8 @@ func TestNonAdminSessionCanAccessProtectedAPIs(t *testing.T) {
 					t.Errorf("GET %s as %s decode error = %v body=%s", path, tc.name, err, rec.Body.String())
 					continue
 				}
-				if env.ErrorMsg != "" {
-					t.Errorf("GET %s as %s error_msg = %q, want empty", path, tc.name, env.ErrorMsg)
+				if env.Error != nil {
+					t.Errorf("GET %s as %s error = %+v, want empty", path, tc.name, env.Error)
 				}
 				if bytes.Contains(env.Data, []byte(`"username"`)) {
 					var payload struct {
@@ -263,8 +263,8 @@ func TestLoginBackfillsNullUserIDSoProtectedAPIsSucceed(t *testing.T) {
 			t.Errorf("GET %s as legacy_zero decode error = %v body=%s", path, err, rec.Body.String())
 			continue
 		}
-		if env.ErrorMsg != "" {
-			t.Errorf("GET %s as legacy_zero error_msg = %q, want empty", path, env.ErrorMsg)
+		if env.Error != nil {
+			t.Errorf("GET %s as legacy_zero error = %+v, want empty", path, env.Error)
 		}
 	}
 

@@ -32,8 +32,8 @@ import (
 )
 
 type testResponse struct {
-	ErrorMsg string          `json:"error_msg"`
-	Data     json.RawMessage `json:"data"`
+	Error *response.ErrorBody `json:"error"`
+	Data  json.RawMessage     `json:"data"`
 }
 
 func setupTestRouter(authUser *contracts.UserDTO) *gin.Engine {
@@ -193,8 +193,8 @@ func TestUploadFile(t *testing.T) {
 			t.Fatalf("failed to unmarshal response: %v", err)
 		}
 
-		if resp.ErrorMsg != "" {
-			t.Fatalf("expected success response, got failure: %s", resp.ErrorMsg)
+		if resp.Error != nil {
+			t.Fatalf("expected success response, got failure: %+v", resp.Error)
 		}
 
 		// Verify database record
@@ -240,7 +240,7 @@ func TestUploadFile(t *testing.T) {
 
 		var resp testResponse
 		_ = json.Unmarshal(w.Body.Bytes(), &resp)
-		if resp.ErrorMsg == "" || !strings.Contains(resp.ErrorMsg, shared.ErrUnsupportedFormat) {
+		if resp.Error == nil || !strings.Contains(resp.Error.Message, shared.ErrUnsupportedFormat) {
 			t.Errorf("expected unsupported format error, got: %v", resp)
 		}
 	})
@@ -277,8 +277,8 @@ func TestUploadFile(t *testing.T) {
 		var resp2 testResponse
 		_ = json.Unmarshal(w2.Body.Bytes(), &resp2)
 
-		if resp2.ErrorMsg != "" {
-			t.Fatalf("second upload was unsuccessful: %s", resp2.ErrorMsg)
+		if resp2.Error != nil {
+			t.Fatalf("second upload was unsuccessful: %+v", resp2.Error)
 		}
 
 		var uploadRecord2 models.Upload
@@ -327,8 +327,8 @@ func TestUploadFile(t *testing.T) {
 		var resp testResponse
 		_ = json.Unmarshal(w.Body.Bytes(), &resp)
 
-		if resp.ErrorMsg != "" {
-			t.Fatalf("local upload failed: %s", resp.ErrorMsg)
+		if resp.Error != nil {
+			t.Fatalf("local upload failed: %+v", resp.Error)
 		}
 
 		var localRecord models.Upload
@@ -474,8 +474,8 @@ func TestListFiles(t *testing.T) {
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 			t.Fatalf("failed to parse response: %v", err)
 		}
-		if resp.ErrorMsg != "" {
-			t.Fatalf("ListFiles() error = %q, want empty", resp.ErrorMsg)
+		if resp.Error != nil {
+			t.Fatalf("ListFiles() error = %+v, want empty", resp.Error)
 		}
 
 		var got listFilesResponse
@@ -505,8 +505,8 @@ func TestListFiles(t *testing.T) {
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 			t.Fatalf("failed to parse response: %v", err)
 		}
-		if resp.ErrorMsg != "" {
-			t.Fatalf("ListFiles(keyword=photo) error = %q, want empty", resp.ErrorMsg)
+		if resp.Error != nil {
+			t.Fatalf("ListFiles(keyword=photo) error = %+v, want empty", resp.Error)
 		}
 
 		var got listFilesResponse
@@ -533,8 +533,8 @@ func TestListFiles(t *testing.T) {
 		if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 			t.Fatalf("failed to parse response: %v", err)
 		}
-		if resp.ErrorMsg != "" {
-			t.Fatalf("ListFiles(user_id=1001) error = %q, want empty", resp.ErrorMsg)
+		if resp.Error != nil {
+			t.Fatalf("ListFiles(user_id=1001) error = %+v, want empty", resp.Error)
 		}
 
 		var got listFilesResponse
@@ -809,15 +809,15 @@ func TestGetFileStats(t *testing.T) {
 	}
 
 	var resp struct {
-		ErrorMsg string            `json:"error_msg"`
-		Data     fileStatsResponse `json:"data"`
+		Error *response.ErrorBody `json:"error"`
+		Data  fileStatsResponse   `json:"data"`
 	}
 	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
 	}
 
-	if resp.ErrorMsg != "" {
-		t.Fatalf("expected no error, got: %s", resp.ErrorMsg)
+	if resp.Error != nil {
+		t.Fatalf("expected no error, got: %+v", resp.Error)
 	}
 
 	// Verify total count and size
@@ -900,13 +900,13 @@ func TestUserUploadManagement(t *testing.T) {
 		router1.ServeHTTP(w, req)
 
 		var resp struct {
-			ErrorMsg string              `json:"error_msg"`
-			Data     listMyFilesResponse `json:"data"`
+			Error *response.ErrorBody `json:"error"`
+			Data  listMyFilesResponse `json:"data"`
 		}
 		_ = json.Unmarshal(w.Body.Bytes(), &resp)
 
-		if resp.ErrorMsg != "" {
-			t.Fatalf("ListMyFiles error: %s", resp.ErrorMsg)
+		if resp.Error != nil {
+			t.Fatalf("ListMyFiles error: %+v", resp.Error)
 		}
 		if resp.Data.Total != 1 {
 			t.Errorf("expected 1 file for user1, got %d", resp.Data.Total)

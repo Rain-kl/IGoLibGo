@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package response provides shared HTTP API response structures adhering to RESTful api-design patterns.
+// Note: 彻底移除 API 信封向下兼容字段 error_msg，全面收敛至 api-design 结构化 error — 见 .agents/notes/implemented/simplification/2026-09-15-remove-api-envelope-error-msg.md
 package response
 
 import (
@@ -33,16 +34,14 @@ type ErrorBody struct {
 
 // ErrorResponse defines the standard error envelope with an "error" object.
 type ErrorResponse struct {
-	ErrorMsg string    `json:"error_msg,omitempty"` // Backwards compatibility with legacy clients
-	Error    ErrorBody `json:"error"`
-	Data     any       `json:"data"`
+	Error ErrorBody `json:"error"`
+	Data  any       `json:"data"`
 }
 
 // Response defines the unified API response envelope with data payload.
 type Response[T any] struct {
-	Data     T          `json:"data"`
-	ErrorMsg string     `json:"error_msg,omitempty"`
-	Error    *ErrorBody `json:"error,omitempty"`
+	Data  T          `json:"data"`
+	Error *ErrorBody `json:"error,omitempty"`
 }
 
 // PagedResponse defines collection response with metadata.
@@ -54,8 +53,7 @@ type PagedResponse[T any] struct {
 
 // Any 用于 Swagger 文档的通用成功响应类型
 type Any struct {
-	Data     any    `json:"data"`
-	ErrorMsg string `json:"error_msg,omitempty" example:""`
+	Data any `json:"data"`
 }
 
 // AnyError 用于 Swagger 文档的错误响应类型
@@ -95,7 +93,6 @@ func NoContent(c *gin.Context) {
 // Err 构造错误响应
 func Err(msg string) ErrorResponse {
 	return ErrorResponse{
-		ErrorMsg: msg,
 		Error: ErrorBody{
 			Code:    "bad_request",
 			Message: msg,
@@ -107,7 +104,6 @@ func Err(msg string) ErrorResponse {
 // ErrWithCode 构造带状态码与 Code 的错误响应
 func ErrWithCode(errCode, msg string, details ...ErrorDetail) ErrorResponse {
 	return ErrorResponse{
-		ErrorMsg: msg,
 		Error: ErrorBody{
 			Code:    errCode,
 			Message: msg,

@@ -33,8 +33,6 @@ export interface ApiResponse<T = unknown> {
   error?: ApiErrorBody;
   /** 响应消息 */
   message?: string;
-  /** 兼容字段：旧版错误消息 */
-  error_msg?: string;
   /** 兼容字段：旧版错误代码 */
   error_code?: string;
   /** 响应状态码 */
@@ -47,8 +45,6 @@ export interface ApiResponse<T = unknown> {
 export interface ApiError {
   /** 标准结构化错误体 (api-design 规范) */
   error?: ApiErrorBody;
-  /** 兼容字段：错误消息 */
-  error_msg?: string;
   /** 兼容字段：错误代码 */
   error_code?: string;
   /** 兼容字段：错误详情 */
