@@ -1018,7 +1018,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await expect(page.getByText('编辑一条龙自动化配置')).toBeVisible();
   });
 
-  test('successfully preserves and saves major and minor in edit dialog even when auto-checkin is disabled', async ({
+  test('hides beacon check-in parameters when auto-checkin is disabled and shows them when enabled', async ({
     page,
   }) => {
     let capturedReq: Record<string, unknown> | null = null;
@@ -1030,7 +1030,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
           data: [
             {
               id: 'seat_manual_checkin',
-              name: '手动打卡预填测试',
+              name: '打卡参数显隐测试',
               cookie: 'Authorization=cookie-xxx',
               library_id: 20,
               library_name: '总馆二楼',
@@ -1072,7 +1072,17 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await page.getByLabel(/操作|actions/i).click();
     await page.getByRole('menuitem', { name: /编辑配置/i }).click();
 
-    // Auto-checkin switch remains OFF
+    // 1. When auto-checkin is disabled, beacon inputs should NOT be visible
+    await expect(page.getByPlaceholder(/如 31.2304/i)).not.toBeVisible();
+    await expect(
+      page.getByPlaceholder(/如 10001 \(0-65535\)/i),
+    ).not.toBeVisible();
+
+    // 2. Toggle switch ON -> Beacon parameters become visible
+    await page.getByRole('switch').click();
+    await expect(page.getByPlaceholder(/如 31.2304/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/如 10001 \(0-65535\)/i)).toBeVisible();
+
     // Fill in beacon parameters
     await page.getByPlaceholder(/如 31.2304/i).fill('31.2304');
     await page.getByPlaceholder(/如 121.4737/i).fill('121.4737');
@@ -1085,10 +1095,10 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     // Click "保存修改"
     await page.getByRole('button', { name: /保存修改/i }).click();
 
-    // Verify backend received major and minor as numbers, NOT 0
+    // Verify backend received auto_checkin true and valid major/minor
     expect(capturedReq).not.toBeNull();
     const result = capturedReq!;
-    expect(result.auto_checkin).toBe(false);
+    expect(result.auto_checkin).toBe(true);
     expect(result.major).toBe(10001);
     expect(result.minor).toBe(1980);
     expect(result.beacon_uuid).toBe('FDA50693-A4E2-4FB1-AFCF-C6EB07647825');

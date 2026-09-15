@@ -571,105 +571,86 @@ export function PipelineEditDialog({
           </div>
 
           {/* Section 3: Beacon Settings (Required when autoCheckin is true) */}
-          <div
-            className={cn(
-              'space-y-3 rounded-lg border p-3.5 transition-colors',
-              autoCheckin
-                ? 'border-primary/20 bg-primary/5'
-                : 'border-border/40 bg-muted/10',
-            )}
-          >
-            <div className='flex items-center justify-between'>
-              <span className='text-xs font-semibold flex items-center gap-1.5'>
-                <Radio className='size-3.5 text-primary' />
-                {autoCheckin
-                  ? t('dialog.customBeaconRequired')
-                  : t('dialog.customBeacon')}
-              </span>
-              {autoCheckin && (
+          {autoCheckin && (
+            <div className='space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3.5'>
+              <div className='flex items-center justify-between'>
+                <span className='text-xs font-semibold flex items-center gap-1.5'>
+                  <Radio className='size-3.5 text-primary' />
+                  {t('dialog.customBeaconRequired')}
+                </span>
                 <span className='text-[10px] text-destructive font-medium'>
                   {t('dialog.requiredTag')}
                 </span>
-              )}
-            </div>
+              </div>
 
-            <div className='grid grid-cols-2 gap-2.5'>
+              <div className='grid grid-cols-2 gap-2.5'>
+                <div className='space-y-1'>
+                  <Label className='text-[11px] text-muted-foreground'>
+                    {t('dialog.latLabel')}
+                    <span className='text-destructive ml-0.5'>*</span>
+                  </Label>
+                  <Input
+                    placeholder={t('dialog.latPlaceholder')}
+                    value={beaconLat}
+                    onChange={(e) => setBeaconLat(e.target.value)}
+                    className='h-8 text-xs font-mono'
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <Label className='text-[11px] text-muted-foreground'>
+                    {t('dialog.lngLabel')}
+                    <span className='text-destructive ml-0.5'>*</span>
+                  </Label>
+                  <Input
+                    placeholder={t('dialog.lngPlaceholder')}
+                    value={beaconLng}
+                    onChange={(e) => setBeaconLng(e.target.value)}
+                    className='h-8 text-xs font-mono'
+                  />
+                </div>
+              </div>
+
               <div className='space-y-1'>
                 <Label className='text-[11px] text-muted-foreground'>
-                  {t('dialog.latLabel')}
-                  {autoCheckin && (
-                    <span className='text-destructive ml-0.5'>*</span>
-                  )}
-                </Label>
-                <Input
-                  placeholder={t('dialog.latPlaceholder')}
-                  value={beaconLat}
-                  onChange={(e) => setBeaconLat(e.target.value)}
-                  className='h-8 text-xs font-mono'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[11px] text-muted-foreground'>
-                  {t('dialog.lngLabel')}
-                  {autoCheckin && (
-                    <span className='text-destructive ml-0.5'>*</span>
-                  )}
-                </Label>
-                <Input
-                  placeholder={t('dialog.lngPlaceholder')}
-                  value={beaconLng}
-                  onChange={(e) => setBeaconLng(e.target.value)}
-                  className='h-8 text-xs font-mono'
-                />
-              </div>
-            </div>
-
-            <div className='space-y-1'>
-              <Label className='text-[11px] text-muted-foreground'>
-                {t('dialog.macLabel')}
-                {autoCheckin && (
+                  {t('dialog.macLabel')}
                   <span className='text-destructive ml-0.5'>*</span>
-                )}
-              </Label>
-              <Input
-                placeholder={t('dialog.macPlaceholder')}
-                value={beaconMac}
-                onChange={(e) => setBeaconMac(e.target.value)}
-                className='h-8 text-xs font-mono'
-              />
-            </div>
+                </Label>
+                <Input
+                  placeholder={t('dialog.macPlaceholder')}
+                  value={beaconMac}
+                  onChange={(e) => setBeaconMac(e.target.value)}
+                  className='h-8 text-xs font-mono'
+                />
+              </div>
 
-            <div className='grid grid-cols-2 gap-2.5'>
-              <div className='space-y-1'>
-                <Label className='text-[11px] text-muted-foreground'>
-                  {t('dialog.majorLabel')}
-                  {autoCheckin && (
+              <div className='grid grid-cols-2 gap-2.5'>
+                <div className='space-y-1'>
+                  <Label className='text-[11px] text-muted-foreground'>
+                    {t('dialog.majorLabel')}
                     <span className='text-destructive ml-0.5'>*</span>
-                  )}
-                </Label>
-                <Input
-                  placeholder={t('dialog.majorPlaceholder')}
-                  value={major}
-                  onChange={(e) => setMajor(e.target.value)}
-                  className='h-8 text-xs font-mono'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[11px] text-muted-foreground'>
-                  {t('dialog.minorLabel')}
-                  {autoCheckin && (
+                  </Label>
+                  <Input
+                    placeholder={t('dialog.majorPlaceholder')}
+                    value={major}
+                    onChange={(e) => setMajor(e.target.value)}
+                    className='h-8 text-xs font-mono'
+                  />
+                </div>
+                <div className='space-y-1'>
+                  <Label className='text-[11px] text-muted-foreground'>
+                    {t('dialog.minorLabel')}
                     <span className='text-destructive ml-0.5'>*</span>
-                  )}
-                </Label>
-                <Input
-                  placeholder={t('dialog.minorPlaceholder')}
-                  value={minor}
-                  onChange={(e) => setMinor(e.target.value)}
-                  className='h-8 text-xs font-mono'
-                />
+                  </Label>
+                  <Input
+                    placeholder={t('dialog.minorPlaceholder')}
+                    value={minor}
+                    onChange={(e) => setMinor(e.target.value)}
+                    className='h-8 text-xs font-mono'
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Section 4: Login Credentials Status & Optional Update */}
           <div className='space-y-3 rounded-lg border border-border/40 p-3.5 bg-muted/10'>
