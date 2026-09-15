@@ -88,10 +88,9 @@ export class IGoPipelineService extends BaseService {
       data.auth_url?.trim() ||
       data.auth_code?.trim() ||
       '';
-    return this.post<PipelineHelperVerifySessionResponse>(
-      '/helper/verify-session',
-      { cookie: input },
-    );
+    return this.post<PipelineHelperVerifySessionResponse>('/verify-session', {
+      cookie: input,
+    });
   }
 
   /**
@@ -108,7 +107,7 @@ export class IGoPipelineService extends BaseService {
       data.auth_url?.trim() ||
       data.auth_code?.trim() ||
       '';
-    return this.post<LibraryLayoutResponse>('/helper/library-layout', {
+    return this.post<LibraryLayoutResponse>('/library-layout', {
       cookie: cookieInput,
       library_id: data.library_id,
     });
@@ -125,9 +124,8 @@ export class IGoPipelineService extends BaseService {
       data.checkin_url?.trim() ||
       data.checkin_code?.trim() ||
       '';
-    return this.post<PipelineHelperVerifyCheckinResponse>(
-      '/helper/verify-checkin',
-      { token_or_code: input },
-    );
+    return this.post<PipelineHelperVerifyCheckinResponse>('/verify-checkin', {
+      token_or_code: input,
+    });
   }
 }

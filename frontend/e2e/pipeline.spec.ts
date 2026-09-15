@@ -168,81 +168,75 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
       });
     });
 
-    await page.route(
-      '*/**/api/v1/igo/pipeline/helper*/verify-session*',
-      async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            data: {
-              valid: true,
-              libraries: [
-                {
-                  library_id: 20,
-                  name: '总馆二楼',
-                  floor: '2',
-                  is_open: true,
-                  total_seats: 2,
-                  used_seats: 0,
-                  booked_seats: 0,
-                },
-                {
-                  library_id: 10,
-                  name: '总馆一楼',
-                  floor: '1',
-                  is_open: true,
-                  total_seats: 10,
-                  used_seats: 2,
-                  booked_seats: 1,
-                },
-              ],
-              cookie: 'Authorization=cookie-xxx',
-              expires_at: '2026-09-16T08:00:00Z',
-            },
-          }),
-        });
-      },
-    );
+    await page.route('**/api/v1/igo/pipeline/verify-session', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            valid: true,
+            libraries: [
+              {
+                library_id: 20,
+                name: '总馆二楼',
+                floor: '2',
+                is_open: true,
+                total_seats: 2,
+                used_seats: 0,
+                booked_seats: 0,
+              },
+              {
+                library_id: 10,
+                name: '总馆一楼',
+                floor: '1',
+                is_open: true,
+                total_seats: 10,
+                used_seats: 2,
+                booked_seats: 1,
+              },
+            ],
+            cookie: 'Authorization=cookie-xxx',
+            expires_at: '2026-09-16T08:00:00Z',
+          },
+        }),
+      });
+    });
 
-    await page.route(
-      '*/**/api/v1/igo/pipeline/helper*/library-layout*',
-      async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            data: {
-              library_id: 20,
-              name: '总馆二楼',
-              floor: '2',
-              is_open: true,
-              total_seats: 2,
-              available_seats: 2,
-              booked_seats: 0,
-              used_seats: 0,
-              invalid_layout_item_count: 0,
-              seats: [
-                {
-                  seat_key: 'S-201',
-                  seat_name: '201号',
-                  is_occupied: false,
-                  x: 1,
-                  y: 1,
-                },
-                {
-                  seat_key: 'S-202',
-                  seat_name: '202号',
-                  is_occupied: false,
-                  x: 1,
-                  y: 2,
-                },
-              ],
-            },
-          }),
-        });
-      },
-    );
+    await page.route('**/api/v1/igo/pipeline/library-layout', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            library_id: 20,
+            name: '总馆二楼',
+            floor: '2',
+            is_open: true,
+            total_seats: 2,
+            available_seats: 2,
+            booked_seats: 0,
+            used_seats: 0,
+            invalid_layout_item_count: 0,
+            seats: [
+              {
+                seat_key: 'S-201',
+                seat_name: '201号',
+                is_occupied: false,
+                x: 1,
+                y: 1,
+              },
+              {
+                seat_key: 'S-202',
+                seat_name: '202号',
+                is_occupied: false,
+                x: 1,
+                y: 2,
+              },
+            ],
+          },
+        }),
+      });
+    });
 
     await page.goto('/pipeline');
 
