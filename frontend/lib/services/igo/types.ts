@@ -483,4 +483,3 @@ export interface PipelineHelperVerifyCheckinResponse {
   token: string;
   expires_at?: string;
 }
-
