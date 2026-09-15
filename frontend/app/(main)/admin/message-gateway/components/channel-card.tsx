@@ -5,7 +5,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Pencil, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import type { MessageChannel } from '@/lib/services/message-gateway';
 interface ChannelCardProps {
   channel: MessageChannel;
   onToggle: (enabled: boolean) => void;
+  onEdit: () => void;
   onDelete: () => void;
   toggling?: boolean;
   deleting?: boolean;
@@ -33,6 +34,7 @@ interface ChannelCardProps {
 export function ChannelCard({
   channel,
   onToggle,
+  onEdit,
   onDelete,
   toggling,
   deleting,
@@ -61,7 +63,11 @@ export function ChannelCard({
           />
         </div>
       </div>
-      <div className='flex justify-end'>
+      <div className='flex items-center justify-end gap-2'>
+        <Button variant='outline' size='sm' onClick={onEdit}>
+          <Pencil className='size-4' />
+          {t('edit')}
+        </Button>
         <Button
           variant='ghost'
           size='sm'

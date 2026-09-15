@@ -260,7 +260,7 @@ func TestCreateChannel_ReturnsBeforeConnectFinishes(t *testing.T) {
 			Name:        "T",
 			Type:        "telegram",
 			Enabled:     &enabled,
-			Credentials: map[string]string{"token": "8942292815:AAEuc8SBuOmaFvWxoM1dX0cRrpM7nafp2H0"},
+			Credentials: map[string]string{"token": "mock_token"},
 		})
 		done <- err
 	}()
