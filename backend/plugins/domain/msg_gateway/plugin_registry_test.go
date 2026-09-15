@@ -23,6 +23,10 @@ func TestPushRegistry(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, registry)
 
+	botReg, err := ctx.Inject[contracts.BotCommandRegistry]()
+	require.NoError(t, err)
+	require.NotNil(t, botReg)
+
 	const key = "test.push_registry.probe"
 	registry.RegisterBuiltInEvent(contracts.PushEventMeta{
 		Key:         key,

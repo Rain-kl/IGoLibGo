@@ -119,6 +119,9 @@ func (r *Runner) syncChannels(ctx context.Context) error {
 			continue
 		}
 		ch, err := factory(cfg, func(inboundCtx context.Context, msg do.InboundMessage) error {
+			if reg := GetBotRegistry(); reg != nil {
+				return reg.Dispatch(inboundCtx, msg, r.SendText)
+			}
 			return HandleInboundMessage(inboundCtx, msg, r.SendText)
 		})
 		if err != nil {

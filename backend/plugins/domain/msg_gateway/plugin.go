@@ -10,6 +10,7 @@ import (
 	"Wavelet/core/extpoints"
 	"Wavelet/pkg/ginutil"
 	"Wavelet/pkg/util"
+	"Wavelet/plugins/domain/msg_gateway/bot"
 	"Wavelet/plugins/domain/msg_gateway/channels/qq"
 	"Wavelet/plugins/domain/msg_gateway/channels/telegram"
 	"Wavelet/plugins/domain/msg_gateway/consts"
@@ -149,6 +150,18 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 			onInbound = botCmdHandler.HandleInbound
 		}
 		return qq.New(cfg, onInbound)
+	})
+
+	reg := service.NewBotRegistry()
+	if err := bot.RegisterBuiltins(reg); err != nil {
+		return err
+	}
+	// Note: 网关独占 BotCommandRegistry 并 Provide，业务插件 Bind 注册 — 见 .agents/notes/implemented/architecture/2026-09-15-bot-command-registry.md
+	ctx.Provide[contracts.BotCommandRegistry](reg)
+	service.SetBotRegistry(reg)
+	ctx.OnDispose(func() error {
+		service.SetBotRegistry(nil)
+		return nil
 	})
 
 	const defaultTaskRetry = 3

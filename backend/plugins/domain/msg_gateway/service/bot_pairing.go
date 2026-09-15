@@ -23,9 +23,9 @@ import (
 // Note: 任何未鉴权/未绑定私聊消息自动回复配对码 — 见 .agents/notes/implemented/bug-fix/2026-09-15-telegram-bot-start-reply.md
 
 // HandleInboundMessage processes inbound private chat messages.
-// If the sender's platform identity is not bound to a Wavelet user, it generates/reuses a pairing code and replies.
-// If already bound, it notifies the sender that the account is bound.
-func HandleInboundMessage(ctx context.Context, msg do.InboundMessage, sendFn func(ctx context.Context, channelID uint64, to do.Recipient, text string) error) error {
+// Unbound senders receive a pairing code via ReplyPairingCode.
+// Bound senders are a no-op here; command dispatch is BotRegistry.Dispatch.
+func HandleInboundMessage(ctx context.Context, msg do.InboundMessage, sendFn SendTextFn) error {
 	if msg.ChannelID == 0 || msg.PlatformUserID == "" {
 		return nil
 	}
@@ -36,19 +36,15 @@ func HandleInboundMessage(ctx context.Context, msg do.InboundMessage, sendFn fun
 		return err
 	}
 
-	recipient := do.Recipient{
-		ChatID:         msg.ChatID,
-		PlatformUserID: msg.PlatformUserID,
-	}
-
 	if err == nil && binding != nil {
-		replyText := "您的账号已成功绑定 Wavelet 平台，后续通知将在此处推送。"
-		if sendFn != nil {
-			return sendFn(ctx, msg.ChannelID, recipient, replyText)
-		}
 		return nil
 	}
 
+	return ReplyPairingCode(ctx, msg, sendFn)
+}
+
+// ReplyPairingCode generates or reuses a pairing code and replies with bind instructions.
+func ReplyPairingCode(ctx context.Context, msg do.InboundMessage, sendFn SendTextFn) error {
 	expiryMinutes := 15
 	if c := core.AppContext(ctx); c != nil {
 		if schema, ok := c.Settings().Get("msg_gateway.pairing_code_expiry_minutes"); ok {
@@ -75,7 +71,10 @@ func HandleInboundMessage(ctx context.Context, msg do.InboundMessage, sendFn fun
 	replyText := fmt.Sprintf("欢迎使用 Wavelet 机器人！\n您的绑定配对码为：%s（%d分钟内有效）。\n请登录系统，在「消息网关 -> 私聊身份绑定」中选择该频道并输入此配对码以完成绑定。", formattedCode, expiryMinutes)
 
 	if sendFn != nil {
-		return sendFn(ctx, msg.ChannelID, recipient, replyText)
+		return sendFn(ctx, msg.ChannelID, do.Recipient{
+			ChatID:         msg.ChatID,
+			PlatformUserID: msg.PlatformUserID,
+		}, replyText)
 	}
 	return nil
 }

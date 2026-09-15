@@ -6,14 +6,14 @@
 
 ## 一、技能总览与上游分类
 
-本项目采用**目录源码直入（非 Git Submodule）**方式引入外部技能，确保仓库轻量、自包含且不受子模块指针冲突影响。当前共收录 **37 个技能**，来源分为以下四大类：
+本项目采用**目录源码直入（非 Git Submodule）**方式引入外部技能，确保仓库轻量、自包含且不受子模块指针冲突影响。当前共收录 **38 个技能**，来源分为以下四大类：
 
 | 来源分类 | 技能数量 | 官方仓库地址 | 仓库内路径 |
 | :--- | :---: | :--- | :--- |
 | **ECC 社区体系** | 25 | `https://github.com/affaan-m/ECC` | `skills/<skill-name>` |
 | **DeepSeek 决策沉淀** | 1 | `https://github.com/czm15053/write-notes-like-deepseek` | 根目录全包 |
 | **自动化目标循环** | 1 | `https://github.com/dave1010/autoresearch` | 根目录全包 |
-| **Wavelet 自研/内核业务** | 10 | `https://github.com/Rain-kl/Wavelet` (当前项目) | `.agents/skills/<skill-name>` |
+| **Wavelet 自研/内核业务** | 11 | `https://github.com/Rain-kl/Wavelet` (当前项目) | `.agents/skills/<skill-name>` |
 
 ---
 
@@ -62,7 +62,7 @@
 
 ---
 
-### 3. Wavelet 自研/核心业务与框架技能 (10 个)
+### 3. Wavelet 自研/核心业务与框架技能 (11 个)
 
 上游仓库统一为当前开源主仓库：[`https://github.com/Rain-kl/Wavelet`](https://github.com/Rain-kl/Wavelet)  
 存放路径：`.agents/skills/<skill-name>`  
@@ -78,6 +78,7 @@
 | `wv-logstore` | 日志与分析库架构：日志/分析用途表划分、`plugins/domain/risk_control/logstore` 接入与 PG/SQLite 回落。 | 随着审计时序日志与主分析库路由策略变动维护。 |
 | `wv-file-upload` | 统一文件摄取服务：通过 `upload.Ingest` / `contracts.StorageService` 进行文件存储，严禁旁路写表。 | 随着存储服务抽象和文件接入端点调整同步更新。 |
 | `wv-push-notification` | 系统通知推送机制：通过统一触发器投递消息，支持跨域解耦与动态推送配置。 | 随着通知服务与网关契约改动同步更新。 |
+| `wv-new-bot-command` | 业务插件注册 Bot 斜杠命令与多轮对话、`contracts.BotCommandRegistry`、自带 /help /me /cancel | 随命令注册表、自带指令与对话占位契约改动同步更新。 |
 | `wv-logging` | 结构化日志与链路追踪：基于 `backend/pkg/logger`（Zap + otelzap + 5000 行环形缓冲区，支持 Admin WebSocket 日志流）及 `contracts.LoggerService`。 | 随着后端日志系统与 Trace 上下文调整维护。 |
 | `wv-release-guide` | 版本发布规范：从 Git 历史整理规范的 Version Bump 提交信息以自动触发双语 GitHub Release。 | 随着 CI/CD 自动化发版脚本逻辑调整维护。 |
 
