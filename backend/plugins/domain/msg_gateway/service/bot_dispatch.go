@@ -118,28 +118,9 @@ func parseBotDispatchPayload(payload []byte) (botDispatchPayload, error) {
 	return p, nil
 }
 
+// dispatchOnChannel delivers text through the already-connected runner channel.
+// Note: 禁止再 Connect 一条 getUpdates，否则会踢掉主 poller — 见 .agents/notes/implemented/bug-fix/2026-09-15-bot-runner-request-ctx-and-nested-config.md
 func dispatchOnChannel(ctx context.Context, row *entity.MessageChannel, userID uint64, text string) (int, int) {
-	factory, ok := Lookup(row.Type)
-	if !ok {
-		logger.ErrorF(ctx, "bot dispatch: %s type=%s", consts.ErrBotChannelNotRegistered, row.Type)
-		return 0, 1
-	}
-	cfg, err := channelConfigFromRow(row)
-	if err != nil {
-		logger.ErrorF(ctx, "bot dispatch: decode channel %d: %v", row.ID, err)
-		return 0, 1
-	}
-	ch, err := factory(cfg, nil)
-	if err != nil {
-		logger.ErrorF(ctx, "bot dispatch: create adapter %d: %v", row.ID, err)
-		return 0, 1
-	}
-	if err := ch.Connect(ctx); err != nil {
-		logger.ErrorF(ctx, "bot dispatch: connect channel %d: %v", row.ID, err)
-		return 0, 1
-	}
-	defer func() { _ = ch.Disconnect(ctx) }()
-
 	bindings, err := dao.ListBindingsByChannel(ctx, row.ID)
 	if err != nil {
 		logger.ErrorF(ctx, "bot dispatch: list bindings %d: %v", row.ID, err)
@@ -154,7 +135,7 @@ func dispatchOnChannel(ctx context.Context, row *entity.MessageChannel, userID u
 			ChatID:         bindings[i].PlatformUserID,
 			PlatformUserID: bindings[i].PlatformUserID,
 		}
-		if err := ch.Send(ctx, to, do.OutboundMessage{Text: text}); err != nil {
+		if err := GlobalRunner.SendText(ctx, row.ID, to, text); err != nil {
 			logger.ErrorF(ctx, "bot dispatch: send channel=%d user=%d: %v", row.ID, bindings[i].UserID, err)
 			failed++
 			continue

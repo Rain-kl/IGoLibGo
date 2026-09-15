@@ -230,7 +230,7 @@ func convertStruct(raw any, typ reflect.Type) (any, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%w: %s.%s: %w", ErrConfigType, typ.Name(), f.key, err)
 		}
-		out.FieldByName(fieldNameForPath(typ, f.path)).Set(reflect.ValueOf(converted))
+		out.FieldByIndex(f.index).Set(reflect.ValueOf(converted))
 	}
 	return out.Interface(), nil
 }
@@ -253,14 +253,4 @@ func asStringMap(raw any) (map[string]any, bool) {
 	default:
 		return nil, false
 	}
-}
-
-// fieldNameForPath maps a declared config path back to the Go struct field carrying it.
-func fieldNameForPath(t reflect.Type, path string) string {
-	for i := range t.NumField() {
-		if t.Field(i).Tag.Get("config") == path {
-			return t.Field(i).Name
-		}
-	}
-	return ""
 }

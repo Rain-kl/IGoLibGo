@@ -11,7 +11,7 @@ Status: implemented
 ## Decision
 
 1. **通用未鉴权私聊自动回复**：不注册单独的 `/start` 命令，对所有来自未绑定平台身份（`PlatformUserID`）的私聊消息，自动生成/复用 15 分钟内有效的 8 位配对码（如 `ABCD-EFGH`）并回复指导信息。对于已绑定的身份回复“账号已成功绑定”。
-2. **Bot Runner 生命周期管理**：在 `bot_runner.go` 中实现全量 Channel 加载、连接与平滑重启 (`Reload`)；默认在 `msg_gateway` 插件加载时启动 Runner，并在 Channel CRUD 提交后触发热加载。
+2. **Bot Runner 生命周期管理**：在 `bot_runner.go` 中实现全量 Channel 加载、连接与平滑重启 (`Reload`)；默认在 `msg_gateway` 插件加载时启动 Runner。Channel CRUD 提交后触发 `ReloadAsync`，Connect 绑定 Runner lifetime 而非 HTTP 请求 context（见 [bot-runner-request-ctx-and-nested-config](2026-09-15-bot-runner-request-ctx-and-nested-config.md)）。
 
 3. **`MessagePairingCode` 实体与 Goose SQL 迁移 Schema 严格对齐**：修复 Go 模型 `entity.MessagePairingCode` 错配包含不存在的 `id` 与 `user_id` 字段的问题，使其严格与 Goose SQL 迁移 `00001_initial.sql` 中 `code VARCHAR(16) PRIMARY KEY` 保持一致，消除 `no such column: w_message_pairing_codes.id` 数据库报错。
 

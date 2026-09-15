@@ -210,6 +210,62 @@ func TestAutoEnableBeatsFileValueButLosesToExplicitEnv(t *testing.T) {
 	assert.Equal(t, extpoints.OriginEnv, r2.Origin("redis.enabled"))
 }
 
+// nestedHostConfig mirrors cmd.hostConfig: named nested structs with their own
+// `config` tags. LOG_LEVEL must bind to log.level, not leave Level empty.
+type nestedHostConfig struct {
+	App struct {
+		Name string `config:"app_name" env:"APP_NAME" default:"Wavelet"`
+	} `config:"app"`
+	Log struct {
+		Level string `config:"level" env:"LOG_LEVEL" default:"info"`
+	} `config:"log"`
+}
+
+func TestBindNestedStructFromEnvAndDefaults(t *testing.T) {
+	t.Run("env overrides nested fields", func(t *testing.T) {
+		src := newFakeSource()
+		src.env["LOG_LEVEL"] = "debug"
+		src.env["APP_NAME"] = "igolib"
+
+		r := extpoints.NewConfigRegistry(src)
+		var cfg nestedHostConfig
+		require.NoError(t, r.Declare("host", extpoints.ConfigBinding{Target: &cfg}))
+		require.NoError(t, r.Resolve())
+		require.NoError(t, r.Bind("", &cfg))
+
+		assert.Equal(t, "debug", cfg.Log.Level)
+		assert.Equal(t, "igolib", cfg.App.Name)
+		assert.Equal(t, extpoints.OriginEnv, r.Origin("log.level"))
+		assert.Equal(t, extpoints.OriginEnv, r.Origin("app.app_name"))
+	})
+
+	t.Run("declared default fills nested field when env and file are absent", func(t *testing.T) {
+		r := extpoints.NewConfigRegistry(newFakeSource())
+		var cfg nestedHostConfig
+		require.NoError(t, r.Declare("host", extpoints.ConfigBinding{Target: &cfg}))
+		require.NoError(t, r.Resolve())
+		require.NoError(t, r.Bind("", &cfg))
+
+		assert.Equal(t, "info", cfg.Log.Level)
+		assert.Equal(t, "Wavelet", cfg.App.Name)
+		assert.Equal(t, extpoints.OriginDefault, r.Origin("log.level"))
+	})
+
+	t.Run("dotted file keys bind into nested structs", func(t *testing.T) {
+		src := newFakeSource()
+		src.values["log.level"] = "warn"
+
+		r := extpoints.NewConfigRegistry(src)
+		var cfg nestedHostConfig
+		require.NoError(t, r.Declare("host", extpoints.ConfigBinding{Target: &cfg}))
+		require.NoError(t, r.Resolve())
+		require.NoError(t, r.Bind("", &cfg))
+
+		assert.Equal(t, "warn", cfg.Log.Level)
+		assert.Equal(t, extpoints.OriginFile, r.Origin("log.level"))
+	})
+}
+
 func TestEntriesRedactSecretsAndReportDefaults(t *testing.T) {
 	r := extpoints.NewConfigRegistry(newFakeSource())
 	require.NoError(t, r.Declare("auth", extpoints.ConfigBinding{Prefix: "app", Target: &sessionConfig{}}))
