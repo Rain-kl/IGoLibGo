@@ -145,9 +145,13 @@ export class BaseService {
     params?: Record<string, unknown>,
     config?: InternalAxiosRequestConfig,
   ): Promise<T> {
+    const isDataInParams = Boolean(params && 'data' in params);
     const requestConfig: InternalAxiosRequestConfig = {
       ...config,
-      params,
+      params: isDataInParams ? undefined : params,
+      data:
+        config?.data ??
+        (isDataInParams ? (params as Record<string, unknown>).data : undefined),
     } as InternalAxiosRequestConfig;
     const response = await apiClient.delete<ApiResponse<T>>(
       this.getFullPath(path),

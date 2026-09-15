@@ -27,16 +27,18 @@ func (ctrl *Controller) ListTasks(c *gin.Context) {
 }
 
 // ListTaskRecords 任务启动历史（原 /api/task-records）
+// ListTaskRecords 任务启动历史（原 /api/task-records）
 // @Summary 任务启动记录
 // @Tags igo
 // @Produce json
+// @Param kind query string false "任务类型 (grab / global-leak)"
 // @Success 200 {object} response.Any{data=[]do.TaskLaunchRecord}
 // @Failure 401 {object} response.AnyError
 // @Failure 501 {object} response.AnyError
 // @Router /api/v1/igo/task-records [get]
 func (ctrl *Controller) ListTaskRecords(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
-		res, err := ctrl.svc.ListTaskRecords(c.Request.Context(), userID)
+		res, err := ctrl.svc.ListTaskRecords(c.Request.Context(), userID, c.Query("kind"))
 		ctrl.jsonOK(c, res, err)
 	})
 }
@@ -47,7 +49,7 @@ func (ctrl *Controller) ListTaskRecords(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param kind path string true "grab / occupy / global-leak / tomorrow"
-// @Success 200 {object} response.Any
+// @Success 200 {object} response.Any{data=do.CoordinatorStatus}
 // @Failure 400 {object} response.AnyError
 // @Failure 401 {object} response.AnyError
 // @Failure 501 {object} response.AnyError
@@ -86,7 +88,11 @@ func (ctrl *Controller) StartTask(c *gin.Context) {
 			}
 			err = ctrl.svc.StartTomorrow(c.Request.Context(), userID, req)
 		}
-		ctrl.noContent(c, err)
+		if ctrl.reply(c, err) {
+			return
+		}
+		status, err := ctrl.svc.GetTaskStatus(c.Request.Context(), userID, kind)
+		ctrl.jsonOK(c, status, err)
 	})
 }
 
@@ -94,7 +100,7 @@ func (ctrl *Controller) StartTask(c *gin.Context) {
 // @Summary 取消任务
 // @Tags igo
 // @Param kind path string true "grab / occupy / global-leak / tomorrow"
-// @Success 204 "无内容"
+// @Success 200 {object} response.Any{data=do.CoordinatorStatus}
 // @Failure 400 {object} response.AnyError
 // @Failure 401 {object} response.AnyError
 // @Failure 501 {object} response.AnyError
@@ -107,7 +113,11 @@ func (ctrl *Controller) CancelTask(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.CancelTask(c.Request.Context(), userID, kind)
-		ctrl.noContent(c, err)
+		if ctrl.reply(c, err) {
+			return
+		}
+		status, err := ctrl.svc.GetTaskStatus(c.Request.Context(), userID, kind)
+		ctrl.jsonOK(c, status, err)
 	})
 }
 
@@ -117,7 +127,7 @@ func (ctrl *Controller) CancelTask(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body do.TomorrowStartRequest true "明日预约计划"
-// @Success 200 {object} response.Any
+// @Success 200 {object} response.Any{data=do.CoordinatorStatus}
 // @Failure 400 {object} response.AnyError
 // @Failure 401 {object} response.AnyError
 // @Failure 501 {object} response.AnyError
@@ -129,7 +139,11 @@ func (ctrl *Controller) RunTomorrowNow(c *gin.Context) {
 	}
 	ctrl.withUser(c, func(userID uint64) {
 		err := ctrl.svc.RunTomorrowNow(c.Request.Context(), userID, req)
-		ctrl.noContent(c, err)
+		if ctrl.reply(c, err) {
+			return
+		}
+		status, err := ctrl.svc.GetTaskStatus(c.Request.Context(), userID, consts.TaskKindTomorrow)
+		ctrl.jsonOK(c, status, err)
 	})
 }
 

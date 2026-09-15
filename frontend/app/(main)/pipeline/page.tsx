@@ -23,6 +23,7 @@ import { IGoService } from '@/lib/services/igo';
 import type {
   PipelineConfigDTO,
   PipelineExecutionResult,
+  RunPipelineRequest,
 } from '@/lib/services/igo/types';
 import { PipelineCard } from './components/pipeline-card';
 import { PipelineDialog } from './components/pipeline-dialog';
@@ -111,20 +112,10 @@ export default function PipelinePage() {
   ) => {
     setRunningId(cfg.id);
     try {
-      let runReq: Record<string, string> | undefined;
+      let runReq: RunPipelineRequest | undefined;
       if (overrideAuthInput) {
-        if (overrideAuthInput.includes('code=')) {
-          if (authModalNeed === 'CHECKIN') {
-            runReq = { checkin_url: overrideAuthInput };
-          } else {
-            runReq = { auth_url: overrideAuthInput };
-          }
-        } else if (overrideAuthInput.length === 32) {
-          if (authModalNeed === 'CHECKIN') {
-            runReq = { checkin_code: overrideAuthInput };
-          } else {
-            runReq = { auth_code: overrideAuthInput };
-          }
+        if (authModalNeed === 'CHECKIN') {
+          runReq = { checkin_token: overrideAuthInput };
         } else {
           runReq = { cookie: overrideAuthInput };
         }

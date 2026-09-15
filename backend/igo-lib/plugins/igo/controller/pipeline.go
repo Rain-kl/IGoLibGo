@@ -16,7 +16,7 @@ import (
 // @Summary 获取一条龙配置列表
 // @Tags IGo-Pipeline
 // @Produce json
-// @Success 200 {object} response.Response{data=[]do.PipelineConfigDTO}
+// @Success 200 {object} response.Any{data=[]do.PipelineConfigDTO}
 // @Router /api/v1/igo/pipeline/configs [get]
 func (ctrl *Controller) ListPipelineConfigs(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
@@ -30,7 +30,7 @@ func (ctrl *Controller) ListPipelineConfigs(c *gin.Context) {
 // @Tags IGo-Pipeline
 // @Produce json
 // @Param id path string true "配置 ID"
-// @Success 200 {object} response.Response{data=do.PipelineConfigDTO}
+// @Success 200 {object} response.Any{data=do.PipelineConfigDTO}
 // @Router /api/v1/igo/pipeline/configs/{id} [get]
 func (ctrl *Controller) GetPipelineConfig(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
@@ -46,7 +46,7 @@ func (ctrl *Controller) GetPipelineConfig(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body do.CreatePipelineConfigRequest true "创建参数"
-// @Success 201 {object} response.Response{data=do.PipelineConfigDTO}
+// @Success 201 {object} response.Any{data=do.PipelineConfigDTO}
 // @Router /api/v1/igo/pipeline/configs [post]
 func (ctrl *Controller) CreatePipelineConfig(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
@@ -69,7 +69,7 @@ func (ctrl *Controller) CreatePipelineConfig(c *gin.Context) {
 // @Produce json
 // @Param id path string true "配置 ID"
 // @Param body body do.UpdatePipelineConfigRequest true "更新参数"
-// @Success 200 {object} response.Response{data=do.PipelineConfigDTO}
+// @Success 200 {object} response.Any{data=do.PipelineConfigDTO}
 // @Router /api/v1/igo/pipeline/configs/{id} [put]
 func (ctrl *Controller) UpdatePipelineConfig(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
@@ -104,7 +104,7 @@ func (ctrl *Controller) DeletePipelineConfig(c *gin.Context) {
 // @Produce json
 // @Param id path string true "配置 ID"
 // @Param body body do.RunPipelineRequest false "覆盖凭据"
-// @Success 200 {object} response.Response{data=do.PipelineRunResult}
+// @Success 200 {object} response.Any{data=do.PipelineRunResult}
 // @Router /api/v1/igo/pipeline/configs/{id}/run [post]
 func (ctrl *Controller) RunPipeline(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
@@ -127,7 +127,7 @@ func (ctrl *Controller) RunPipeline(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body do.HelperVerifySessionRequest true "登录凭据"
-// @Success 200 {object} response.Response{data=map[string]any}
+// @Success 200 {object} response.Any
 // @Router /api/v1/igo/pipeline/verify-session [post]
 //
 //nolint:dupl // distinct helper verification endpoint
@@ -156,7 +156,7 @@ func (ctrl *Controller) HelperVerifySession(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body do.HelperLibraryLayoutRequest true "场馆与凭据"
-// @Success 200 {object} response.Response{data=do.LibraryLayoutResponse}
+// @Success 200 {object} response.Any{data=do.LibraryLayoutResponse}
 // @Router /api/v1/igo/pipeline/library-layout [post]
 func (ctrl *Controller) HelperGetLibraryLayout(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
@@ -175,7 +175,7 @@ func (ctrl *Controller) HelperGetLibraryLayout(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body do.HelperVerifyCheckinRequest true "签到凭据"
-// @Success 200 {object} response.Response{data=map[string]any}
+// @Success 200 {object} response.Any
 // @Router /api/v1/igo/pipeline/verify-checkin [post]
 //
 //nolint:dupl // distinct helper verification endpoint

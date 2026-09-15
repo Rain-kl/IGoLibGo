@@ -102,6 +102,19 @@ func (s *Service) CreatePipelineConfig(ctx context.Context, userID uint64, req d
 		}
 	}
 
+	beaconUUID := req.BeaconUUID
+	if beaconUUID == "" {
+		beaconUUID = req.BeaconMac
+	}
+	lat := req.Latitude
+	if lat == "" {
+		lat = req.BeaconLat
+	}
+	lng := req.Longitude
+	if lng == "" {
+		lng = req.BeaconLng
+	}
+
 	row := &entity.PipelineConfig{
 		ID:               req.ID,
 		UserID:           userID,
@@ -116,11 +129,11 @@ func (s *Service) CreatePipelineConfig(ctx context.Context, userID uint64, req d
 		AutoCheckin:      req.AutoCheckin,
 		CheckinToken:     checkinToken,
 		CheckinExpiresAt: checkinExp,
-		BeaconUUID:       req.BeaconUUID,
+		BeaconUUID:       beaconUUID,
 		Major:            req.Major,
 		Minor:            req.Minor,
-		Latitude:         req.Latitude,
-		Longitude:        req.Longitude,
+		Latitude:         lat,
+		Longitude:        lng,
 	}
 	if err := dao.CreatePipelineConfig(ctx, row); err != nil {
 		return nil, err
@@ -155,16 +168,7 @@ func (s *Service) GetPipelineConfig(ctx context.Context, userID uint64, id strin
 	return &dto, nil
 }
 
-// UpdatePipelineConfig updates an existing pipeline configuration.
-func (s *Service) UpdatePipelineConfig(ctx context.Context, userID uint64, id string, req do.UpdatePipelineConfigRequest) (*do.PipelineConfigDTO, error) {
-	row, err := dao.GetPipelineConfigByUser(ctx, id, userID)
-	if err != nil {
-		return nil, err
-	}
-	if row == nil {
-		return nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到该一条龙配置")
-	}
-
+func applyPipelineConfigFields(row *entity.PipelineConfig, req *do.UpdatePipelineConfigRequest) {
 	if req.Name != "" {
 		row.Name = strings.TrimSpace(req.Name)
 	}
@@ -184,13 +188,42 @@ func (s *Service) UpdatePipelineConfig(ctx context.Context, userID uint64, id st
 		row.SeatName = req.SeatName
 	}
 	row.AutoCheckin = req.AutoCheckin
-	if req.BeaconUUID != "" {
-		row.BeaconUUID = req.BeaconUUID
+	beaconUUID := req.BeaconUUID
+	if beaconUUID == "" {
+		beaconUUID = req.BeaconMac
+	}
+	if beaconUUID != "" {
+		row.BeaconUUID = beaconUUID
 	}
 	row.Major = req.Major
 	row.Minor = req.Minor
-	row.Latitude = req.Latitude
-	row.Longitude = req.Longitude
+	lat := req.Latitude
+	if lat == "" {
+		lat = req.BeaconLat
+	}
+	if lat != "" {
+		row.Latitude = lat
+	}
+	lng := req.Longitude
+	if lng == "" {
+		lng = req.BeaconLng
+	}
+	if lng != "" {
+		row.Longitude = lng
+	}
+}
+
+// UpdatePipelineConfig updates an existing pipeline configuration.
+func (s *Service) UpdatePipelineConfig(ctx context.Context, userID uint64, id string, req do.UpdatePipelineConfigRequest) (*do.PipelineConfigDTO, error) {
+	row, err := dao.GetPipelineConfigByUser(ctx, id, userID)
+	if err != nil {
+		return nil, err
+	}
+	if row == nil {
+		return nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到该一条龙配置")
+	}
+
+	applyPipelineConfigFields(row, &req)
 
 	if strings.TrimSpace(req.Cookie) != "" {
 		cookie, exp, err := s.resolveCookie(ctx, userID, req.Cookie)
@@ -249,6 +282,7 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 		return &do.PipelineRunResult{
 			Success:    false,
 			ConfigID:   id,
+			Name:       row.Name,
 			NeedAuth:   "LOGIN",
 			AuthURL:    consts.WeChatLoginAuthURL,
 			Message:    "TraceInt 账户未授权或凭据为空，请重新登录授权",
@@ -260,6 +294,7 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 		return &do.PipelineRunResult{
 			Success:    false,
 			ConfigID:   id,
+			Name:       row.Name,
 			NeedAuth:   "LOGIN",
 			AuthURL:    consts.WeChatLoginAuthURL,
 			Message:    "TraceInt 账户授权已过期，请重新登录授权",
@@ -272,6 +307,7 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 			return &do.PipelineRunResult{
 				Success:    false,
 				ConfigID:   id,
+				Name:       row.Name,
 				NeedAuth:   "CHECKIN",
 				AuthURL:    consts.WeChatCheckinAuthURL,
 				Message:    "已开启自动签到但签到凭据缺失，请授权签到链接",
@@ -282,6 +318,7 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 			return &do.PipelineRunResult{
 				Success:    false,
 				ConfigID:   id,
+				Name:       row.Name,
 				NeedAuth:   "CHECKIN",
 				AuthURL:    consts.WeChatCheckinAuthURL,
 				Message:    "签到微信授权已失效，请重新授权签到链接",
@@ -299,6 +336,7 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 		return &do.PipelineRunResult{ //nolint:nilerr // result encapsulates failure
 			Success:    false,
 			ConfigID:   id,
+			Name:       row.Name,
 			Message:    fmt.Sprintf("获取场馆「%s」布局失败: %v", row.LibraryName, err),
 			ExecutedAt: execTime,
 		}, "", false
@@ -315,6 +353,7 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 		return &do.PipelineRunResult{
 			Success:    false,
 			ConfigID:   id,
+			Name:       row.Name,
 			Message:    fmt.Sprintf("在场馆「%s」中未找到目标座位「%s」", row.LibraryName, row.SeatName),
 			ExecutedAt: execTime,
 		}, "", false
@@ -323,6 +362,7 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 		return &do.PipelineRunResult{
 			Success:    false,
 			ConfigID:   id,
+			Name:       row.Name,
 			Message:    fmt.Sprintf("目标座位 [%s %s] 当前已被占用，占座失败退出", row.LibraryName, row.SeatName),
 			ExecutedAt: execTime,
 		}, "", false
@@ -337,6 +377,7 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 		return &do.PipelineRunResult{ //nolint:nilerr // result encapsulates failure
 			Success:           false,
 			ConfigID:          id,
+			Name:              row.Name,
 			ReservationStatus: "占座失败",
 			Message:           fmt.Sprintf("预约占座失败: %s", errMsg),
 			ExecutedAt:        execTime,
@@ -353,6 +394,7 @@ func (s *Service) executeBeaconCheckin(ctx context.Context, cli *traceint.Client
 		return &do.PipelineRunResult{ //nolint:nilerr // result encapsulates failure
 			Success:           true,
 			ConfigID:          id,
+			Name:              row.Name,
 			ReservationStatus: reservationStatus,
 			CheckinStatus:     "获取服务器时间失败",
 			Message:           fmt.Sprintf("已成功占座 [%s %s]，但获取签到服务器时间失败: %v", row.LibraryName, row.SeatName, err),
@@ -374,6 +416,7 @@ func (s *Service) executeBeaconCheckin(ctx context.Context, cli *traceint.Client
 		return &do.PipelineRunResult{ //nolint:nilerr // result encapsulates failure
 			Success:           true,
 			ConfigID:          id,
+			Name:              row.Name,
 			ReservationStatus: reservationStatus,
 			CheckinStatus:     fmt.Sprintf("打卡失败: %v", err),
 			Message:           fmt.Sprintf("已成功占座 [%s %s]，但远程自动签到打卡失败: %v", row.LibraryName, row.SeatName, err),
@@ -384,6 +427,7 @@ func (s *Service) executeBeaconCheckin(ctx context.Context, cli *traceint.Client
 	return &do.PipelineRunResult{
 		Success:           true,
 		ConfigID:          id,
+		Name:              row.Name,
 		ReservationStatus: reservationStatus,
 		CheckinStatus:     fmt.Sprintf("打卡成功 (%s)", signResp.Message),
 		Message:           fmt.Sprintf("一条龙全流程执行成功！已成功占座 [%s %s] 并完成签到打卡", row.LibraryName, row.SeatName),
@@ -430,6 +474,7 @@ func (s *Service) RunPipeline(ctx context.Context, userID uint64, id string, ove
 		return &do.PipelineRunResult{
 			Success:           true,
 			ConfigID:          id,
+			Name:              row.Name,
 			ReservationStatus: resStatus,
 			Message:           fmt.Sprintf("一条龙自动化执行成功！已成功锁定座位 [%s %s]", row.LibraryName, row.SeatName),
 			ExecutedAt:        execTime,
@@ -535,27 +580,34 @@ func toPipelineDTO(row *entity.PipelineConfig) do.PipelineConfigDTO {
 	if row == nil {
 		return do.PipelineConfigDTO{}
 	}
+	hasCookie := row.Cookie != ""
+	hasCheckin := row.CheckinToken != ""
 	return do.PipelineConfigDTO{
-		ID:               row.ID,
-		UserID:           row.UserID,
-		Name:             row.Name,
-		HasCookie:        row.Cookie != "",
-		CookieMasked:     traceint.MaskCookie(row.Cookie),
-		CookieExpiresAt:  row.CookieExpiresAt,
-		LibraryID:        row.LibraryID,
-		LibraryName:      row.LibraryName,
-		Floor:            row.Floor,
-		SeatKey:          row.SeatKey,
-		SeatName:         row.SeatName,
-		AutoCheckin:      row.AutoCheckin,
-		HasCheckinToken:  row.CheckinToken != "",
-		CheckinExpiresAt: row.CheckinExpiresAt,
-		BeaconUUID:       row.BeaconUUID,
-		Major:            row.Major,
-		Minor:            row.Minor,
-		Latitude:         row.Latitude,
-		Longitude:        row.Longitude,
-		CreatedAt:        row.CreatedAt,
-		UpdatedAt:        row.UpdatedAt,
+		ID:                row.ID,
+		UserID:            row.UserID,
+		Name:              row.Name,
+		HasCookie:         hasCookie,
+		CookieValid:       hasCookie,
+		CookieMasked:      traceint.MaskCookie(row.Cookie),
+		CookieExpiresAt:   row.CookieExpiresAt,
+		LibraryID:         row.LibraryID,
+		LibraryName:       row.LibraryName,
+		Floor:             row.Floor,
+		SeatKey:           row.SeatKey,
+		SeatName:          row.SeatName,
+		AutoCheckin:       row.AutoCheckin,
+		HasCheckinToken:   hasCheckin,
+		CheckinTokenValid: hasCheckin,
+		CheckinExpiresAt:  row.CheckinExpiresAt,
+		BeaconUUID:        row.BeaconUUID,
+		BeaconMac:         row.BeaconUUID,
+		Major:             row.Major,
+		Minor:             row.Minor,
+		Latitude:          row.Latitude,
+		BeaconLat:         row.Latitude,
+		Longitude:         row.Longitude,
+		BeaconLng:         row.Longitude,
+		CreatedAt:         row.CreatedAt,
+		UpdatedAt:         row.UpdatedAt,
 	}
 }

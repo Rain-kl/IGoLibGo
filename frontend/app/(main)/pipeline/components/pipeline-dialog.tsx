@@ -110,20 +110,45 @@ export function PipelineDialog({
       if (editingConfig) {
         setConfigId(editingConfig.id);
         setName(editingConfig.name);
-        setCookie(editingConfig.cookie || '');
-        setVerifiedCookie(editingConfig.cookie || '');
+        setCookie('');
+        setVerifiedCookie(
+          editingConfig.has_cookie || editingConfig.cookie
+            ? 'PRESERVE_EXISTING'
+            : '',
+        );
         setCookieExpiresAt(editingConfig.cookie_expires_at || null);
-        setAuthType(editingConfig.cookie ? 'cookie' : 'url');
+        setAuthType('url');
         setAuthUrl('');
         setSelectedLibId(editingConfig.library_id);
         setSelectedSeatKey(editingConfig.seat_key);
         setSelectedSeatName(editingConfig.seat_name);
         setAutoCheckin(editingConfig.auto_checkin);
-        setVerifiedCheckinToken(editingConfig.checkin_token || '');
+        setVerifiedCheckinToken(
+          editingConfig.has_checkin_token || editingConfig.checkin_token
+            ? 'PRESERVE_EXISTING'
+            : '',
+        );
         setCheckinUrl('');
-        setBeaconLat(editingConfig.beacon_lat || '');
-        setBeaconLng(editingConfig.beacon_lng || '');
-        setBeaconMac(editingConfig.beacon_mac || '');
+        setBeaconLat(editingConfig.beacon_lat || editingConfig.latitude || '');
+        setBeaconLng(editingConfig.beacon_lng || editingConfig.longitude || '');
+        setBeaconMac(
+          editingConfig.beacon_mac || editingConfig.beacon_uuid || '',
+        );
+        if (editingConfig.library_id && editingConfig.library_name) {
+          setVenueList([
+            {
+              library_id: editingConfig.library_id,
+              name: editingConfig.library_name,
+              floor: editingConfig.floor || '',
+              is_open: true,
+              total_seats: 0,
+              used_seats: 0,
+              booked_seats: 0,
+            },
+          ]);
+        } else {
+          setVenueList([]);
+        }
       } else {
         setConfigId('');
         setName('');
@@ -141,8 +166,8 @@ export function PipelineDialog({
         setBeaconLat('');
         setBeaconLng('');
         setBeaconMac('');
+        setVenueList([]);
       }
-      setVenueList([]);
       setCurrentLayout(null);
       setStep(1);
     }
@@ -232,11 +257,12 @@ export function PipelineDialog({
     // Verify session
     let sessionRes = null;
     let valid = Boolean(verifiedCookie);
-    if (
-      !valid ||
-      authUrl.trim() ||
-      (cookie.trim() && cookie.trim() !== verifiedCookie)
-    ) {
+    const hasNewInput =
+      authUrl.trim() !== '' ||
+      (cookie.trim() !== '' &&
+        cookie.trim() !== verifiedCookie &&
+        cookie.trim() !== 'PRESERVE_EXISTING');
+    if (!valid || hasNewInput) {
       sessionRes = await handleVerifySession();
       valid = Boolean(
         sessionRes &&
@@ -248,11 +274,15 @@ export function PipelineDialog({
 
     if (valid) {
       const availableLibs = sessionRes?.libraries || venueList;
-      const targetCookie = sessionRes?.cookie || verifiedCookie || cookie;
+      const targetCookie =
+        sessionRes?.cookie ||
+        (verifiedCookie !== 'PRESERVE_EXISTING' ? verifiedCookie : undefined);
       const targetLibId = selectedLibId || availableLibs[0]?.library_id;
       if (targetLibId) {
         if (!selectedLibId) setSelectedLibId(targetLibId);
-        await fetchLayoutForVenue(targetLibId, targetCookie);
+        if (targetCookie) {
+          await fetchLayoutForVenue(targetLibId, targetCookie);
+        }
       }
       setStep(2);
     }
@@ -293,13 +323,32 @@ export function PipelineDialog({
 
   // Selected venue object from list or layout
   const selectedVenue = React.useMemo(() => {
-    return (
-      venueList.find((lib) => lib.library_id === selectedLibId) ||
-      (currentLayout && currentLayout.library_id === selectedLibId
-        ? currentLayout
-        : null)
-    );
-  }, [venueList, currentLayout, selectedLibId]);
+    const fromList = venueList.find((lib) => lib.library_id === selectedLibId);
+    if (fromList) return fromList;
+    if (currentLayout && currentLayout.library_id === selectedLibId) {
+      return {
+        library_id: currentLayout.library_id,
+        name: currentLayout.name,
+        floor: currentLayout.floor,
+        is_open: true,
+        total_seats: 0,
+        used_seats: 0,
+        booked_seats: 0,
+      };
+    }
+    if (editingConfig && editingConfig.library_id === selectedLibId) {
+      return {
+        library_id: editingConfig.library_id,
+        name: editingConfig.library_name,
+        floor: editingConfig.floor || '',
+        is_open: true,
+        total_seats: 0,
+        used_seats: 0,
+        booked_seats: 0,
+      };
+    }
+    return null;
+  }, [venueList, currentLayout, selectedLibId, editingConfig]);
 
   // Filtered seats in current layout
   const availableSeats = React.useMemo(() => {
@@ -329,8 +378,15 @@ export function PipelineDialog({
     }
 
     const effectiveCookie =
-      verifiedCookie || (authType === 'cookie' ? cookie : authUrl).trim();
-    const effectiveCheckin = verifiedCheckinToken || checkinUrl.trim();
+      verifiedCookie === 'PRESERVE_EXISTING'
+        ? undefined
+        : verifiedCookie ||
+          (authType === 'cookie' ? cookie : authUrl).trim() ||
+          undefined;
+    const effectiveCheckin =
+      verifiedCheckinToken === 'PRESERVE_EXISTING'
+        ? undefined
+        : verifiedCheckinToken || checkinUrl.trim() || undefined;
 
     setIsSaving(true);
     try {
@@ -343,8 +399,8 @@ export function PipelineDialog({
           seat_key: selectedSeatKey,
           seat_name: selectedSeatName,
           auto_checkin: autoCheckin,
-          cookie: effectiveCookie || undefined,
-          checkin_token: effectiveCheckin || undefined,
+          cookie: effectiveCookie,
+          checkin_token: effectiveCheckin,
           beacon_lat: beaconLat.trim() || undefined,
           beacon_lng: beaconLng.trim() || undefined,
           beacon_mac: beaconMac.trim() || undefined,
@@ -352,6 +408,10 @@ export function PipelineDialog({
         await IGoService.pipeline.updateConfig(configId, req);
         toast.success('配置更新成功！');
       } else {
+        if (!effectiveCookie) {
+          toast.error('创建一条龙自动化卡片必须录入登录凭据');
+          return;
+        }
         const req: CreatePipelineConfigRequest = {
           id: configId.trim(),
           name: name.trim(),
@@ -504,8 +564,9 @@ export function PipelineDialog({
                   <div className='rounded-md bg-emerald-500/10 border border-emerald-500/20 p-2.5 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400'>
                     <ShieldCheck className='size-4 shrink-0' />
                     <span className='flex-1 truncate'>
-                      凭据有效{' '}
-                      {cookieExpiresAt ? `(有效期至 ${cookieExpiresAt})` : ''}
+                      {verifiedCookie === 'PRESERVE_EXISTING'
+                        ? '已保留现有有效登录凭据'
+                        : `凭据有效 ${cookieExpiresAt ? `(有效期至 ${cookieExpiresAt})` : ''}`}
                     </span>
                   </div>
                 )}
@@ -711,7 +772,11 @@ export function PipelineDialog({
                   {verifiedCheckinToken && (
                     <div className='rounded-md bg-emerald-500/10 border border-emerald-500/20 p-2.5 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400'>
                       <CheckCircle2 className='size-4 shrink-0' />
-                      <span>微信打卡授权已绑定就绪</span>
+                      <span>
+                        {verifiedCheckinToken === 'PRESERVE_EXISTING'
+                          ? '已保留现有微信打卡授权'
+                          : '微信打卡授权已绑定就绪'}
+                      </span>
                     </div>
                   )}
 

@@ -116,7 +116,14 @@ func parseLibraryID(c *gin.Context) (int, bool) {
 
 func parsePage(c *gin.Context) (page, perPage int) {
 	page, _ = strconv.Atoi(c.DefaultQuery("page", "1"))
-	perPage, _ = strconv.Atoi(c.DefaultQuery("per_page", "20"))
+	perPageStr := c.Query("per_page")
+	if perPageStr == "" {
+		perPageStr = c.Query("limit")
+	}
+	if perPageStr == "" {
+		perPageStr = "20"
+	}
+	perPage, _ = strconv.Atoi(perPageStr)
 	if page < 1 {
 		page = 1
 	}

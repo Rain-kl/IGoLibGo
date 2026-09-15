@@ -59,10 +59,32 @@ func (s *Service) ListTasks(ctx context.Context, userID uint64) (*do.TaskListRes
 	return &do.TaskListResponse{Tasks: out}, nil
 }
 
+// GetTaskStatus returns the latest status of a coordinator.
+func (s *Service) GetTaskStatus(ctx context.Context, userID uint64, kind string) (*do.CoordinatorStatus, error) {
+	run, err := dao.GetTaskRun(ctx, userID, kind)
+	if err != nil {
+		return nil, err
+	}
+	if run == nil {
+		return &do.CoordinatorStatus{
+			Kind:    kind,
+			State:   stateIdle,
+			Title:   kindTitle(kind),
+			Message: "未运行",
+		}, nil
+	}
+	st := toStatus(*run)
+	return &st, nil
+}
+
 // ListTaskRecords returns recent launch history.
-func (s *Service) ListTaskRecords(ctx context.Context, userID uint64) ([]do.TaskLaunchRecord, error) {
+func (s *Service) ListTaskRecords(ctx context.Context, userID uint64, kindFilter ...string) ([]do.TaskLaunchRecord, error) {
 	var out []do.TaskLaunchRecord
-	for _, kind := range []string{consts.TaskKindGrab, consts.TaskKindGlobalLeak} {
+	targetKinds := []string{consts.TaskKindGrab, consts.TaskKindGlobalLeak}
+	if len(kindFilter) > 0 && kindFilter[0] != "" {
+		targetKinds = []string{kindFilter[0]}
+	}
+	for _, kind := range targetKinds {
 		rows, err := dao.ListTaskLaunchHistory(ctx, userID, kind, consts.MaxTaskLaunchHistory)
 		if err != nil {
 			return nil, err

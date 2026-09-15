@@ -90,6 +90,63 @@ definitions:
       ttl_minutes:
         type: integer
     type: object
+  do.ActivityLogEntry:
+    properties:
+      created_at:
+        type: string
+      id:
+        example: "0"
+        type: string
+      kind:
+        type: string
+      level:
+        type: string
+      message:
+        type: string
+    type: object
+  do.AuthFromCodeRequest:
+    properties:
+      code:
+        type: string
+      remember:
+        type: boolean
+    required:
+    - code
+    type: object
+  do.AuthFromCookieRequest:
+    properties:
+      cookie:
+        type: string
+      remember:
+        type: boolean
+    required:
+    - cookie
+    type: object
+  do.BackupExportRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+    required:
+    - password
+    type: object
+  do.BackupExportResponse:
+    properties:
+      content:
+        type: string
+      filename:
+        type: string
+    type: object
+  do.BackupImportRequest:
+    properties:
+      content:
+        type: string
+      password:
+        type: string
+    required:
+    - content
+    - password
+    type: object
   do.BindRequest:
     properties:
       channel_id:
@@ -117,6 +174,20 @@ definitions:
         example: "0"
         type: string
     type: object
+  do.BoundLibraryResponse:
+    properties:
+      bound:
+        type: boolean
+      layout:
+        $ref: '#/definitions/do.LibraryLayoutResponse'
+      library:
+        $ref: '#/definitions/do.LibrarySummary'
+    type: object
+  do.CancelReservationRequest:
+    properties:
+      stop_occupy_first:
+        type: boolean
+    type: object
   do.ChannelDTO:
     properties:
       credentials:
@@ -142,6 +213,142 @@ definitions:
       type:
         type: string
     type: object
+  do.CheckInAuthFromCodeRequest:
+    properties:
+      code:
+        type: string
+      remember:
+        type: boolean
+    required:
+    - code
+    type: object
+  do.CheckInAuthorizationResponse:
+    properties:
+      device:
+        $ref: '#/definitions/do.CheckInDeviceResponse'
+      device_refresh_warning:
+        type: string
+      session:
+        $ref: '#/definitions/do.CheckInSessionResponse'
+    type: object
+  do.CheckInDeviceResponse:
+    properties:
+      beacon_uuids:
+        items:
+          type: string
+        type: array
+      nickname:
+        type: string
+      school:
+        type: string
+      student_name:
+        type: string
+      student_number:
+        type: string
+    type: object
+  do.CheckInSessionResponse:
+    properties:
+      authorized:
+        type: boolean
+      can_auto_restore:
+        type: boolean
+      expires_at:
+        type: string
+      saved_at:
+        type: string
+    type: object
+  do.CheckInSignRequest:
+    properties:
+      beacon_uuid:
+        type: string
+      expected_library_id:
+        type: integer
+      expected_library_name:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      major:
+        type: integer
+      minor:
+        type: integer
+    required:
+    - beacon_uuid
+    - expected_library_id
+    type: object
+  do.CheckInSignResponse:
+    properties:
+      expiration_time:
+        type: string
+      library_floor:
+        type: string
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      message:
+        type: string
+      seat_key:
+        type: string
+      seat_name:
+        type: string
+      signed_at:
+        type: string
+      status:
+        type: integer
+    type: object
+  do.CheckInVenueProfile:
+    properties:
+      beacon_uuid:
+        type: string
+      latitude:
+        type: number
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      longitude:
+        type: number
+      major:
+        type: integer
+      minor:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  do.CheckInVenueProfilesResponse:
+    properties:
+      profiles:
+        items:
+          $ref: '#/definitions/do.CheckInVenueProfile'
+        type: array
+    type: object
+  do.CoordinatorStatus:
+    properties:
+      is_active:
+        type: boolean
+      kind:
+        type: string
+      last_request_at:
+        type: string
+      last_updated_at:
+        type: string
+      message:
+        type: string
+      poll_count:
+        type: integer
+      reason:
+        type: string
+      request_count:
+        type: integer
+      started_at:
+        type: string
+      state:
+        type: string
+      title:
+        type: string
+    type: object
   do.CreateChannelRequest:
     properties:
       credentials:
@@ -159,19 +366,50 @@ definitions:
       type:
         type: string
     type: object
-  do.CreateGreetingRequest:
+  do.CreatePipelineConfigRequest:
     properties:
-      message:
-        maxLength: 255
-        minLength: 1
+      auto_checkin:
+        type: boolean
+      beacon_lat:
         type: string
-      recipient:
-        maxLength: 64
-        minLength: 1
+      beacon_lng:
+        type: string
+      beacon_mac:
+        type: string
+      beacon_uuid:
+        type: string
+      checkin_token:
+        type: string
+      cookie:
+        type: string
+      floor:
+        type: string
+      id:
+        type: string
+      latitude:
+        type: string
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      longitude:
+        type: string
+      major:
+        type: integer
+      minor:
+        type: integer
+      name:
+        type: string
+      seat_key:
+        type: string
+      seat_name:
         type: string
     required:
-    - message
-    - recipient
+    - cookie
+    - id
+    - library_id
+    - name
+    - seat_key
     type: object
   do.CreatePushChannelRequest:
     properties:
@@ -212,6 +450,29 @@ definitions:
       template:
         type: string
     type: object
+  do.DashboardResponse:
+    properties:
+      authorized:
+        type: boolean
+      bound_library:
+        $ref: '#/definitions/do.LibrarySummary'
+      engine_summary:
+        type: string
+      hero_status:
+        type: string
+      hero_status_detail:
+        type: string
+      historical_success_count:
+        type: integer
+      reservation:
+        $ref: '#/definitions/do.ReservationResponse'
+      tasks:
+        items:
+          $ref: '#/definitions/do.CoordinatorStatus'
+        type: array
+      total_guard_seconds:
+        type: integer
+    type: object
   do.Definition:
     properties:
       fields:
@@ -220,6 +481,16 @@ definitions:
         type: array
       type:
         type: string
+    type: object
+  do.DeleteSeatLabelsRequest:
+    properties:
+      seat_keys:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - seat_keys
     type: object
   do.Field:
     properties:
@@ -230,15 +501,252 @@ definitions:
       type:
         type: string
     type: object
-  do.GreetingResponse:
+  do.GlobalLeakBlacklistResponse:
     properties:
+      items:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/do.SeatRef'
+          type: array
+        type: object
+    type: object
+  do.GlobalLeakLibraryTarget:
+    properties:
+      floor:
+        type: string
+      library_id:
+        type: integer
+      library_name:
+        type: string
+    required:
+    - library_id
+    type: object
+  do.HelperLibraryLayoutRequest:
+    properties:
+      cookie:
+        type: string
+      library_id:
+        type: integer
+    required:
+    - cookie
+    - library_id
+    type: object
+  do.HelperVerifyCheckinRequest:
+    properties:
+      token_or_code:
+        type: string
+    required:
+    - token_or_code
+    type: object
+  do.HelperVerifySessionRequest:
+    properties:
+      cookie:
+        type: string
+    required:
+    - cookie
+    type: object
+  do.LibraryLayoutResponse:
+    properties:
+      available_seats:
+        type: integer
+      booked_seats:
+        type: integer
+      floor:
+        type: string
+      invalid_layout_item_count:
+        type: integer
+      is_open:
+        type: boolean
+      library_id:
+        type: integer
+      max_x:
+        type: integer
+      max_y:
+        type: integer
+      name:
+        type: string
+      seats:
+        items:
+          $ref: '#/definitions/do.SeatSnapshot'
+        type: array
+      total_seats:
+        type: integer
+      used_seats:
+        type: integer
+    type: object
+  do.LibraryRuleResponse:
+    properties:
+      advance_booking:
+        type: string
+      close_end_date:
+        type: string
+      close_start_date:
+        type: string
+      close_time:
+        type: integer
+      close_time_text:
+        type: string
+      hold_reason_json:
+        type: string
+      hold_ttl_minutes:
+        type: string
+      library_id:
+        type: integer
+      open_time:
+        type: integer
+      open_time_text:
+        type: string
+      renew_time_minutes:
+        type: string
+      seat_ttl_minutes:
+        type: string
+      validate_time:
+        type: integer
+    type: object
+  do.LibrarySummary:
+    properties:
+      booked_seats:
+        type: integer
+      floor:
+        type: string
+      is_open:
+        type: boolean
+      library_id:
+        type: integer
+      name:
+        type: string
+      total_seats:
+        type: integer
+      used_seats:
+        type: integer
+    type: object
+  do.PipelineConfigDTO:
+    properties:
+      auto_checkin:
+        type: boolean
+      beacon_lat:
+        type: string
+      beacon_lng:
+        type: string
+      beacon_mac:
+        type: string
+      beacon_uuid:
+        type: string
+      checkin_expires_at:
+        type: string
+      checkin_token_valid:
+        type: boolean
+      cookie_expires_at:
+        type: string
+      cookie_masked:
+        type: string
+      cookie_valid:
+        type: boolean
       created_at:
         type: string
+      floor:
+        type: string
+      has_checkin_token:
+        type: boolean
+      has_cookie:
+        type: boolean
       id:
+        type: string
+      latitude:
+        type: string
+      library_id:
         type: integer
+      library_name:
+        type: string
+      longitude:
+        type: string
+      major:
+        type: integer
+      minor:
+        type: integer
+      name:
+        type: string
+      seat_key:
+        type: string
+      seat_name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        example: "0"
+        type: string
+    type: object
+  do.PipelineRunResult:
+    properties:
+      auth_url:
+        type: string
+      checkin_status:
+        type: string
+      config_id:
+        type: string
+      executed_at:
+        type: string
       message:
         type: string
-      recipient:
+      name:
+        type: string
+      need_auth:
+        description: '"LOGIN", "CHECKIN", or ""'
+        type: string
+      reservation_status:
+        type: string
+      success:
+        type: boolean
+    type: object
+  do.ProtocolTemplatesResponse:
+    properties:
+      cancel_reservation_template:
+        type: string
+      cookie_authorization_return_url:
+        type: string
+      get_cookie_url_template:
+        type: string
+      graphql_default_origin_url:
+        type: string
+      graphql_default_referer_url:
+        type: string
+      graphql_endpoint_url:
+        type: string
+      graphql_tomorrow_origin_url:
+        type: string
+      graphql_tomorrow_referer_url:
+        type: string
+      query_libraries_template:
+        type: string
+      query_library_layout_template:
+        type: string
+      query_library_rule_template:
+        type: string
+      query_reservation_info_template:
+        type: string
+      remote_checkin_api_referer_url:
+        type: string
+      remote_checkin_auth_referer_url:
+        type: string
+      remote_checkin_auth_url_template:
+        type: string
+      remote_checkin_authorization_return_url:
+        type: string
+      remote_checkin_devices_endpoint_url:
+        type: string
+      remote_checkin_sign_endpoint_url:
+        type: string
+      remote_checkin_time_endpoint_url:
+        type: string
+      reserve_seat_template:
+        type: string
+      tomorrow_reservation_info_template:
+        type: string
+      tomorrow_reservation_queue_url_template:
+        type: string
+      tomorrow_reservation_save_template:
+        type: string
+      tomorrow_reservation_warmup_template:
         type: string
     type: object
   do.PublicChannelDTO:
@@ -250,6 +758,271 @@ definitions:
         type: string
       type:
         type: string
+    type: object
+  do.QRCodeResponse:
+    properties:
+      auth_url:
+        type: string
+      expires_at:
+        type: string
+      image_data_url:
+        type: string
+    type: object
+  do.ReservationOperationResponse:
+    properties:
+      message:
+        type: string
+      reservation:
+        $ref: '#/definitions/do.ReservationResponse'
+    type: object
+  do.ReservationResponse:
+    properties:
+      expiration_time:
+        type: string
+      has_reservation:
+        type: boolean
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      reservation_token:
+        type: string
+      seat_key:
+        type: string
+      seat_name:
+        type: string
+    type: object
+  do.RunPipelineRequest:
+    properties:
+      checkin_token:
+        type: string
+      cookie:
+        type: string
+    type: object
+  do.SaveCheckInVenueProfileRequest:
+    properties:
+      beacon_uuid:
+        type: string
+      latitude:
+        type: number
+      library_name:
+        type: string
+      longitude:
+        type: number
+      major:
+        type: integer
+      minor:
+        type: integer
+    required:
+    - beacon_uuid
+    type: object
+  do.SaveFavoritesRequest:
+    properties:
+      seats:
+        items:
+          $ref: '#/definitions/do.SeatRef'
+        type: array
+    required:
+    - seats
+    type: object
+  do.SaveGlobalLeakBlacklistRequest:
+    properties:
+      items:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/do.SeatRef'
+          type: array
+        type: object
+    required:
+    - items
+    type: object
+  do.SaveGlobalLeakSelectedLibrariesRequest:
+    properties:
+      libraries:
+        items:
+          $ref: '#/definitions/do.GlobalLeakLibraryTarget'
+        type: array
+    required:
+    - libraries
+    type: object
+  do.SaveProtocolTemplatesRequest:
+    properties:
+      overrides:
+        $ref: '#/definitions/do.ProtocolTemplatesResponse'
+    required:
+    - overrides
+    type: object
+  do.SaveSettingsRequest:
+    properties:
+      auto_release_enabled:
+        type: boolean
+      auto_release_lead_seconds:
+        type: integer
+      checkin_profiles:
+        additionalProperties:
+          $ref: '#/definitions/do.CheckInVenueProfile'
+        type: object
+      global_leak_scan_interval_seconds:
+        type: integer
+      grab_reservation_strategy:
+        type: string
+      grab_scheduled_start_default:
+        type: string
+      home_reservation_progress_mode:
+        type: string
+      network_max_retries:
+        type: integer
+      occupy_check_interval_mode:
+        type: string
+      occupy_re_reserve_delay_seconds:
+        type: integer
+      optimal_grab_strategy_reminder_enabled:
+        type: boolean
+      request_timeout_seconds:
+        type: integer
+      tomorrow_scheduled_start_default:
+        type: string
+      traceint_graphql_overrides_enabled:
+        type: boolean
+    type: object
+  do.SeatLabel:
+    properties:
+      seat_key:
+        type: string
+      seat_name:
+        type: string
+      text:
+        type: string
+    type: object
+  do.SeatRef:
+    properties:
+      seat_key:
+        type: string
+      seat_name:
+        type: string
+    required:
+    - seat_key
+    type: object
+  do.SeatSnapshot:
+    properties:
+      is_occupied:
+        type: boolean
+      seat_key:
+        type: string
+      seat_name:
+        type: string
+      seat_status:
+        type: integer
+      x:
+        type: integer
+      "y":
+        type: integer
+    type: object
+  do.SessionResponse:
+    properties:
+      authorized:
+        type: boolean
+      can_auto_restore:
+        type: boolean
+      cookie_masked:
+        type: string
+      expires_at:
+        type: string
+      saved_at:
+        type: string
+      source:
+        type: string
+    type: object
+  do.SessionWorkflowResponse:
+    properties:
+      libraries:
+        items:
+          $ref: '#/definitions/do.LibrarySummary'
+        type: array
+      message:
+        type: string
+      session:
+        $ref: '#/definitions/do.SessionResponse'
+    type: object
+  do.SetSeatLabelsRequest:
+    properties:
+      seats:
+        items:
+          $ref: '#/definitions/do.SeatRef'
+        minItems: 1
+        type: array
+      text:
+        type: string
+    required:
+    - seats
+    - text
+    type: object
+  do.SettingsResponse:
+    properties:
+      auto_release_enabled:
+        type: boolean
+      auto_release_lead_seconds:
+        type: integer
+      checkin_profiles:
+        additionalProperties:
+          $ref: '#/definitions/do.CheckInVenueProfile'
+        type: object
+      global_leak_scan_interval_seconds:
+        type: integer
+      grab_reservation_strategy:
+        type: string
+      grab_scheduled_start_default:
+        type: string
+      home_reservation_progress_mode:
+        type: string
+      network_max_retries:
+        type: integer
+      occupy_check_interval_mode:
+        type: string
+      occupy_re_reserve_delay_seconds:
+        type: integer
+      optimal_grab_strategy_reminder_enabled:
+        type: boolean
+      request_timeout_seconds:
+        type: integer
+      tomorrow_scheduled_start_default:
+        type: string
+      traceint_graphql_overrides_enabled:
+        type: boolean
+    type: object
+  do.TaskLaunchRecord:
+    properties:
+      kind:
+        type: string
+      libraries:
+        items:
+          $ref: '#/definitions/do.GlobalLeakLibraryTarget'
+        type: array
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      polling_mode:
+        type: string
+      record_id:
+        type: string
+      recorded_at:
+        type: string
+      reservation_strategy:
+        type: string
+      scan_interval_seconds:
+        type: integer
+      seats:
+        items:
+          $ref: '#/definitions/do.SeatRef'
+        type: array
+    type: object
+  do.TaskListResponse:
+    properties:
+      tasks:
+        items:
+          $ref: '#/definitions/do.CoordinatorStatus'
+        type: array
     type: object
   do.TestPushChannelRequest:
     properties:
@@ -275,6 +1048,23 @@ definitions:
     required:
     - config
     type: object
+  do.TomorrowStartRequest:
+    properties:
+      execute_immediately:
+        type: boolean
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      scheduled_start:
+        type: string
+      seat:
+        $ref: '#/definitions/do.SeatRef'
+    required:
+    - library_id
+    - scheduled_start
+    - seat
+    type: object
   do.UpdateChannelRequest:
     properties:
       credentials:
@@ -288,6 +1078,43 @@ definitions:
           type: string
         type: object
       name:
+        type: string
+    type: object
+  do.UpdatePipelineConfigRequest:
+    properties:
+      auto_checkin:
+        type: boolean
+      beacon_lat:
+        type: string
+      beacon_lng:
+        type: string
+      beacon_mac:
+        type: string
+      beacon_uuid:
+        type: string
+      checkin_token:
+        type: string
+      cookie:
+        type: string
+      floor:
+        type: string
+      latitude:
+        type: string
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      longitude:
+        type: string
+      major:
+        type: integer
+      minor:
+        type: integer
+      name:
+        type: string
+      seat_key:
+        type: string
+      seat_name:
         type: string
     type: object
   do.UpdatePushChannelRequest:
@@ -1335,6 +2162,28 @@ definitions:
         type: string
       issue:
         type: string
+    type: object
+  response.Meta:
+    properties:
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  response.PagedResponse-array_do_ActivityLogEntry:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/do.ActivityLogEntry'
+        type: array
+      error:
+        $ref: '#/definitions/response.ErrorBody'
+      meta:
+        $ref: '#/definitions/response.Meta'
     type: object
   time.Duration:
     enum:
@@ -4187,40 +5036,217 @@ paths:
       summary: 获取公共配置
       tags:
       - config
-  /api/v1/custom/greetings:
+  /api/v1/igo/activity-logs:
+    get:
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页条数
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PagedResponse-array_do_ActivityLogEntry'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 活动日志
+      tags:
+      - igo
+  /api/v1/igo/backup/export:
     post:
       consumes:
       - application/json
       parameters:
-      - description: 问候请求
+      - description: 密码
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/do.CreateGreetingRequest'
+          $ref: '#/definitions/do.BackupExportRequest'
       produces:
       - application/json
       responses:
-        "201":
-          description: 创建成功
+        "200":
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/do.GreetingResponse'
+                  $ref: '#/definitions/do.BackupExportResponse'
               type: object
         "400":
-          description: 参数校验失败
+          description: Bad Request
           schema:
             $ref: '#/definitions/response.AnyError'
-      summary: 创建自定义问候
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 导出备份
       tags:
-      - custom_example
-  /api/v1/custom/greetings/{id}:
+      - igo
+  /api/v1/igo/backup/import:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 备份
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.BackupImportRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 无内容
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 导入备份
+      tags:
+      - igo
+  /api/v1/igo/checkin/auth-qrcode:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.QRCodeResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取签到授权二维码
+      tags:
+      - igo
+  /api/v1/igo/checkin/devices:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInDeviceResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取签到设备
+      tags:
+      - igo
+  /api/v1/igo/checkin/from-code:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 授权码
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.CheckInAuthFromCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInAuthorizationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 签到授权
+      tags:
+      - igo
+  /api/v1/igo/checkin/profiles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInVenueProfilesResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取所有场馆签到配置
+      tags:
+      - igo
+  /api/v1/igo/checkin/profiles/{id}:
     get:
       parameters:
-      - description: 问候 ID
+      - description: 场馆 ID
         in: path
         name: id
         required: true
@@ -4229,21 +5255,1549 @@ paths:
       - application/json
       responses:
         "200":
-          description: 查询成功
+          description: OK
           schema:
             allOf:
             - $ref: '#/definitions/response.Any'
             - properties:
                 data:
-                  $ref: '#/definitions/do.GreetingResponse'
+                  $ref: '#/definitions/do.CheckInVenueProfile'
               type: object
-        "404":
-          description: 未找到
+        "400":
+          description: Bad Request
           schema:
             $ref: '#/definitions/response.AnyError'
-      summary: 获取问候详情
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取场馆签到配置
       tags:
-      - custom_example
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 签到配置
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SaveCheckInVenueProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInVenueProfile'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 保存场馆签到配置
+      tags:
+      - igo
+  /api/v1/igo/checkin/session:
+    delete:
+      responses:
+        "204":
+          description: 无内容
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 退出签到会话
+      tags:
+      - igo
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInSessionResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取签到会话
+      tags:
+      - igo
+  /api/v1/igo/checkin/sign:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 签到参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.CheckInSignRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInSignResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 远程签到
+      tags:
+      - igo
+  /api/v1/igo/dashboard:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.DashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 首页仪表盘
+      tags:
+      - igo
+  /api/v1/igo/global-leak/blacklist:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.GlobalLeakBlacklistResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取捡漏黑名单
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 黑名单
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SaveGlobalLeakBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.GlobalLeakBlacklistResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 保存捡漏黑名单
+      tags:
+      - igo
+  /api/v1/igo/global-leak/selected-libraries:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.GlobalLeakLibraryTarget'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取捡漏场馆
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 场馆列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SaveGlobalLeakSelectedLibrariesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.GlobalLeakLibraryTarget'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 保存捡漏场馆
+      tags:
+      - igo
+  /api/v1/igo/libraries:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.LibrarySummary'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 列出场馆
+      tags:
+      - igo
+  /api/v1/igo/libraries/{id}:
+    get:
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.LibrarySummary'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取场馆
+      tags:
+      - igo
+  /api/v1/igo/libraries/{id}/bind:
+    post:
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.BoundLibraryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 锁定场馆
+      tags:
+      - igo
+  /api/v1/igo/libraries/{id}/favorites:
+    get:
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.SeatRef'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取收藏座位
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 收藏列表
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SaveFavoritesRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 无内容
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 保存收藏座位
+      tags:
+      - igo
+  /api/v1/igo/libraries/{id}/layout:
+    get:
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.LibraryLayoutResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取场馆布局
+      tags:
+      - igo
+  /api/v1/igo/libraries/{id}/preview:
+    post:
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.LibraryLayoutResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 预览场馆
+      tags:
+      - igo
+  /api/v1/igo/libraries/{id}/rule:
+    get:
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.LibraryRuleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取场馆规则
+      tags:
+      - igo
+  /api/v1/igo/libraries/{id}/seat-labels:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 座位 key
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.DeleteSeatLabelsRequest'
+      responses:
+        "204":
+          description: 无内容
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 删除座位标签
+      tags:
+      - igo
+    get:
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.SeatLabel'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取座位标签
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 场馆 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 标签
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SetSeatLabelsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.SeatLabel'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 设置座位标签
+      tags:
+      - igo
+  /api/v1/igo/libraries/bound:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.BoundLibraryResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取锁定场馆
+      tags:
+      - igo
+  /api/v1/igo/libraries/bound/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.BoundLibraryResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 刷新锁定场馆
+      tags:
+      - igo
+  /api/v1/igo/pipeline/configs:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.PipelineConfigDTO'
+                  type: array
+              type: object
+      summary: 获取一条龙配置列表
+      tags:
+      - IGo-Pipeline
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/do.CreatePipelineConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.PipelineConfigDTO'
+              type: object
+      summary: 创建一条龙配置
+      tags:
+      - IGo-Pipeline
+  /api/v1/igo/pipeline/configs/{id}:
+    delete:
+      parameters:
+      - description: 配置 ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      summary: 删除一条龙配置
+      tags:
+      - IGo-Pipeline
+    get:
+      parameters:
+      - description: 配置 ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.PipelineConfigDTO'
+              type: object
+      summary: 获取单个一条龙配置
+      tags:
+      - IGo-Pipeline
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 配置 ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/do.UpdatePipelineConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.PipelineConfigDTO'
+              type: object
+      summary: 更新一条龙配置
+      tags:
+      - IGo-Pipeline
+  /api/v1/igo/pipeline/configs/{id}/run:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 配置 ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 覆盖凭据
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/do.RunPipelineRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.PipelineRunResult'
+              type: object
+      summary: 立即执行一条龙任务
+      tags:
+      - IGo-Pipeline
+  /api/v1/igo/pipeline/library-layout:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 场馆与凭据
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/do.HelperLibraryLayoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.LibraryLayoutResponse'
+              type: object
+      summary: 辅助接口：获取场馆座位排布图
+      tags:
+      - IGo-Pipeline
+  /api/v1/igo/pipeline/verify-checkin:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 签到凭据
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/do.HelperVerifyCheckinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Any'
+      summary: 辅助接口：验证签到凭据并获取设备列表
+      tags:
+      - IGo-Pipeline
+  /api/v1/igo/pipeline/verify-session:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 登录凭据
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/do.HelperVerifySessionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Any'
+      summary: 辅助接口：验证登录凭据并获取场馆列表
+      tags:
+      - IGo-Pipeline
+  /api/v1/igo/protocol/templates:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.ProtocolTemplatesResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取协议模板
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 覆盖
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SaveProtocolTemplatesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.ProtocolTemplatesResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 保存协议模板
+      tags:
+      - igo
+  /api/v1/igo/protocol/templates/defaults:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.ProtocolTemplatesResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取默认协议模板
+      tags:
+      - igo
+  /api/v1/igo/protocol/templates/reset:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.ProtocolTemplatesResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 重置协议模板
+      tags:
+      - igo
+  /api/v1/igo/reservation:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.ReservationResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取当前预约
+      tags:
+      - igo
+  /api/v1/igo/reservation/cancel:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 取消选项
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/do.CancelReservationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.ReservationOperationResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 取消预约
+      tags:
+      - igo
+  /api/v1/igo/reservation/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.ReservationOperationResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 刷新预约
+      tags:
+      - igo
+  /api/v1/igo/session:
+    delete:
+      responses:
+        "204":
+          description: 无内容
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 退出会话
+      tags:
+      - igo
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.SessionResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取会话
+      tags:
+      - igo
+  /api/v1/igo/session/auth-qrcode:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.QRCodeResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取授权二维码
+      tags:
+      - igo
+  /api/v1/igo/session/cookie/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.SessionWorkflowResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 刷新 Cookie
+      tags:
+      - igo
+  /api/v1/igo/session/from-code:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 授权码
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.AuthFromCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.SessionWorkflowResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 从授权码登录
+      tags:
+      - igo
+  /api/v1/igo/session/from-cookie:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Cookie
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.AuthFromCookieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.SessionWorkflowResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 从 Cookie 登录
+      tags:
+      - igo
+  /api/v1/igo/settings:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.SettingsResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 获取设置
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 设置
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SaveSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.SettingsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 保存设置
+      tags:
+      - igo
+  /api/v1/igo/status:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.DashboardResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 运行状态
+      tags:
+      - igo
+  /api/v1/igo/task-records:
+    get:
+      parameters:
+      - description: 任务类型 (grab / global-leak)
+        in: query
+        name: kind
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.TaskLaunchRecord'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 任务启动记录
+      tags:
+      - igo
+  /api/v1/igo/tasks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.TaskListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 列出任务状态
+      tags:
+      - igo
+  /api/v1/igo/tasks/{kind}/cancel:
+    post:
+      parameters:
+      - description: grab / occupy / global-leak / tomorrow
+        in: path
+        name: kind
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CoordinatorStatus'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 取消任务
+      tags:
+      - igo
+  /api/v1/igo/tasks/{kind}/start:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: grab / occupy / global-leak / tomorrow
+        in: path
+        name: kind
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CoordinatorStatus'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 启动任务
+      tags:
+      - igo
+  /api/v1/igo/tasks/tomorrow/run-now:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 明日预约计划
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.TomorrowStartRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CoordinatorStatus'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.AnyError'
+        "501":
+          description: Not Implemented
+          schema:
+            $ref: '#/definitions/response.AnyError'
+      summary: 立即执行明日预约
+      tags:
+      - igo
   /api/v1/message-gateway/bindings:
     get:
       description: Returns the current user's bound messaging channels

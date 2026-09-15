@@ -4559,7 +4559,52 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/custom/greetings": {
+        "/api/v1/igo/activity-logs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "活动日志",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PagedResponse-array_do_ActivityLogEntry"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/backup/export": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -4568,23 +4613,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "custom_example"
+                    "igo"
                 ],
-                "summary": "创建自定义问候",
+                "summary": "导出备份",
                 "parameters": [
                     {
-                        "description": "问候请求",
+                        "description": "密码",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/do.CreateGreetingRequest"
+                            "$ref": "#/definitions/do.BackupExportRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "创建成功",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -4594,7 +4639,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/do.GreetingResponse"
+                                            "$ref": "#/definitions/do.BackupExportResponse"
                                         }
                                     }
                                 }
@@ -4602,7 +4647,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "参数校验失败",
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.AnyError"
                         }
@@ -4610,27 +4667,66 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/custom/greetings/{id}": {
+        "/api/v1/igo/backup/import": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "导入备份",
+                "parameters": [
+                    {
+                        "description": "备份",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.BackupImportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/auth-qrcode": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "custom_example"
+                    "igo"
                 ],
-                "summary": "获取问候详情",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "问候 ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "获取签到授权二维码",
                 "responses": {
                     "200": {
-                        "description": "查询成功",
+                        "description": "OK",
                         "schema": {
                             "allOf": [
                                 {
@@ -4640,15 +4736,2758 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/do.GreetingResponse"
+                                            "$ref": "#/definitions/do.QRCodeResponse"
                                         }
                                     }
                                 }
                             ]
                         }
                     },
-                    "404": {
-                        "description": "未找到",
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/devices": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取签到设备",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInDeviceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/from-code": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "签到授权",
+                "parameters": [
+                    {
+                        "description": "授权码",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.CheckInAuthFromCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInAuthorizationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/profiles": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取所有场馆签到配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInVenueProfilesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/profiles/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取场馆签到配置",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInVenueProfile"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "保存场馆签到配置",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "签到配置",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SaveCheckInVenueProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInVenueProfile"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/session": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取签到会话",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInSessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "igo"
+                ],
+                "summary": "退出签到会话",
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/sign": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "远程签到",
+                "parameters": [
+                    {
+                        "description": "签到参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.CheckInSignRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInSignResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/dashboard": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "首页仪表盘",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.DashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/global-leak/blacklist": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取捡漏黑名单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.GlobalLeakBlacklistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "保存捡漏黑名单",
+                "parameters": [
+                    {
+                        "description": "黑名单",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SaveGlobalLeakBlacklistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.GlobalLeakBlacklistResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/global-leak/selected-libraries": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取捡漏场馆",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.GlobalLeakLibraryTarget"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "保存捡漏场馆",
+                "parameters": [
+                    {
+                        "description": "场馆列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SaveGlobalLeakSelectedLibrariesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.GlobalLeakLibraryTarget"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "列出场馆",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.LibrarySummary"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/bound": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取锁定场馆",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.BoundLibraryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/bound/refresh": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "刷新锁定场馆",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.BoundLibraryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取场馆",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.LibrarySummary"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/{id}/bind": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "锁定场馆",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.BoundLibraryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/{id}/favorites": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取收藏座位",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.SeatRef"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "保存收藏座位",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "收藏列表",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SaveFavoritesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/{id}/layout": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取场馆布局",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.LibraryLayoutResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/{id}/preview": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "预览场馆",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.LibraryLayoutResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/{id}/rule": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取场馆规则",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.LibraryRuleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/libraries/{id}/seat-labels": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取座位标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.SeatLabel"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "设置座位标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "标签",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SetSeatLabelsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.SeatLabel"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "删除座位标签",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "场馆 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "座位 key",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.DeleteSeatLabelsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/pipeline/configs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "获取一条龙配置列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.PipelineConfigDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "创建一条龙配置",
+                "parameters": [
+                    {
+                        "description": "创建参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.CreatePipelineConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.PipelineConfigDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/pipeline/configs/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "获取单个一条龙配置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "配置 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.PipelineConfigDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "更新一条龙配置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "配置 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.UpdatePipelineConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.PipelineConfigDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "删除一条龙配置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "配置 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/pipeline/configs/{id}/run": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "立即执行一条龙任务",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "配置 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "覆盖凭据",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/do.RunPipelineRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.PipelineRunResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/pipeline/library-layout": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "辅助接口：获取场馆座位排布图",
+                "parameters": [
+                    {
+                        "description": "场馆与凭据",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.HelperLibraryLayoutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.LibraryLayoutResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/pipeline/verify-checkin": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "辅助接口：验证签到凭据并获取设备列表",
+                "parameters": [
+                    {
+                        "description": "签到凭据",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.HelperVerifyCheckinRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/pipeline/verify-session": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IGo-Pipeline"
+                ],
+                "summary": "辅助接口：验证登录凭据并获取场馆列表",
+                "parameters": [
+                    {
+                        "description": "登录凭据",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.HelperVerifySessionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/protocol/templates": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取协议模板",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.ProtocolTemplatesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "保存协议模板",
+                "parameters": [
+                    {
+                        "description": "覆盖",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SaveProtocolTemplatesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.ProtocolTemplatesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/protocol/templates/defaults": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取默认协议模板",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.ProtocolTemplatesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/protocol/templates/reset": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "重置协议模板",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.ProtocolTemplatesResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/reservation": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取当前预约",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.ReservationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/reservation/cancel": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "取消预约",
+                "parameters": [
+                    {
+                        "description": "取消选项",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/do.CancelReservationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.ReservationOperationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/reservation/refresh": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "刷新预约",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.ReservationOperationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/session": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取会话",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.SessionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "igo"
+                ],
+                "summary": "退出会话",
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/session/auth-qrcode": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取授权二维码",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.QRCodeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/session/cookie/refresh": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "刷新 Cookie",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.SessionWorkflowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/session/from-code": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "从授权码登录",
+                "parameters": [
+                    {
+                        "description": "授权码",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.AuthFromCodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.SessionWorkflowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/session/from-cookie": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "从 Cookie 登录",
+                "parameters": [
+                    {
+                        "description": "Cookie",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.AuthFromCookieRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.SessionWorkflowResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/settings": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取设置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.SettingsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "保存设置",
+                "parameters": [
+                    {
+                        "description": "设置",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SaveSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.SettingsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/status": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "运行状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.DashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/task-records": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "任务启动记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务类型 (grab / global-leak)",
+                        "name": "kind",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.TaskLaunchRecord"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/tasks": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "列出任务状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.TaskListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/tasks/tomorrow/run-now": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "立即执行明日预约",
+                "parameters": [
+                    {
+                        "description": "明日预约计划",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.TomorrowStartRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CoordinatorStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/tasks/{kind}/cancel": {
+            "post": {
+                "tags": [
+                    "igo"
+                ],
+                "summary": "取消任务",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "grab / occupy / global-leak / tomorrow",
+                        "name": "kind",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CoordinatorStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/tasks/{kind}/start": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "启动任务",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "grab / occupy / global-leak / tomorrow",
+                        "name": "kind",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CoordinatorStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.AnyError"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.AnyError"
                         }
@@ -6284,6 +9123,93 @@ const docTemplate = `{
                 }
             }
         },
+        "do.ActivityLogEntry": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.AuthFromCodeRequest": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "remember": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "do.AuthFromCookieRequest": {
+            "type": "object",
+            "required": [
+                "cookie"
+            ],
+            "properties": {
+                "cookie": {
+                    "type": "string"
+                },
+                "remember": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "do.BackupExportRequest": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "do.BackupExportResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.BackupImportRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "password"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "do.BindRequest": {
             "type": "object",
             "properties": {
@@ -6324,6 +9250,28 @@ const docTemplate = `{
                 }
             }
         },
+        "do.BoundLibraryResponse": {
+            "type": "object",
+            "properties": {
+                "bound": {
+                    "type": "boolean"
+                },
+                "layout": {
+                    "$ref": "#/definitions/do.LibraryLayoutResponse"
+                },
+                "library": {
+                    "$ref": "#/definitions/do.LibrarySummary"
+                }
+            }
+        },
+        "do.CancelReservationRequest": {
+            "type": "object",
+            "properties": {
+                "stop_occupy_first": {
+                    "type": "boolean"
+                }
+            }
+        },
         "do.ChannelDTO": {
             "type": "object",
             "properties": {
@@ -6361,6 +9309,214 @@ const docTemplate = `{
                 }
             }
         },
+        "do.CheckInAuthFromCodeRequest": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "remember": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "do.CheckInAuthorizationResponse": {
+            "type": "object",
+            "properties": {
+                "device": {
+                    "$ref": "#/definitions/do.CheckInDeviceResponse"
+                },
+                "device_refresh_warning": {
+                    "type": "string"
+                },
+                "session": {
+                    "$ref": "#/definitions/do.CheckInSessionResponse"
+                }
+            }
+        },
+        "do.CheckInDeviceResponse": {
+            "type": "object",
+            "properties": {
+                "beacon_uuids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "school": {
+                    "type": "string"
+                },
+                "student_name": {
+                    "type": "string"
+                },
+                "student_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.CheckInSessionResponse": {
+            "type": "object",
+            "properties": {
+                "authorized": {
+                    "type": "boolean"
+                },
+                "can_auto_restore": {
+                    "type": "boolean"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "saved_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.CheckInSignRequest": {
+            "type": "object",
+            "required": [
+                "beacon_uuid",
+                "expected_library_id"
+            ],
+            "properties": {
+                "beacon_uuid": {
+                    "type": "string"
+                },
+                "expected_library_id": {
+                    "type": "integer"
+                },
+                "expected_library_name": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "major": {
+                    "type": "integer"
+                },
+                "minor": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.CheckInSignResponse": {
+            "type": "object",
+            "properties": {
+                "expiration_time": {
+                    "type": "string"
+                },
+                "library_floor": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
+                    "type": "string"
+                },
+                "signed_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.CheckInVenueProfile": {
+            "type": "object",
+            "properties": {
+                "beacon_uuid": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "major": {
+                    "type": "integer"
+                },
+                "minor": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.CheckInVenueProfilesResponse": {
+            "type": "object",
+            "properties": {
+                "profiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.CheckInVenueProfile"
+                    }
+                }
+            }
+        },
+        "do.CoordinatorStatus": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "last_request_at": {
+                    "type": "string"
+                },
+                "last_updated_at": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "poll_count": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "request_count": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "do.CreateChannelRequest": {
             "type": "object",
             "properties": {
@@ -6387,22 +9543,69 @@ const docTemplate = `{
                 }
             }
         },
-        "do.CreateGreetingRequest": {
+        "do.CreatePipelineConfigRequest": {
             "type": "object",
             "required": [
-                "message",
-                "recipient"
+                "cookie",
+                "id",
+                "library_id",
+                "name",
+                "seat_key"
             ],
             "properties": {
-                "message": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
+                "auto_checkin": {
+                    "type": "boolean"
                 },
-                "recipient": {
-                    "type": "string",
-                    "maxLength": 64,
-                    "minLength": 1
+                "beacon_lat": {
+                    "type": "string"
+                },
+                "beacon_lng": {
+                    "type": "string"
+                },
+                "beacon_mac": {
+                    "type": "string"
+                },
+                "beacon_uuid": {
+                    "type": "string"
+                },
+                "checkin_token": {
+                    "type": "string"
+                },
+                "cookie": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "string"
+                },
+                "major": {
+                    "type": "integer"
+                },
+                "minor": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
+                    "type": "string"
                 }
             }
         },
@@ -6465,6 +9668,41 @@ const docTemplate = `{
                 }
             }
         },
+        "do.DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "authorized": {
+                    "type": "boolean"
+                },
+                "bound_library": {
+                    "$ref": "#/definitions/do.LibrarySummary"
+                },
+                "engine_summary": {
+                    "type": "string"
+                },
+                "hero_status": {
+                    "type": "string"
+                },
+                "hero_status_detail": {
+                    "type": "string"
+                },
+                "historical_success_count": {
+                    "type": "integer"
+                },
+                "reservation": {
+                    "$ref": "#/definitions/do.ReservationResponse"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.CoordinatorStatus"
+                    }
+                },
+                "total_guard_seconds": {
+                    "type": "integer"
+                }
+            }
+        },
         "do.Definition": {
             "type": "object",
             "properties": {
@@ -6476,6 +9714,21 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "do.DeleteSeatLabelsRequest": {
+            "type": "object",
+            "required": [
+                "seat_keys"
+            ],
+            "properties": {
+                "seat_keys": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -6493,19 +9746,378 @@ const docTemplate = `{
                 }
             }
         },
-        "do.GreetingResponse": {
+        "do.GlobalLeakBlacklistResponse": {
             "type": "object",
             "properties": {
+                "items": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/do.SeatRef"
+                        }
+                    }
+                }
+            }
+        },
+        "do.GlobalLeakLibraryTarget": {
+            "type": "object",
+            "required": [
+                "library_id"
+            ],
+            "properties": {
+                "floor": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.HelperLibraryLayoutRequest": {
+            "type": "object",
+            "required": [
+                "cookie",
+                "library_id"
+            ],
+            "properties": {
+                "cookie": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.HelperVerifyCheckinRequest": {
+            "type": "object",
+            "required": [
+                "token_or_code"
+            ],
+            "properties": {
+                "token_or_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.HelperVerifySessionRequest": {
+            "type": "object",
+            "required": [
+                "cookie"
+            ],
+            "properties": {
+                "cookie": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.LibraryLayoutResponse": {
+            "type": "object",
+            "properties": {
+                "available_seats": {
+                    "type": "integer"
+                },
+                "booked_seats": {
+                    "type": "integer"
+                },
+                "floor": {
+                    "type": "string"
+                },
+                "invalid_layout_item_count": {
+                    "type": "integer"
+                },
+                "is_open": {
+                    "type": "boolean"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "max_x": {
+                    "type": "integer"
+                },
+                "max_y": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "seats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.SeatSnapshot"
+                    }
+                },
+                "total_seats": {
+                    "type": "integer"
+                },
+                "used_seats": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.LibraryRuleResponse": {
+            "type": "object",
+            "properties": {
+                "advance_booking": {
+                    "type": "string"
+                },
+                "close_end_date": {
+                    "type": "string"
+                },
+                "close_start_date": {
+                    "type": "string"
+                },
+                "close_time": {
+                    "type": "integer"
+                },
+                "close_time_text": {
+                    "type": "string"
+                },
+                "hold_reason_json": {
+                    "type": "string"
+                },
+                "hold_ttl_minutes": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "open_time": {
+                    "type": "integer"
+                },
+                "open_time_text": {
+                    "type": "string"
+                },
+                "renew_time_minutes": {
+                    "type": "string"
+                },
+                "seat_ttl_minutes": {
+                    "type": "string"
+                },
+                "validate_time": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.LibrarySummary": {
+            "type": "object",
+            "properties": {
+                "booked_seats": {
+                    "type": "integer"
+                },
+                "floor": {
+                    "type": "string"
+                },
+                "is_open": {
+                    "type": "boolean"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "total_seats": {
+                    "type": "integer"
+                },
+                "used_seats": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.PipelineConfigDTO": {
+            "type": "object",
+            "properties": {
+                "auto_checkin": {
+                    "type": "boolean"
+                },
+                "beacon_lat": {
+                    "type": "string"
+                },
+                "beacon_lng": {
+                    "type": "string"
+                },
+                "beacon_mac": {
+                    "type": "string"
+                },
+                "beacon_uuid": {
+                    "type": "string"
+                },
+                "checkin_expires_at": {
+                    "type": "string"
+                },
+                "checkin_token_valid": {
+                    "type": "boolean"
+                },
+                "cookie_expires_at": {
+                    "type": "string"
+                },
+                "cookie_masked": {
+                    "type": "string"
+                },
+                "cookie_valid": {
+                    "type": "boolean"
+                },
                 "created_at": {
                     "type": "string"
                 },
+                "floor": {
+                    "type": "string"
+                },
+                "has_checkin_token": {
+                    "type": "boolean"
+                },
+                "has_cookie": {
+                    "type": "boolean"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "string"
+                },
+                "library_id": {
                     "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "string"
+                },
+                "major": {
+                    "type": "integer"
+                },
+                "minor": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "0"
+                }
+            }
+        },
+        "do.PipelineRunResult": {
+            "type": "object",
+            "properties": {
+                "auth_url": {
+                    "type": "string"
+                },
+                "checkin_status": {
+                    "type": "string"
+                },
+                "config_id": {
+                    "type": "string"
+                },
+                "executed_at": {
+                    "type": "string"
                 },
                 "message": {
                     "type": "string"
                 },
-                "recipient": {
+                "name": {
+                    "type": "string"
+                },
+                "need_auth": {
+                    "description": "\"LOGIN\", \"CHECKIN\", or \"\"",
+                    "type": "string"
+                },
+                "reservation_status": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "do.ProtocolTemplatesResponse": {
+            "type": "object",
+            "properties": {
+                "cancel_reservation_template": {
+                    "type": "string"
+                },
+                "cookie_authorization_return_url": {
+                    "type": "string"
+                },
+                "get_cookie_url_template": {
+                    "type": "string"
+                },
+                "graphql_default_origin_url": {
+                    "type": "string"
+                },
+                "graphql_default_referer_url": {
+                    "type": "string"
+                },
+                "graphql_endpoint_url": {
+                    "type": "string"
+                },
+                "graphql_tomorrow_origin_url": {
+                    "type": "string"
+                },
+                "graphql_tomorrow_referer_url": {
+                    "type": "string"
+                },
+                "query_libraries_template": {
+                    "type": "string"
+                },
+                "query_library_layout_template": {
+                    "type": "string"
+                },
+                "query_library_rule_template": {
+                    "type": "string"
+                },
+                "query_reservation_info_template": {
+                    "type": "string"
+                },
+                "remote_checkin_api_referer_url": {
+                    "type": "string"
+                },
+                "remote_checkin_auth_referer_url": {
+                    "type": "string"
+                },
+                "remote_checkin_auth_url_template": {
+                    "type": "string"
+                },
+                "remote_checkin_authorization_return_url": {
+                    "type": "string"
+                },
+                "remote_checkin_devices_endpoint_url": {
+                    "type": "string"
+                },
+                "remote_checkin_sign_endpoint_url": {
+                    "type": "string"
+                },
+                "remote_checkin_time_endpoint_url": {
+                    "type": "string"
+                },
+                "reserve_seat_template": {
+                    "type": "string"
+                },
+                "tomorrow_reservation_info_template": {
+                    "type": "string"
+                },
+                "tomorrow_reservation_queue_url_template": {
+                    "type": "string"
+                },
+                "tomorrow_reservation_save_template": {
+                    "type": "string"
+                },
+                "tomorrow_reservation_warmup_template": {
                     "type": "string"
                 }
             }
@@ -6522,6 +10134,412 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "do.QRCodeResponse": {
+            "type": "object",
+            "properties": {
+                "auth_url": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "image_data_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.ReservationOperationResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "reservation": {
+                    "$ref": "#/definitions/do.ReservationResponse"
+                }
+            }
+        },
+        "do.ReservationResponse": {
+            "type": "object",
+            "properties": {
+                "expiration_time": {
+                    "type": "string"
+                },
+                "has_reservation": {
+                    "type": "boolean"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "reservation_token": {
+                    "type": "string"
+                },
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.RunPipelineRequest": {
+            "type": "object",
+            "properties": {
+                "checkin_token": {
+                    "type": "string"
+                },
+                "cookie": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.SaveCheckInVenueProfileRequest": {
+            "type": "object",
+            "required": [
+                "beacon_uuid"
+            ],
+            "properties": {
+                "beacon_uuid": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "major": {
+                    "type": "integer"
+                },
+                "minor": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.SaveFavoritesRequest": {
+            "type": "object",
+            "required": [
+                "seats"
+            ],
+            "properties": {
+                "seats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.SeatRef"
+                    }
+                }
+            }
+        },
+        "do.SaveGlobalLeakBlacklistRequest": {
+            "type": "object",
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "items": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/do.SeatRef"
+                        }
+                    }
+                }
+            }
+        },
+        "do.SaveGlobalLeakSelectedLibrariesRequest": {
+            "type": "object",
+            "required": [
+                "libraries"
+            ],
+            "properties": {
+                "libraries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.GlobalLeakLibraryTarget"
+                    }
+                }
+            }
+        },
+        "do.SaveProtocolTemplatesRequest": {
+            "type": "object",
+            "required": [
+                "overrides"
+            ],
+            "properties": {
+                "overrides": {
+                    "$ref": "#/definitions/do.ProtocolTemplatesResponse"
+                }
+            }
+        },
+        "do.SaveSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "auto_release_enabled": {
+                    "type": "boolean"
+                },
+                "auto_release_lead_seconds": {
+                    "type": "integer"
+                },
+                "checkin_profiles": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/do.CheckInVenueProfile"
+                    }
+                },
+                "global_leak_scan_interval_seconds": {
+                    "type": "integer"
+                },
+                "grab_reservation_strategy": {
+                    "type": "string"
+                },
+                "grab_scheduled_start_default": {
+                    "type": "string"
+                },
+                "home_reservation_progress_mode": {
+                    "type": "string"
+                },
+                "network_max_retries": {
+                    "type": "integer"
+                },
+                "occupy_check_interval_mode": {
+                    "type": "string"
+                },
+                "occupy_re_reserve_delay_seconds": {
+                    "type": "integer"
+                },
+                "optimal_grab_strategy_reminder_enabled": {
+                    "type": "boolean"
+                },
+                "request_timeout_seconds": {
+                    "type": "integer"
+                },
+                "tomorrow_scheduled_start_default": {
+                    "type": "string"
+                },
+                "traceint_graphql_overrides_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "do.SeatLabel": {
+            "type": "object",
+            "properties": {
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.SeatRef": {
+            "type": "object",
+            "required": [
+                "seat_key"
+            ],
+            "properties": {
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.SeatSnapshot": {
+            "type": "object",
+            "properties": {
+                "is_occupied": {
+                    "type": "boolean"
+                },
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
+                    "type": "string"
+                },
+                "seat_status": {
+                    "type": "integer"
+                },
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                }
+            }
+        },
+        "do.SessionResponse": {
+            "type": "object",
+            "properties": {
+                "authorized": {
+                    "type": "boolean"
+                },
+                "can_auto_restore": {
+                    "type": "boolean"
+                },
+                "cookie_masked": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "saved_at": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.SessionWorkflowResponse": {
+            "type": "object",
+            "properties": {
+                "libraries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.LibrarySummary"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "session": {
+                    "$ref": "#/definitions/do.SessionResponse"
+                }
+            }
+        },
+        "do.SetSeatLabelsRequest": {
+            "type": "object",
+            "required": [
+                "seats",
+                "text"
+            ],
+            "properties": {
+                "seats": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/do.SeatRef"
+                    }
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.SettingsResponse": {
+            "type": "object",
+            "properties": {
+                "auto_release_enabled": {
+                    "type": "boolean"
+                },
+                "auto_release_lead_seconds": {
+                    "type": "integer"
+                },
+                "checkin_profiles": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/do.CheckInVenueProfile"
+                    }
+                },
+                "global_leak_scan_interval_seconds": {
+                    "type": "integer"
+                },
+                "grab_reservation_strategy": {
+                    "type": "string"
+                },
+                "grab_scheduled_start_default": {
+                    "type": "string"
+                },
+                "home_reservation_progress_mode": {
+                    "type": "string"
+                },
+                "network_max_retries": {
+                    "type": "integer"
+                },
+                "occupy_check_interval_mode": {
+                    "type": "string"
+                },
+                "occupy_re_reserve_delay_seconds": {
+                    "type": "integer"
+                },
+                "optimal_grab_strategy_reminder_enabled": {
+                    "type": "boolean"
+                },
+                "request_timeout_seconds": {
+                    "type": "integer"
+                },
+                "tomorrow_scheduled_start_default": {
+                    "type": "string"
+                },
+                "traceint_graphql_overrides_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "do.TaskLaunchRecord": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                },
+                "libraries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.GlobalLeakLibraryTarget"
+                    }
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "polling_mode": {
+                    "type": "string"
+                },
+                "record_id": {
+                    "type": "string"
+                },
+                "recorded_at": {
+                    "type": "string"
+                },
+                "reservation_strategy": {
+                    "type": "string"
+                },
+                "scan_interval_seconds": {
+                    "type": "integer"
+                },
+                "seats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.SeatRef"
+                    }
+                }
+            }
+        },
+        "do.TaskListResponse": {
+            "type": "object",
+            "properties": {
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.CoordinatorStatus"
+                    }
                 }
             }
         },
@@ -6562,6 +10580,31 @@ const docTemplate = `{
                 }
             }
         },
+        "do.TomorrowStartRequest": {
+            "type": "object",
+            "required": [
+                "library_id",
+                "scheduled_start",
+                "seat"
+            ],
+            "properties": {
+                "execute_immediately": {
+                    "type": "boolean"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "scheduled_start": {
+                    "type": "string"
+                },
+                "seat": {
+                    "$ref": "#/definitions/do.SeatRef"
+                }
+            }
+        },
         "do.UpdateChannelRequest": {
             "type": "object",
             "properties": {
@@ -6581,6 +10624,62 @@ const docTemplate = `{
                     }
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.UpdatePipelineConfigRequest": {
+            "type": "object",
+            "properties": {
+                "auto_checkin": {
+                    "type": "boolean"
+                },
+                "beacon_lat": {
+                    "type": "string"
+                },
+                "beacon_lng": {
+                    "type": "string"
+                },
+                "beacon_mac": {
+                    "type": "string"
+                },
+                "beacon_uuid": {
+                    "type": "string"
+                },
+                "checkin_token": {
+                    "type": "string"
+                },
+                "cookie": {
+                    "type": "string"
+                },
+                "floor": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "string"
+                },
+                "major": {
+                    "type": "integer"
+                },
+                "minor": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "seat_key": {
+                    "type": "string"
+                },
+                "seat_name": {
                     "type": "string"
                 }
             }
@@ -8133,6 +12232,40 @@ const docTemplate = `{
                 },
                 "issue": {
                     "type": "string"
+                }
+            }
+        },
+        "response.Meta": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.PagedResponse-array_do_ActivityLogEntry": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/do.ActivityLogEntry"
+                    }
+                },
+                "error": {
+                    "$ref": "#/definitions/response.ErrorBody"
+                },
+                "meta": {
+                    "$ref": "#/definitions/response.Meta"
                 }
             }
         },

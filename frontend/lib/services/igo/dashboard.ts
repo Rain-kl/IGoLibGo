@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BaseService } from '@/lib/services/core';
-import type {
-  ActivityLogEntry,
-  DashboardResponse,
-} from './types';
+import type { ActivityLogEntry, DashboardResponse } from './types';
 
 export class IGoDashboardService extends BaseService {
   protected static readonly basePath = '/api/v1/igo';

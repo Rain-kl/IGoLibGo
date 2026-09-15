@@ -74,7 +74,10 @@ export function PipelineResultDialog({
                   : t('resultDialog.failureTitle')}
               </DialogTitle>
               <p className='text-xs text-muted-foreground mt-0.5'>
-                配置: {result.name} ({result.config_id})
+                配置:{' '}
+                {result.name
+                  ? `${result.name} (${result.config_id})`
+                  : result.config_id}
               </p>
             </div>
           </div>

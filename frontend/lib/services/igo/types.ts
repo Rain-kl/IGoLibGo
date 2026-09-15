@@ -382,6 +382,8 @@ export interface PipelineConfigDTO {
   id: string;
   name: string;
   cookie?: string;
+  cookie_masked?: string;
+  has_cookie?: boolean;
   cookie_expires_at?: string;
   cookie_valid?: boolean;
   library_id: number;
@@ -391,11 +393,15 @@ export interface PipelineConfigDTO {
   seat_name: string;
   auto_checkin: boolean;
   checkin_token?: string;
+  has_checkin_token?: boolean;
   checkin_expires_at?: string;
   checkin_token_valid?: boolean;
-  beacon_lat: string;
-  beacon_lng: string;
-  beacon_mac: string;
+  beacon_uuid?: string;
+  beacon_lat?: string;
+  latitude?: string;
+  beacon_lng?: string;
+  longitude?: string;
+  beacon_mac?: string;
   created_at: string;
   updated_at: string;
 }

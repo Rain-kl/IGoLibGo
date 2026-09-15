@@ -24,9 +24,10 @@ export class IGoTaskService extends BaseService {
   }
 
   static async listTaskRecords(kind?: string): Promise<TaskLaunchRecord[]> {
-    return this.get<TaskLaunchRecord[]>('/task-records', {
-      params: kind ? { kind } : undefined,
-    });
+    return this.get<TaskLaunchRecord[]>(
+      '/task-records',
+      kind ? { kind } : undefined,
+    );
   }
 
   static async runTomorrowNow(): Promise<CoordinatorStatus> {
@@ -48,13 +49,13 @@ export class IGoTaskService extends BaseService {
     data: GlobalLeakStartRequest,
   ): Promise<CoordinatorStatus> {
     return this.post<CoordinatorStatus>(
-      '/tasks/leak/start',
+      '/tasks/global-leak/start',
       data as unknown as Record<string, unknown>,
     );
   }
 
   static async cancelLeak(): Promise<CoordinatorStatus> {
-    return this.post<CoordinatorStatus>('/tasks/leak/cancel');
+    return this.post<CoordinatorStatus>('/tasks/global-leak/cancel');
   }
 
   static async startTomorrow(
@@ -89,8 +90,8 @@ export class IGoTaskService extends BaseService {
 
   static async saveGlobalLeakBlacklist(
     data: SaveGlobalLeakBlacklistRequest,
-  ): Promise<GlobalLeakBlacklistResponse> {
-    return this.put<GlobalLeakBlacklistResponse>(
+  ): Promise<void> {
+    return this.put<void>(
       '/global-leak/blacklist',
       data as unknown as Record<string, unknown>,
     );
@@ -106,8 +107,8 @@ export class IGoTaskService extends BaseService {
 
   static async saveGlobalLeakSelectedLibraries(
     data: SaveGlobalLeakSelectedLibrariesRequest,
-  ): Promise<GlobalLeakLibraryTarget[]> {
-    return this.put<GlobalLeakLibraryTarget[]>(
+  ): Promise<void> {
+    return this.put<void>(
       '/global-leak/selected-libraries',
       data as unknown as Record<string, unknown>,
     );
