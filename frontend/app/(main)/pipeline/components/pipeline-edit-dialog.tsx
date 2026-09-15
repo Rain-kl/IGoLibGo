@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  Radio,
   Save,
   ShieldCheck,
   Workflow,
@@ -80,6 +81,8 @@ export function PipelineEditDialog({
   const [beaconLat, setBeaconLat] = React.useState('');
   const [beaconLng, setBeaconLng] = React.useState('');
   const [beaconMac, setBeaconMac] = React.useState('');
+  const [major, setMajor] = React.useState('');
+  const [minor, setMinor] = React.useState('');
 
   // Optional Venue/Seat Picker
   const [showVenuePicker, setShowVenuePicker] = React.useState(false);
@@ -115,6 +118,16 @@ export function PipelineEditDialog({
       setBeaconLat(config.latitude || '');
       setBeaconLng(config.longitude || '');
       setBeaconMac(config.beacon_uuid || '');
+      setMajor(
+        config.major !== undefined && config.major !== null
+          ? String(config.major)
+          : '',
+      );
+      setMinor(
+        config.minor !== undefined && config.minor !== null
+          ? String(config.minor)
+          : '',
+      );
 
       // Reset optional sections
       setShowVenuePicker(false);
@@ -230,6 +243,28 @@ export function PipelineEditDialog({
       toast.error('座位名称不能为空');
       return;
     }
+    if (autoCheckin) {
+      if (
+        !beaconLat.trim() ||
+        !beaconLng.trim() ||
+        !beaconMac.trim() ||
+        major.trim() === '' ||
+        minor.trim() === ''
+      ) {
+        toast.error(t('dialog.beaconValidationError'));
+        return;
+      }
+      const majorNum = Number(major);
+      if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
+        toast.error(t('dialog.majorRangeError'));
+        return;
+      }
+      const minorNum = Number(minor);
+      if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
+        toast.error(t('dialog.minorRangeError'));
+        return;
+      }
+    }
 
     const effectiveCookie =
       verifiedCookie ||
@@ -250,6 +285,8 @@ export function PipelineEditDialog({
         latitude: beaconLat.trim() || undefined,
         longitude: beaconLng.trim() || undefined,
         beacon_uuid: beaconMac.trim() || undefined,
+        major: autoCheckin && major.trim() !== '' ? Number(major) : 0,
+        minor: autoCheckin && minor.trim() !== '' ? Number(minor) : 0,
       };
 
       await IGoService.pipeline.updateConfig(config.id, req);
@@ -518,18 +555,39 @@ export function PipelineEditDialog({
             )}
           </div>
 
-          {/* Section 3: Custom Beacon Settings (Optional) */}
-          <div className='space-y-2.5 rounded-lg border border-border/40 p-3.5 bg-muted/10'>
-            <p className='text-xs font-semibold text-muted-foreground'>
-              {t('dialog.customBeacon')}
-            </p>
-            <div className='grid grid-cols-2 gap-2'>
+          {/* Section 3: Beacon Settings (Required when autoCheckin is true) */}
+          <div
+            className={cn(
+              'space-y-3 rounded-lg border p-3.5 transition-colors',
+              autoCheckin
+                ? 'border-primary/20 bg-primary/5'
+                : 'border-border/40 bg-muted/10',
+            )}
+          >
+            <div className='flex items-center justify-between'>
+              <span className='text-xs font-semibold flex items-center gap-1.5'>
+                <Radio className='size-3.5 text-primary' />
+                {autoCheckin
+                  ? t('dialog.customBeaconRequired')
+                  : t('dialog.customBeacon')}
+              </span>
+              {autoCheckin && (
+                <span className='text-[10px] text-destructive font-medium'>
+                  {t('dialog.requiredTag')}
+                </span>
+              )}
+            </div>
+
+            <div className='grid grid-cols-2 gap-2.5'>
               <div className='space-y-1'>
                 <Label className='text-[11px] text-muted-foreground'>
                   {t('dialog.latLabel')}
+                  {autoCheckin && (
+                    <span className='text-destructive ml-0.5'>*</span>
+                  )}
                 </Label>
                 <Input
-                  placeholder='如 30.123456'
+                  placeholder={t('dialog.latPlaceholder')}
                   value={beaconLat}
                   onChange={(e) => setBeaconLat(e.target.value)}
                   className='h-8 text-xs font-mono'
@@ -538,25 +596,63 @@ export function PipelineEditDialog({
               <div className='space-y-1'>
                 <Label className='text-[11px] text-muted-foreground'>
                   {t('dialog.lngLabel')}
+                  {autoCheckin && (
+                    <span className='text-destructive ml-0.5'>*</span>
+                  )}
                 </Label>
                 <Input
-                  placeholder='如 120.123456'
+                  placeholder={t('dialog.lngPlaceholder')}
                   value={beaconLng}
                   onChange={(e) => setBeaconLng(e.target.value)}
                   className='h-8 text-xs font-mono'
                 />
               </div>
             </div>
+
             <div className='space-y-1'>
               <Label className='text-[11px] text-muted-foreground'>
                 {t('dialog.macLabel')}
+                {autoCheckin && (
+                  <span className='text-destructive ml-0.5'>*</span>
+                )}
               </Label>
               <Input
-                placeholder='如 AA:BB:CC:DD:EE:FF'
+                placeholder={t('dialog.macPlaceholder')}
                 value={beaconMac}
                 onChange={(e) => setBeaconMac(e.target.value)}
                 className='h-8 text-xs font-mono'
               />
+            </div>
+
+            <div className='grid grid-cols-2 gap-2.5'>
+              <div className='space-y-1'>
+                <Label className='text-[11px] text-muted-foreground'>
+                  {t('dialog.majorLabel')}
+                  {autoCheckin && (
+                    <span className='text-destructive ml-0.5'>*</span>
+                  )}
+                </Label>
+                <Input
+                  placeholder={t('dialog.majorPlaceholder')}
+                  value={major}
+                  onChange={(e) => setMajor(e.target.value)}
+                  className='h-8 text-xs font-mono'
+                />
+              </div>
+              <div className='space-y-1'>
+                <Label className='text-[11px] text-muted-foreground'>
+                  {t('dialog.minorLabel')}
+                  {autoCheckin && (
+                    <span className='text-destructive ml-0.5'>*</span>
+                  )}
+                </Label>
+                <Input
+                  placeholder={t('dialog.minorPlaceholder')}
+                  value={minor}
+                  onChange={(e) => setMinor(e.target.value)}
+                  className='h-8 text-xs font-mono'
+                />
+              </div>
             </div>
           </div>
 

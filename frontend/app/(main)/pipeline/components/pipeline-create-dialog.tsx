@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Radio,
   Save,
   ShieldCheck,
   Sparkles,
@@ -77,6 +78,13 @@ export function PipelineCreateDialog({
   // Auto Check-in toggle (no credentials required)
   const [autoCheckin, setAutoCheckin] = React.useState(false);
 
+  // Beacon parameters (Required when autoCheckin is true)
+  const [beaconLat, setBeaconLat] = React.useState('');
+  const [beaconLng, setBeaconLng] = React.useState('');
+  const [beaconMac, setBeaconMac] = React.useState('');
+  const [major, setMajor] = React.useState('');
+  const [minor, setMinor] = React.useState('');
+
   // Step 2: Venue and Seat Selection
   const [venueList, setVenueList] = React.useState<LibrarySummary[]>([]);
   const [currentLayout, setCurrentLayout] =
@@ -100,6 +108,11 @@ export function PipelineCreateDialog({
       setVerifiedCookie('');
       setCookieExpiresAt(null);
       setAutoCheckin(false);
+      setBeaconLat('');
+      setBeaconLng('');
+      setBeaconMac('');
+      setMajor('');
+      setMinor('');
       setSelectedLibId(null);
       setSelectedSeatKey('');
       setSelectedSeatName('');
@@ -189,6 +202,29 @@ export function PipelineCreateDialog({
     if (!name.trim()) {
       toast.error('请输入配置名称');
       return;
+    }
+
+    if (autoCheckin) {
+      if (
+        !beaconLat.trim() ||
+        !beaconLng.trim() ||
+        !beaconMac.trim() ||
+        major.trim() === '' ||
+        minor.trim() === ''
+      ) {
+        toast.error(t('dialog.beaconValidationError'));
+        return;
+      }
+      const majorNum = Number(major);
+      if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
+        toast.error(t('dialog.majorRangeError'));
+        return;
+      }
+      const minorNum = Number(minor);
+      if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
+        toast.error(t('dialog.minorRangeError'));
+        return;
+      }
     }
 
     // Verify session
@@ -282,6 +318,11 @@ export function PipelineCreateDialog({
         seat_name: selectedSeatName,
         auto_checkin: autoCheckin,
         cookie: effectiveCookie,
+        latitude: autoCheckin ? beaconLat.trim() : undefined,
+        longitude: autoCheckin ? beaconLng.trim() : undefined,
+        beacon_uuid: autoCheckin ? beaconMac.trim() : undefined,
+        major: autoCheckin && major.trim() !== '' ? Number(major) : 0,
+        minor: autoCheckin && minor.trim() !== '' ? Number(minor) : 0,
       };
       await IGoService.pipeline.createConfig(req);
       toast.success('一条龙自动化卡片创建成功！');
@@ -386,6 +427,108 @@ export function PipelineCreateDialog({
                   onCheckedChange={setAutoCheckin}
                 />
               </div>
+
+              {/* Beacon Parameters (Required when autoCheckin is true) */}
+              {autoCheckin && (
+                <div className='space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3.5'>
+                  <div className='flex items-center justify-between'>
+                    <Label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
+                      <Radio className='size-3.5 text-primary' />
+                      <span>{t('dialog.customBeaconRequired')}</span>
+                    </Label>
+                    <span className='text-[10px] text-destructive font-medium'>
+                      {t('dialog.requiredTag')}
+                    </span>
+                  </div>
+
+                  <div className='grid grid-cols-2 gap-2.5'>
+                    <div className='space-y-1'>
+                      <Label
+                        htmlFor='create-beacon-lat'
+                        className='text-[11px] font-medium'
+                      >
+                        {t('dialog.latLabel')}{' '}
+                        <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        id='create-beacon-lat'
+                        placeholder={t('dialog.latPlaceholder')}
+                        value={beaconLat}
+                        onChange={(e) => setBeaconLat(e.target.value)}
+                        className='h-8 text-xs font-mono'
+                      />
+                    </div>
+                    <div className='space-y-1'>
+                      <Label
+                        htmlFor='create-beacon-lng'
+                        className='text-[11px] font-medium'
+                      >
+                        {t('dialog.lngLabel')}{' '}
+                        <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        id='create-beacon-lng'
+                        placeholder={t('dialog.lngPlaceholder')}
+                        value={beaconLng}
+                        onChange={(e) => setBeaconLng(e.target.value)}
+                        className='h-8 text-xs font-mono'
+                      />
+                    </div>
+                  </div>
+
+                  <div className='space-y-1'>
+                    <Label
+                      htmlFor='create-beacon-mac'
+                      className='text-[11px] font-medium'
+                    >
+                      {t('dialog.macLabel')}{' '}
+                      <span className='text-destructive'>*</span>
+                    </Label>
+                    <Input
+                      id='create-beacon-mac'
+                      placeholder={t('dialog.macPlaceholder')}
+                      value={beaconMac}
+                      onChange={(e) => setBeaconMac(e.target.value)}
+                      className='h-8 text-xs font-mono'
+                    />
+                  </div>
+
+                  <div className='grid grid-cols-2 gap-2.5'>
+                    <div className='space-y-1'>
+                      <Label
+                        htmlFor='create-beacon-major'
+                        className='text-[11px] font-medium'
+                      >
+                        {t('dialog.majorLabel')}{' '}
+                        <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        id='create-beacon-major'
+                        placeholder={t('dialog.majorPlaceholder')}
+                        value={major}
+                        onChange={(e) => setMajor(e.target.value)}
+                        className='h-8 text-xs font-mono'
+                      />
+                    </div>
+                    <div className='space-y-1'>
+                      <Label
+                        htmlFor='create-beacon-minor'
+                        className='text-[11px] font-medium'
+                      >
+                        {t('dialog.minorLabel')}{' '}
+                        <span className='text-destructive'>*</span>
+                      </Label>
+                      <Input
+                        id='create-beacon-minor'
+                        placeholder={t('dialog.minorPlaceholder')}
+                        value={minor}
+                        onChange={(e) => setMinor(e.target.value)}
+                        className='h-8 text-xs font-mono'
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Login Credentials Section */}
               <div className='space-y-2 pt-2 border-t border-border/40'>
