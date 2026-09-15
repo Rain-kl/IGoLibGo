@@ -1017,4 +1017,80 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     // Edit dialog remains open
     await expect(page.getByText('编辑一条龙自动化配置')).toBeVisible();
   });
+
+  test('successfully preserves and saves major and minor in edit dialog even when auto-checkin is disabled', async ({
+    page,
+  }) => {
+    let capturedReq: Record<string, unknown> | null = null;
+    await page.route('**/api/v1/igo/pipeline/configs', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: 'seat_manual_checkin',
+              name: '手动打卡预填测试',
+              cookie: 'Authorization=cookie-xxx',
+              library_id: 20,
+              library_name: '总馆二楼',
+              floor: '2',
+              seat_key: 'S-202',
+              seat_name: '202号',
+              auto_checkin: false,
+              major: 0,
+              minor: 0,
+              updated_at: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+    });
+
+    await page.route(
+      '**/api/v1/igo/pipeline/configs/seat_manual_checkin',
+      async (route) => {
+        if (route.request().method() === 'PUT') {
+          capturedReq = route.request().postDataJSON();
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              data: {
+                id: 'seat_manual_checkin',
+                ...capturedReq,
+                updated_at: new Date().toISOString(),
+              },
+            }),
+          });
+          return;
+        }
+      },
+    );
+
+    await page.goto('/pipeline');
+    await page.getByLabel(/操作|actions/i).click();
+    await page.getByRole('menuitem', { name: /编辑配置/i }).click();
+
+    // Auto-checkin switch remains OFF
+    // Fill in beacon parameters
+    await page.getByPlaceholder(/如 31.2304/i).fill('31.2304');
+    await page.getByPlaceholder(/如 121.4737/i).fill('121.4737');
+    await page
+      .getByPlaceholder(/如 FDA50693-A4E2-4FB1-AFCF-C6EB07647825/i)
+      .fill('FDA50693-A4E2-4FB1-AFCF-C6EB07647825');
+    await page.getByPlaceholder(/如 10001 \(0-65535\)/i).fill('10001');
+    await page.getByPlaceholder(/如 1980 \(0-65535\)/i).fill('1980');
+
+    // Click "保存修改"
+    await page.getByRole('button', { name: /保存修改/i }).click();
+
+    // Verify backend received major and minor as numbers, NOT 0
+    expect(capturedReq).not.toBeNull();
+    const result = capturedReq!;
+    expect(result.auto_checkin).toBe(false);
+    expect(result.major).toBe(10001);
+    expect(result.minor).toBe(1980);
+    expect(result.beacon_uuid).toBe('FDA50693-A4E2-4FB1-AFCF-C6EB07647825');
+  });
 });

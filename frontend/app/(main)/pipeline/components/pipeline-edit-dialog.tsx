@@ -119,12 +119,12 @@ export function PipelineEditDialog({
       setBeaconLng(config.longitude || '');
       setBeaconMac(config.beacon_uuid || '');
       setMajor(
-        config.major !== undefined && config.major !== null
+        config.major !== undefined && config.major !== null && config.major > 0
           ? String(config.major)
           : '',
       );
       setMinor(
-        config.minor !== undefined && config.minor !== null
+        config.minor !== undefined && config.minor !== null && config.minor > 0
           ? String(config.minor)
           : '',
       );
@@ -264,6 +264,21 @@ export function PipelineEditDialog({
         toast.error(t('dialog.minorRangeError'));
         return;
       }
+    } else {
+      if (major.trim() !== '') {
+        const majorNum = Number(major);
+        if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
+          toast.error(t('dialog.majorRangeError'));
+          return;
+        }
+      }
+      if (minor.trim() !== '') {
+        const minorNum = Number(minor);
+        if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
+          toast.error(t('dialog.minorRangeError'));
+          return;
+        }
+      }
     }
 
     const effectiveCookie =
@@ -285,8 +300,8 @@ export function PipelineEditDialog({
         latitude: beaconLat.trim() || undefined,
         longitude: beaconLng.trim() || undefined,
         beacon_uuid: beaconMac.trim() || undefined,
-        major: autoCheckin && major.trim() !== '' ? Number(major) : 0,
-        minor: autoCheckin && minor.trim() !== '' ? Number(minor) : 0,
+        major: major.trim() !== '' ? Number(major) : 0,
+        minor: minor.trim() !== '' ? Number(minor) : 0,
       };
 
       await IGoService.pipeline.updateConfig(config.id, req);

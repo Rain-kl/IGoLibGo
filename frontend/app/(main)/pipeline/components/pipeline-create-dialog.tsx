@@ -225,6 +225,21 @@ export function PipelineCreateDialog({
         toast.error(t('dialog.minorRangeError'));
         return;
       }
+    } else {
+      if (major.trim() !== '') {
+        const majorNum = Number(major);
+        if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
+          toast.error(t('dialog.majorRangeError'));
+          return;
+        }
+      }
+      if (minor.trim() !== '') {
+        const minorNum = Number(minor);
+        if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
+          toast.error(t('dialog.minorRangeError'));
+          return;
+        }
+      }
     }
 
     // Verify session
@@ -318,11 +333,11 @@ export function PipelineCreateDialog({
         seat_name: selectedSeatName,
         auto_checkin: autoCheckin,
         cookie: effectiveCookie,
-        latitude: autoCheckin ? beaconLat.trim() : undefined,
-        longitude: autoCheckin ? beaconLng.trim() : undefined,
-        beacon_uuid: autoCheckin ? beaconMac.trim() : undefined,
-        major: autoCheckin && major.trim() !== '' ? Number(major) : 0,
-        minor: autoCheckin && minor.trim() !== '' ? Number(minor) : 0,
+        latitude: beaconLat.trim() || undefined,
+        longitude: beaconLng.trim() || undefined,
+        beacon_uuid: beaconMac.trim() || undefined,
+        major: major.trim() !== '' ? Number(major) : 0,
+        minor: minor.trim() !== '' ? Number(minor) : 0,
       };
       await IGoService.pipeline.createConfig(req);
       toast.success('一条龙自动化卡片创建成功！');
