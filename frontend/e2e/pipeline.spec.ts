@@ -180,7 +180,6 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
           status: 400,
           contentType: 'application/json',
           body: JSON.stringify({
-            error_msg: '参数校验失败',
             error: { code: 'validation_error', message: '参数校验失败' },
             data: null,
           }),
@@ -232,7 +231,6 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
           status: 400,
           contentType: 'application/json',
           body: JSON.stringify({
-            error_msg: '参数校验失败',
             error: { code: 'validation_error', message: '参数校验失败' },
             data: null,
           }),
@@ -344,7 +342,6 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
           status: 400,
           contentType: 'application/json',
           body: JSON.stringify({
-            error_msg: '参数校验失败',
             error: { code: 'validation_error', message: '参数校验失败' },
             data: null,
           }),

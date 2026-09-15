@@ -240,7 +240,6 @@ func TestPlugin_NotImplementedEnvelope(t *testing.T) {
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
 	assert.Equal(t, consts.CodeNotImplemented, body.Error.Code)
 	assert.Equal(t, "接口尚未实现", body.Error.Message)
-	assert.Equal(t, "接口尚未实现", body.ErrorMsg)
 	assert.Nil(t, body.Data)
 }
 

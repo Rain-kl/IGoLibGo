@@ -5,7 +5,6 @@ import { BaseService } from '@/lib/services/core';
 import type {
   ActivityLogEntry,
   DashboardResponse,
-  TaskListResponse,
 } from './types';
 
 export class IGoDashboardService extends BaseService {
@@ -15,16 +14,21 @@ export class IGoDashboardService extends BaseService {
     return this.get<DashboardResponse>('/dashboard');
   }
 
-  static async getStatus(): Promise<TaskListResponse> {
-    return this.get<TaskListResponse>('/status');
+  static async getStatus(): Promise<DashboardResponse> {
+    return this.get<DashboardResponse>('/status');
   }
 
   static async listActivityLogs(params?: {
     limit?: number;
     before_id?: string;
+    page?: number;
+    per_page?: number;
   }): Promise<ActivityLogEntry[]> {
-    return this.get<ActivityLogEntry[]>('/activity-logs', {
-      params: params as Record<string, unknown>,
-    });
+    const queryParams: Record<string, unknown> = {};
+    if (params?.page) queryParams.page = params.page;
+    if (params?.per_page || params?.limit) {
+      queryParams.per_page = params.per_page || params.limit;
+    }
+    return this.get<ActivityLogEntry[]>('/activity-logs', queryParams);
   }
 }
