@@ -14,18 +14,45 @@ import { Button } from '@/components/ui/button';
 import { ErrorInline } from '@/components/layout/error';
 import { LoadingStateWithBorder } from '@/components/layout/loading';
 import { AdminMessageGatewayService } from '@/lib/services/message-gateway';
-import type { CreateMessageChannelRequest } from '@/lib/services/message-gateway';
+import type {
+  CreateMessageChannelRequest,
+  MessageChannel,
+  UpdateMessageChannelRequest,
+} from '@/lib/services/message-gateway';
 import { AddChannelDialog } from './components/add-channel-dialog';
 import { ChannelCard } from './components/channel-card';
+import { EditChannelDialog } from './components/edit-channel-dialog';
 
 export default function MessageGatewayAdminPage() {
   const t = useTranslations('admin.messageGateway');
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = React.useState(false);
+  const [editingChannel, setEditingChannel] =
+    React.useState<MessageChannel | null>(null);
 
   const channelsQuery = useQuery({
     queryKey: ['admin', 'message-gateway-channels'],
     queryFn: () => AdminMessageGatewayService.list(),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateMessageChannelRequest;
+    }) => AdminMessageGatewayService.update(id, data),
+    onSuccess: () => {
+      toast.success(t('updateSuccess'));
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'message-gateway-channels'],
+      });
+      setEditingChannel(null);
+    },
+    onError: (err: unknown) => {
+      toast.error(t('updateFailed') + ': ' + (err as Error).message);
+    },
   });
 
   const createMutation = useMutation({
@@ -125,6 +152,7 @@ export default function MessageGatewayAdminPage() {
               onToggle={(enabled) =>
                 toggleMutation.mutate({ id: ch.id, enabled })
               }
+              onEdit={() => setEditingChannel(ch)}
               onDelete={() => deleteMutation.mutate(ch.id)}
             />
           ))}
@@ -136,6 +164,16 @@ export default function MessageGatewayAdminPage() {
         onOpenChange={setAddOpen}
         submitting={createMutation.isPending}
         onSubmit={(data) => createMutation.mutate(data)}
+      />
+
+      <EditChannelDialog
+        open={!!editingChannel}
+        channel={editingChannel}
+        onOpenChange={(open) => {
+          if (!open) setEditingChannel(null);
+        }}
+        submitting={updateMutation.isPending}
+        onSubmit={(id, data) => updateMutation.mutate({ id, data })}
       />
     </motion.div>
   );

@@ -1157,6 +1157,9 @@
       "keepSecretHint": "留空则保留已保存的密钥",
       "cancel": "取消",
       "create": "创建",
+      "edit": "编辑",
+      "editChannelTitle": "编辑通道",
+      "save": "保存",
       "testConnection": "测试连通性",
       "loadFailed": "加载通道失败"
     },

@@ -1157,6 +1157,9 @@
       "keepSecretHint": "Leave blank to keep the saved secret",
       "cancel": "Cancel",
       "create": "Create",
+      "edit": "Edit",
+      "editChannelTitle": "Edit channel",
+      "save": "Save",
       "testConnection": "Test connection",
       "loadFailed": "Failed to load channels"
     },
