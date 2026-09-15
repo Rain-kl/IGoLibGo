@@ -100,6 +100,15 @@ var expectedRoutes = []struct {
 	{"GET", "/api/v1/igo/checkin/profiles"},
 	{"GET", "/api/v1/igo/checkin/profiles/:id"},
 	{"PUT", "/api/v1/igo/checkin/profiles/:id"},
+	{"GET", "/api/v1/igo/pipeline/configs"},
+	{"POST", "/api/v1/igo/pipeline/configs"},
+	{"GET", "/api/v1/igo/pipeline/configs/:id"},
+	{"PUT", "/api/v1/igo/pipeline/configs/:id"},
+	{"DELETE", "/api/v1/igo/pipeline/configs/:id"},
+	{"POST", "/api/v1/igo/pipeline/configs/:id/run"},
+	{"POST", "/api/v1/igo/pipeline/helper/verify-session"},
+	{"POST", "/api/v1/igo/pipeline/helper/library-layout"},
+	{"POST", "/api/v1/igo/pipeline/helper/verify-checkin"},
 	{"GET", "/api/v1/igo/protocol/templates"},
 	{"GET", "/api/v1/igo/protocol/templates/defaults"},
 	{"PUT", "/api/v1/igo/protocol/templates"},
@@ -210,7 +219,9 @@ func TestPlugin_RegistersMigrations(t *testing.T) {
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{
 		"migrations/postgres/00001_initial.sql",
+		"migrations/postgres/00002_pipeline_configs.sql",
 		"migrations/sqlite/00001_initial.sql",
+		"migrations/sqlite/00002_pipeline_configs.sql",
 	}, matches)
 }
 

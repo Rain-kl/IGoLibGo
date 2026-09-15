@@ -137,6 +137,16 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	g.GET("/checkin/profiles/:id", ctrl.GetCheckInVenueProfile)
 	g.PUT("/checkin/profiles/:id", ctrl.SaveCheckInVenueProfile)
 
+	g.GET("/pipeline/configs", ctrl.ListPipelineConfigs)
+	g.POST("/pipeline/configs", ctrl.CreatePipelineConfig)
+	g.GET("/pipeline/configs/:id", ctrl.GetPipelineConfig)
+	g.PUT("/pipeline/configs/:id", ctrl.UpdatePipelineConfig)
+	g.DELETE("/pipeline/configs/:id", ctrl.DeletePipelineConfig)
+	g.POST("/pipeline/configs/:id/run", ctrl.RunPipeline)
+	g.POST("/pipeline/helper/verify-session", ctrl.HelperVerifySession)
+	g.POST("/pipeline/helper/library-layout", ctrl.HelperGetLibraryLayout)
+	g.POST("/pipeline/helper/verify-checkin", ctrl.HelperVerifyCheckin)
+
 	g.GET("/protocol/templates", ctrl.GetProtocolTemplates)
 	g.GET("/protocol/templates/defaults", ctrl.GetDefaultProtocolTemplates)
 	g.PUT("/protocol/templates", ctrl.SaveProtocolTemplates)
