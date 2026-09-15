@@ -6,6 +6,7 @@ services:
       args:
         VERSION: canary
     image: ghcr.io/rain-kl/igolib:canary
+    pull_policy: always
     restart: unless-stopped
     env_file: .env
     environment:
