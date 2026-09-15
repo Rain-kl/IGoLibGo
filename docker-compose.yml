@@ -5,7 +5,7 @@ services:
       dockerfile: manifest/docker/Dockerfile
       args:
         VERSION: canary
-    image: ghcr.io/rain-kl/wavelet:canary
+    image: ghcr.io/rain-kl/igolib:canary
     restart: unless-stopped
     env_file: .env
     environment:
