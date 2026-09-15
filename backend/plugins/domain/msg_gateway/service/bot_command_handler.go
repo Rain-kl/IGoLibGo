@@ -22,6 +22,7 @@ import (
 const (
 	botSessionKeyPrefix = "igo_bot_session"
 	botSessionTTL       = 5 * time.Minute
+	pairingCodeTTL      = 15 * time.Minute
 
 	stepWaitingLoginAuth   = "waiting_login_auth"
 	stepWaitingCheckinAuth = "waiting_checkin_auth"
@@ -66,7 +67,7 @@ func (h *BotCommandHandler) HandleInbound(ctx context.Context, in mgdo.InboundMe
 		if err != nil {
 			return err
 		}
-		_, _ = dao.UpsertPairingCode(ctx, in.ChannelID, in.PlatformUserID, code, time.Now().Add(15*time.Minute))
+		_, _ = dao.UpsertPairingCode(ctx, in.ChannelID, in.PlatformUserID, code, time.Now().Add(pairingCodeTTL))
 		reply := fmt.Sprintf("👋 您好！您尚未绑定 Wavelet 账号。\n您的专属配对码为：`%s`\n请前往 Web 控制台「个人设置 - 绑定机器人」中输入此配对码完成绑定。", FormatCode(code))
 		return ReplyToInbound(ctx, in, reply)
 	}
@@ -127,7 +128,7 @@ func (h *BotCommandHandler) handleShow(ctx context.Context, in mgdo.InboundMessa
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("📋 您的一条龙自动化配置列表（共 %d 个）：\n", len(configs)))
+	fmt.Fprintf(&sb, "📋 您的一条龙自动化配置列表（共 %d 个）：\n", len(configs))
 	sb.WriteString("━━━━━━━━━━━━━━━━━━━━\n")
 	for i, c := range configs {
 		autoCheckinText := "关闭"
@@ -136,13 +137,13 @@ func (h *BotCommandHandler) handleShow(ctx context.Context, in mgdo.InboundMessa
 		}
 		credStatus := "有效"
 		if c.Cookie == "" {
-			credStatus = "未授权"
+			credStatus = "未授权" //nolint:gosec // user status display label
 		}
-		sb.WriteString(fmt.Sprintf("%d. [%s] %s\n", i+1, c.ID, c.Name))
-		sb.WriteString(fmt.Sprintf("   • 目标场馆: %s (%s楼)\n", c.LibraryName, c.Floor))
-		sb.WriteString(fmt.Sprintf("   • 目标座位: %s (%s)\n", c.SeatName, c.SeatKey))
-		sb.WriteString(fmt.Sprintf("   • 自动签到: %s\n", autoCheckinText))
-		sb.WriteString(fmt.Sprintf("   • 凭据状态: %s\n\n", credStatus))
+		fmt.Fprintf(&sb, "%d. [%s] %s\n", i+1, c.ID, c.Name)
+		fmt.Fprintf(&sb, "   • 目标场馆: %s (%s楼)\n", c.LibraryName, c.Floor)
+		fmt.Fprintf(&sb, "   • 目标座位: %s (%s)\n", c.SeatName, c.SeatKey)
+		fmt.Fprintf(&sb, "   • 自动签到: %s\n", autoCheckinText)
+		fmt.Fprintf(&sb, "   • 凭据状态: %s\n\n", credStatus)
 	}
 	sb.WriteString("👉 发送 `/run [配置 ID]` 即可立即执行！")
 	return ReplyToInbound(ctx, in, sb.String())

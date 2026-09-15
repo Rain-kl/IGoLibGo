@@ -121,14 +121,16 @@ func (ctrl *Controller) RunPipeline(c *gin.Context) {
 	})
 }
 
-// HelperVerifySession validates a raw cookie or authorization link and retrieves venues.
+// HelperVerifySession tests login credentials and retrieves library list.
 // @Summary 辅助接口：验证登录凭据并获取场馆列表
 // @Tags IGo-Pipeline
 // @Accept json
 // @Produce json
-// @Param body body do.HelperVerifySessionRequest true "凭据参数"
+// @Param body body do.HelperVerifySessionRequest true "登录凭据"
 // @Success 200 {object} response.Response{data=map[string]any}
 // @Router /api/v1/igo/pipeline/helper/verify-session [post]
+//
+//nolint:dupl // distinct helper verification endpoint
 func (ctrl *Controller) HelperVerifySession(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
 		req, ok := bindJSON[do.HelperVerifySessionRequest](c)
@@ -174,6 +176,8 @@ func (ctrl *Controller) HelperGetLibraryLayout(c *gin.Context) {
 // @Param body body do.HelperVerifyCheckinRequest true "签到凭据"
 // @Success 200 {object} response.Response{data=map[string]any}
 // @Router /api/v1/igo/pipeline/helper/verify-checkin [post]
+//
+//nolint:dupl // distinct helper verification endpoint
 func (ctrl *Controller) HelperVerifyCheckin(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
 		req, ok := bindJSON[do.HelperVerifyCheckinRequest](c)

@@ -25,7 +25,7 @@ func UpsertSession(ctx context.Context, row *entity.Session) error {
 	ensureID(&row.ID)
 	return gdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: colUserID}},
-		DoUpdates: clause.AssignmentColumns([]string{"cookie", "source", "saved_at", "expires_at", "can_auto_restore", colUpdatedAt}),
+		DoUpdates: clause.AssignmentColumns([]string{colCookie, "source", "saved_at", "expires_at", "can_auto_restore", colUpdatedAt}),
 	}).Create(row).Error
 }
 

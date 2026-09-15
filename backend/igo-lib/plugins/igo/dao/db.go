@@ -22,6 +22,8 @@ var dbSvc contracts.DBService
 const (
 	colUserID    = "user_id"
 	colUpdatedAt = "updated_at"
+	colCookie    = "cookie"
+	colLibraryID = "library_id"
 )
 
 // SetDBService binds the platform DBService. Wired via ctx.Bind.

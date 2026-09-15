@@ -25,7 +25,7 @@ func UpsertVenue(ctx context.Context, row *entity.Venue) error {
 	ensureID(&row.ID)
 	return gdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: colUserID}},
-		DoUpdates: clause.AssignmentColumns([]string{"library_id", "name", "floor", "is_open", "total_seats", "used_seats", "booked_seats", colUpdatedAt}),
+		DoUpdates: clause.AssignmentColumns([]string{colLibraryID, "name", "floor", "is_open", "total_seats", "used_seats", "booked_seats", colUpdatedAt}),
 	}).Create(row).Error
 }
 

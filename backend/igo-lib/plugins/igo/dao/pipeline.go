@@ -98,9 +98,9 @@ func UpdatePipelineConfig(ctx context.Context, row *entity.PipelineConfig) error
 	row.UpdatedAt = time.Now().UTC()
 	res := gdb.Model(row).Where("id = ? AND user_id = ?", row.ID, row.UserID).Updates(map[string]any{
 		"name":               row.Name,
-		"cookie":             row.Cookie,
+		colCookie:            row.Cookie,
 		"cookie_expires_at":  row.CookieExpiresAt,
-		"library_id":         row.LibraryID,
+		colLibraryID:         row.LibraryID,
 		"library_name":       row.LibraryName,
 		"floor":              row.Floor,
 		"seat_key":           row.SeatKey,
@@ -113,7 +113,7 @@ func UpdatePipelineConfig(ctx context.Context, row *entity.PipelineConfig) error
 		"minor":              row.Minor,
 		"latitude":           row.Latitude,
 		"longitude":          row.Longitude,
-		"updated_at":         row.UpdatedAt,
+		colUpdatedAt:         row.UpdatedAt,
 	})
 	if res.Error != nil {
 		return res.Error
