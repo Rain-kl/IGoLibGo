@@ -150,7 +150,8 @@ export function PipelineDialog({
 
   // Step 1: Verify session credentials
   const handleVerifySession = async () => {
-    if (!authUrl.trim() && !cookie.trim()) {
+    const rawInput = (authType === 'cookie' ? cookie : authUrl).trim();
+    if (!rawInput) {
       toast.error(
         authType === 'url' ? '请输入微信授权链接或 Code' : '请输入 Cookie',
       );
@@ -160,17 +161,7 @@ export function PipelineDialog({
     setIsVerifyingAuth(true);
     try {
       const res = await IGoService.pipeline.helperVerifySession({
-        cookie: authType === 'cookie' ? cookie.trim() : undefined,
-        auth_url:
-          authType === 'url' && authUrl.includes('code=')
-            ? authUrl.trim()
-            : undefined,
-        auth_code:
-          authType === 'url' &&
-          !authUrl.includes('code=') &&
-          authUrl.trim().length === 32
-            ? authUrl.trim()
-            : undefined,
+        cookie: rawInput,
       });
 
       if (res.valid) {
@@ -201,8 +192,12 @@ export function PipelineDialog({
   const fetchLayoutForVenue = async (libId: number, cookieToUse?: string) => {
     setIsLoadingLayout(true);
     try {
+      const targetCookie =
+        cookieToUse ||
+        verifiedCookie ||
+        (authType === 'cookie' ? cookie : authUrl).trim();
       const layout = await IGoService.pipeline.helperGetLibraryLayout({
-        cookie: cookieToUse || verifiedCookie || cookie || undefined,
+        cookie: targetCookie || undefined,
         library_id: libId,
       });
       setCurrentLayout(layout);
@@ -320,6 +315,10 @@ export function PipelineDialog({
       return;
     }
 
+    const effectiveCookie =
+      verifiedCookie || (authType === 'cookie' ? cookie : authUrl).trim();
+    const effectiveCheckin = verifiedCheckinToken || checkinUrl.trim();
+
     setIsSaving(true);
     try {
       if (isEditing) {
@@ -331,25 +330,8 @@ export function PipelineDialog({
           seat_key: selectedSeatKey,
           seat_name: selectedSeatName,
           auto_checkin: autoCheckin,
-          cookie: verifiedCookie || cookie.trim() || undefined,
-          auth_url:
-            authType === 'url' && authUrl.includes('code=')
-              ? authUrl.trim()
-              : undefined,
-          auth_code:
-            authType === 'url' &&
-            !authUrl.includes('code=') &&
-            authUrl.trim().length === 32
-              ? authUrl.trim()
-              : undefined,
-          checkin_token: verifiedCheckinToken || undefined,
-          checkin_url: checkinUrl.includes('code=')
-            ? checkinUrl.trim()
-            : undefined,
-          checkin_code:
-            !checkinUrl.includes('code=') && checkinUrl.trim().length === 32
-              ? checkinUrl.trim()
-              : undefined,
+          cookie: effectiveCookie || undefined,
+          checkin_token: effectiveCheckin || undefined,
           beacon_lat: beaconLat.trim() || undefined,
           beacon_lng: beaconLng.trim() || undefined,
           beacon_mac: beaconMac.trim() || undefined,
@@ -366,25 +348,8 @@ export function PipelineDialog({
           seat_key: selectedSeatKey,
           seat_name: selectedSeatName,
           auto_checkin: autoCheckin,
-          cookie: verifiedCookie || cookie.trim() || undefined,
-          auth_url:
-            authType === 'url' && authUrl.includes('code=')
-              ? authUrl.trim()
-              : undefined,
-          auth_code:
-            authType === 'url' &&
-            !authUrl.includes('code=') &&
-            authUrl.trim().length === 32
-              ? authUrl.trim()
-              : undefined,
-          checkin_token: verifiedCheckinToken || undefined,
-          checkin_url: checkinUrl.includes('code=')
-            ? checkinUrl.trim()
-            : undefined,
-          checkin_code:
-            !checkinUrl.includes('code=') && checkinUrl.trim().length === 32
-              ? checkinUrl.trim()
-              : undefined,
+          cookie: effectiveCookie,
+          checkin_token: effectiveCheckin || undefined,
           beacon_lat: beaconLat.trim() || undefined,
           beacon_lng: beaconLng.trim() || undefined,
           beacon_mac: beaconMac.trim() || undefined,
