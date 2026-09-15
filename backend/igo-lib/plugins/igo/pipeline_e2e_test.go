@@ -421,4 +421,46 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 	req = httptest.NewRequest(http.MethodGet, "/api/v1/igo/pipeline/configs/my_exam_seat", nil)
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	// ==========================================
+	// 10. Verify helper endpoints: verify-session & library-layout
+	// ==========================================
+	// 10.1 Empty cookie -> 400 Bad Request
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/verify-session", strings.NewReader(`{"cookie":""}`))
+	req.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	// 10.2 Missing body -> 400 Bad Request
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/verify-session", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	// 10.3 Valid cookie -> 200 OK with libraries
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/verify-session", strings.NewReader(`{"cookie":"Authorization=traceint-user101-cookie"}`))
+	req.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var verifyRes response.Response[map[string]any]
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &verifyRes))
+	assert.NotEmpty(t, verifyRes.Data["libraries"])
+
+	// 10.4 library-layout without cookie -> 400 Bad Request
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/library-layout", strings.NewReader(`{"library_id":20}`))
+	req.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	// 10.5 library-layout with cookie -> 200 OK with seats
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/library-layout", strings.NewReader(`{"cookie":"Authorization=traceint-user101-cookie","library_id":20}`))
+	req.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 }

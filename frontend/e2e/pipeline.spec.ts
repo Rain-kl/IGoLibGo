@@ -169,6 +169,25 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     });
 
     await page.route('**/api/v1/igo/pipeline/verify-session', async (route) => {
+      const postData = route.request().postDataJSON();
+      // Enforce real backend contract: empty cookie must fail with 400 validation error
+      if (
+        !postData?.cookie ||
+        typeof postData.cookie !== 'string' ||
+        postData.cookie.trim() === ''
+      ) {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            error_msg: '参数校验失败',
+            error: { code: 'validation_error', message: '参数校验失败' },
+            data: null,
+          }),
+        });
+        return;
+      }
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -203,6 +222,24 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     });
 
     await page.route('**/api/v1/igo/pipeline/library-layout', async (route) => {
+      const postData = route.request().postDataJSON();
+      if (
+        !postData?.cookie ||
+        typeof postData.cookie !== 'string' ||
+        postData.cookie.trim() === ''
+      ) {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            error_msg: '参数校验失败',
+            error: { code: 'validation_error', message: '参数校验失败' },
+            data: null,
+          }),
+        });
+        return;
+      }
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -251,13 +288,15 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await page.getByPlaceholder(/例如: seat01/i).fill('my_seat_202');
     await page.getByPlaceholder(/例如: 张三的考研专座/i).fill('二楼靠窗202');
 
-    // Switch to Cookie auth tab
-    await page.getByRole('tab', { name: /Cookie 字符串/i }).click();
+    // DO NOT switch tab: Stay on default "微信授权链接" tab!
+    // Paste full real WeChat authorization redirect URL with code parameter
+    const sampleWeChatAuthUrl =
+      'https://web.traceint.com/web/index.html?code=081a2b3c4d5e6f7a8b9c0d1e2f3a4b5c&state=STATE';
     await page
-      .getByPlaceholder(/Authorization=.../i)
-      .fill('Authorization=cookie-xxx');
+      .getByPlaceholder(/粘贴以 open.weixin.qq.com 开头的授权链接或 Code/i)
+      .fill(sampleWeChatAuthUrl);
 
-    // Click "下一步"
+    // Click "下一步" -> triggers verify-session with non-empty payload
     await page.getByRole('button', { name: /下一步/i }).click();
 
     // Step 2: Library & Seat Selection
@@ -272,11 +311,153 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     // Step 3: Auto Check-In
     await expect(page.getByText('自动签到设置')).toBeVisible();
 
+    // Toggle auto-checkin switch
+    await page.getByRole('switch').click();
+    await page
+      .getByPlaceholder(/粘贴微信签到授权链接或 Code/i)
+      .fill('https://web.traceint.com/web/index.html#checkin-token-xyz');
+
     // Save configuration
     await page.getByRole('button', { name: /保存配置/i }).click();
 
     // Card should appear in list
     await expect(page.getByText('二楼靠窗202')).toBeVisible();
+  });
+
+  test('validates and rejects empty authorization input on step 1 and prevents advancing', async ({
+    page,
+  }) => {
+    await page.route('**/api/v1/igo/pipeline/configs', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
+
+    let verifySessionCalledWithEmpty = false;
+    await page.route('**/api/v1/igo/pipeline/verify-session', async (route) => {
+      const postData = route.request().postDataJSON();
+      if (!postData?.cookie || postData.cookie.trim() === '') {
+        verifySessionCalledWithEmpty = true;
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            error_msg: '参数校验失败',
+            error: { code: 'validation_error', message: '参数校验失败' },
+            data: null,
+          }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        body: JSON.stringify({ data: { valid: true } }),
+      });
+    });
+
+    await page.goto('/pipeline');
+    await page
+      .getByRole('button', { name: /新增自动化卡片/i })
+      .first()
+      .click();
+
+    // Fill ID and Name, but leave authorization input completely empty
+    await page.getByPlaceholder(/例如: seat01/i).fill('empty_seat');
+    await page.getByPlaceholder(/例如: 张三的考研专座/i).fill('空授权测试');
+
+    // Click "下一步"
+    await page.getByRole('button', { name: /下一步/i }).click();
+
+    // Dialog must stay on Step 1
+    await expect(page.getByText('新增一条龙自动化配置')).toBeVisible();
+    await expect(page.getByText('基本信息与凭据')).toBeVisible();
+    await expect(page.getByText('请输入微信授权链接或 Code')).toBeVisible();
+
+    // Ensure frontend did not silently dispatch an empty payload to the backend
+    expect(verifySessionCalledWithEmpty).toBe(false);
+  });
+
+  test('accepts raw 32-character authorization code on default URL tab without dropping payload', async ({
+    page,
+  }) => {
+    await page.route('**/api/v1/igo/pipeline/configs', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
+
+    let receivedCode = '';
+    await page.route('**/api/v1/igo/pipeline/verify-session', async (route) => {
+      const postData = route.request().postDataJSON();
+      receivedCode = postData?.cookie || '';
+      expect(receivedCode).toBe('081a2b3c4d5e6f7a8b9c0d1e2f3a4b5c');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            valid: true,
+            libraries: [
+              {
+                library_id: 10,
+                name: '总馆一楼',
+                floor: '1',
+                is_open: true,
+                total_seats: 10,
+                used_seats: 0,
+                booked_seats: 0,
+              },
+            ],
+            cookie: 'Authorization=cookie-from-code',
+          },
+        }),
+      });
+    });
+
+    await page.route('**/api/v1/igo/pipeline/library-layout', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            library_id: 10,
+            name: '总馆一楼',
+            floor: '1',
+            seats: [
+              {
+                seat_key: 'S-1',
+                seat_name: '1号',
+                is_occupied: false,
+                x: 1,
+                y: 1,
+              },
+            ],
+          },
+        }),
+      });
+    });
+
+    await page.goto('/pipeline');
+    await page
+      .getByRole('button', { name: /新增自动化卡片/i })
+      .first()
+      .click();
+    await page.getByPlaceholder(/例如: seat01/i).fill('seat_code_32');
+    await page.getByPlaceholder(/例如: 张三的考研专座/i).fill('32位Code测试');
+
+    // Fill raw 32-char code in default URL input
+    await page
+      .getByPlaceholder(/粘贴以 open.weixin.qq.com 开头的授权链接或 Code/i)
+      .fill('081a2b3c4d5e6f7a8b9c0d1e2f3a4b5c');
+    await page.getByRole('button', { name: /下一步/i }).click();
+
+    // Successfully moves to Step 2
+    await expect(page.getByText('场馆与座位选择')).toBeVisible();
+    expect(receivedCode).toBe('081a2b3c4d5e6f7a8b9c0d1e2f3a4b5c');
   });
 
   test('executes pipeline and displays step-by-step execution results dialog', async ({
