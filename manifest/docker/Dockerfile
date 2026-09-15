@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.27
 ARG BUN_VERSION=1
 ARG ALPINE_VERSION=3.23
 
@@ -51,7 +51,7 @@ RUN test -f plugins/drivers/driver_http/dist/index.html && \
     -tags embed_frontend \
     -trimpath \
     -ldflags="-s -w -X Wavelet/pkg/buildinfo.Version=${VERSION} -X Wavelet/pkg/buildinfo.BuildTime=${BUILD_DATE}" \
-    -o /out/wavelet \
+    -o /out/igolib \
     ./main.go
 
 FROM alpine:${ALPINE_VERSION}
@@ -64,10 +64,10 @@ RUN apk add --no-cache ca-certificates tzdata postgresql-client && \
 
 WORKDIR /app
 
-COPY --from=backend-builder /out/wavelet ./wavelet
+COPY --from=backend-builder /out/igolib ./igolib
 COPY docs ./docs
 
 EXPOSE 8000
 
-ENTRYPOINT ["./wavelet"]
+ENTRYPOINT ["./igolib"]
 CMD ["all"]

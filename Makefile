@@ -33,7 +33,7 @@ build-embedded:
 	cd backend && go build \
 		-tags embed_frontend \
 		-ldflags "-s -w -X '$(MODULE)/pkg/buildinfo.Version=$(VERSION)' -X '$(MODULE)/pkg/buildinfo.BuildTime=$(BUILD_DATE)'" \
-		-o ../bin/wavelet \
+		-o ../bin/igolib \
 		main.go
 
 code-check:
@@ -45,7 +45,7 @@ build-backend:
 	@echo "==> Building backend version=$(VERSION) build_date=$(BUILD_DATE)..."
 	cd backend && go build \
 		-ldflags "-s -w -X '$(MODULE)/pkg/buildinfo.Version=$(VERSION)' -X '$(MODULE)/pkg/buildinfo.BuildTime=$(BUILD_DATE)'" \
-		-o ../bin/wavelet \
+		-o ../bin/igolib \
 		main.go
 
 build-frontend:

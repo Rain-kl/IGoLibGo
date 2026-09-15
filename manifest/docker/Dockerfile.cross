@@ -19,7 +19,7 @@
 #   make cross-build VERSION=v1.2.3
 #   make cross-build GOOS=linux GOARCH=arm64
 
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.27
 ARG BUN_VERSION=1
 ARG ALPINE_VERSION=3.23
 
@@ -90,7 +90,7 @@ RUN set -e; \
         [ -n "$FILTER_ARCH" ] && [ "$GOARCH" != "$FILTER_ARCH" ] && continue; \
         EXT=""; \
         [ "$GOOS" = "windows" ] && EXT=".exe"; \
-        OUTPUT="/out/wavelet_${GOOS}_${GOARCH}${EXT}"; \
+        OUTPUT="/out/igolib_${GOOS}_${GOARCH}${EXT}"; \
         echo "==> Building ${OUTPUT} (version=${VERSION})..."; \
         CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} \
           go build \

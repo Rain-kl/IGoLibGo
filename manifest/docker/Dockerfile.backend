@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.27
 ARG ALPINE_VERSION=3.23
 
 FROM golang:${GO_VERSION}-alpine AS builder
@@ -22,7 +22,7 @@ WORKDIR /workspace/backend
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
     -ldflags="-s -w -X Wavelet/pkg/buildinfo.Version=${VERSION} -X Wavelet/pkg/buildinfo.BuildTime=${BUILD_DATE}" \
-    -o /out/wavelet \
+    -o /out/igolib \
     ./main.go
 
 FROM alpine:${ALPINE_VERSION}
@@ -35,10 +35,10 @@ RUN apk add --no-cache ca-certificates tzdata postgresql-client && \
 
 WORKDIR /app
 
-COPY --from=builder /out/wavelet ./wavelet
+COPY --from=builder /out/igolib ./igolib
 COPY docs ./docs
 
 EXPOSE 8000
 
-ENTRYPOINT ["./wavelet"]
+ENTRYPOINT ["./igolib"]
 CMD ["api"]
