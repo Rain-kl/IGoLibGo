@@ -41,6 +41,7 @@ import { IGoService } from '@/lib/services/igo';
 import type {
   CreatePipelineConfigRequest,
   LibraryLayoutResponse,
+  LibrarySummary,
   PipelineConfigDTO,
   UpdatePipelineConfigRequest,
 } from '@/lib/services/igo/types';
@@ -83,7 +84,9 @@ export function PipelineDialog({
   const [isVerifyingAuth, setIsVerifyingAuth] = React.useState(false);
 
   // Step 2: Venue and Seat
-  const [libraries, setLibraries] = React.useState<LibraryLayoutResponse[]>([]);
+  const [venueList, setVenueList] = React.useState<LibrarySummary[]>([]);
+  const [currentLayout, setCurrentLayout] =
+    React.useState<LibraryLayoutResponse | null>(null);
   const [isLoadingLayout, setIsLoadingLayout] = React.useState(false);
   const [selectedLibId, setSelectedLibId] = React.useState<number | null>(null);
   const [selectedSeatKey, setSelectedSeatKey] = React.useState('');
@@ -139,6 +142,8 @@ export function PipelineDialog({
         setBeaconLng('');
         setBeaconMac('');
       }
+      setVenueList([]);
+      setCurrentLayout(null);
       setStep(1);
     }
   }, [open, editingConfig]);
@@ -149,7 +154,7 @@ export function PipelineDialog({
       toast.error(
         authType === 'url' ? '请输入微信授权链接或 Code' : '请输入 Cookie',
       );
-      return false;
+      return null;
     }
 
     setIsVerifyingAuth(true);
@@ -171,44 +176,38 @@ export function PipelineDialog({
       if (res.valid) {
         setVerifiedCookie(res.cookie);
         setCookieExpiresAt(res.expires_at || null);
+        if (res.libraries && res.libraries.length > 0) {
+          setVenueList(res.libraries);
+          if (!selectedLibId) {
+            setSelectedLibId(res.libraries[0].library_id);
+          }
+        }
         toast.success('TraceInt 凭据验证成功！');
-        return true;
+        return res;
       }
       toast.error('TraceInt 凭据验证失败，请重新获取授权链接');
-      return false;
+      return null;
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : '验证 TraceInt 凭据失败',
       );
-      return false;
+      return null;
     } finally {
       setIsVerifyingAuth(false);
     }
   };
 
-  // Step 2: Fetch library layout when moving to Step 2
-  const fetchLibraries = async (cookieToUse?: string) => {
+  // Step 2: Fetch library seat layout for specific venue
+  const fetchLayoutForVenue = async (libId: number, cookieToUse?: string) => {
     setIsLoadingLayout(true);
     try {
-      const libs = await IGoService.pipeline.helperGetLibraryLayout({
+      const layout = await IGoService.pipeline.helperGetLibraryLayout({
         cookie: cookieToUse || verifiedCookie || cookie || undefined,
-        auth_url:
-          authType === 'url' && authUrl.includes('code=')
-            ? authUrl.trim()
-            : undefined,
-        auth_code:
-          authType === 'url' &&
-          !authUrl.includes('code=') &&
-          authUrl.trim().length === 32
-            ? authUrl.trim()
-            : undefined,
+        library_id: libId,
       });
-      setLibraries(libs || []);
-      if (libs && libs.length > 0 && !selectedLibId) {
-        setSelectedLibId(libs[0].library_id);
-      }
+      setCurrentLayout(layout);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : '获取场馆信息失败');
+      toast.error(err instanceof Error ? err.message : '获取场馆座位信息失败');
     } finally {
       setIsLoadingLayout(false);
     }
@@ -229,13 +228,25 @@ export function PipelineDialog({
     }
 
     // Verify session
+    let sessionRes = null;
     let valid = Boolean(verifiedCookie);
-    if (!valid || authUrl.trim() || cookie.trim() !== verifiedCookie) {
-      valid = await handleVerifySession();
+    if (
+      !valid ||
+      authUrl.trim() ||
+      (cookie.trim() && cookie.trim() !== verifiedCookie)
+    ) {
+      sessionRes = await handleVerifySession();
+      valid = Boolean(sessionRes?.valid);
     }
 
     if (valid) {
-      await fetchLibraries(verifiedCookie);
+      const availableLibs = sessionRes?.libraries || venueList;
+      const targetCookie = sessionRes?.cookie || verifiedCookie || cookie;
+      const targetLibId = selectedLibId || availableLibs[0]?.library_id;
+      if (targetLibId) {
+        if (!selectedLibId) setSelectedLibId(targetLibId);
+        await fetchLayoutForVenue(targetLibId, targetCookie);
+      }
       setStep(2);
     }
   };
@@ -272,25 +283,30 @@ export function PipelineDialog({
     }
   };
 
-  // Selected library object
-  const currentLibrary = React.useMemo(() => {
-    return libraries.find((lib) => lib.library_id === selectedLibId) || null;
-  }, [libraries, selectedLibId]);
+  // Selected venue object from list or layout
+  const selectedVenue = React.useMemo(() => {
+    return (
+      venueList.find((lib) => lib.library_id === selectedLibId) ||
+      (currentLayout && currentLayout.library_id === selectedLibId
+        ? currentLayout
+        : null)
+    );
+  }, [venueList, currentLayout, selectedLibId]);
 
-  // Filtered seats in current library
+  // Filtered seats in current layout
   const availableSeats = React.useMemo(() => {
-    if (!currentLibrary || !currentLibrary.seats) return [];
-    if (!seatSearch.trim()) return currentLibrary.seats;
+    if (!currentLayout || !currentLayout.seats) return [];
+    if (!seatSearch.trim()) return currentLayout.seats;
     const q = seatSearch.trim().toLowerCase();
-    return currentLibrary.seats.filter(
+    return currentLayout.seats.filter(
       (s) =>
         s.seat_name.toLowerCase().includes(q) ||
         s.seat_key.toLowerCase().includes(q),
     );
-  }, [currentLibrary, seatSearch]);
+  }, [currentLayout, seatSearch]);
 
   const handleSave = async () => {
-    if (!selectedLibId || !currentLibrary) {
+    if (!selectedLibId || !selectedVenue) {
       toast.error('请选择目标场馆');
       return;
     }
@@ -309,9 +325,9 @@ export function PipelineDialog({
       if (isEditing) {
         const req: UpdatePipelineConfigRequest = {
           name: name.trim(),
-          library_id: currentLibrary.library_id,
-          library_name: currentLibrary.name,
-          floor: currentLibrary.floor,
+          library_id: selectedVenue.library_id,
+          library_name: selectedVenue.name,
+          floor: selectedVenue.floor,
           seat_key: selectedSeatKey,
           seat_name: selectedSeatName,
           auto_checkin: autoCheckin,
@@ -344,9 +360,9 @@ export function PipelineDialog({
         const req: CreatePipelineConfigRequest = {
           id: configId.trim(),
           name: name.trim(),
-          library_id: currentLibrary.library_id,
-          library_name: currentLibrary.name,
-          floor: currentLibrary.floor,
+          library_id: selectedVenue.library_id,
+          library_name: selectedVenue.name,
+          floor: selectedVenue.floor,
           seat_key: selectedSeatKey,
           seat_name: selectedSeatName,
           auto_checkin: autoCheckin,
@@ -527,13 +543,13 @@ export function PipelineDialog({
                   <Spinner className='size-6' />
                   <p className='text-xs'>正在拉取场馆与座位信息...</p>
                 </div>
-              ) : libraries.length === 0 ? (
+              ) : venueList.length === 0 ? (
                 <div className='text-center py-8 text-muted-foreground space-y-2'>
                   <p>未获取到场馆信息，请检查登录凭据是否有效。</p>
                   <Button
                     variant='outline'
                     size='sm'
-                    onClick={() => fetchLibraries()}
+                    onClick={() => handleNextFromStep1()}
                   >
                     重试拉取
                   </Button>
@@ -552,6 +568,7 @@ export function PipelineDialog({
                         setSelectedLibId(id);
                         setSelectedSeatKey('');
                         setSelectedSeatName('');
+                        fetchLayoutForVenue(id);
                       }}
                     >
                       <SelectTrigger>
@@ -560,20 +577,26 @@ export function PipelineDialog({
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {libraries.map((lib) => (
+                        {venueList.map((lib) => (
                           <SelectItem
                             key={lib.library_id}
                             value={String(lib.library_id)}
                           >
                             {lib.name} ({lib.floor}F) - 可选{' '}
-                            {lib.available_seats || 0}/{lib.total_seats || 0}
+                            {lib.total_seats -
+                              (lib.used_seats + lib.booked_seats) >
+                            0
+                              ? lib.total_seats -
+                                (lib.used_seats + lib.booked_seats)
+                              : 0}
+                            /{lib.total_seats || 0}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {currentLibrary && (
+                  {selectedVenue && (
                     <div className='space-y-2 pt-2 border-t border-border/40'>
                       <div className='flex items-center justify-between gap-2'>
                         <Label className='text-xs font-semibold'>

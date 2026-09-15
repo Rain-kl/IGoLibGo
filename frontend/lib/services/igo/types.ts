@@ -470,6 +470,7 @@ export interface PipelineHelperVerifySessionResponse {
   valid: boolean;
   cookie: string;
   expires_at?: string;
+  libraries?: LibrarySummary[];
 }
 
 export interface PipelineHelperVerifyCheckinRequest {

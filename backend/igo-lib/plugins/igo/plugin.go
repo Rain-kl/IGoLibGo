@@ -162,8 +162,11 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	g.DELETE("/pipeline/configs/:id", ctrl.DeletePipelineConfig)
 	g.POST("/pipeline/configs/:id/run", ctrl.RunPipeline)
 	g.POST("/pipeline/helper/verify-session", ctrl.HelperVerifySession)
+	g.POST("/pipeline/helpers/verify-session", ctrl.HelperVerifySession)
 	g.POST("/pipeline/helper/library-layout", ctrl.HelperGetLibraryLayout)
+	g.POST("/pipeline/helpers/library-layout", ctrl.HelperGetLibraryLayout)
 	g.POST("/pipeline/helper/verify-checkin", ctrl.HelperVerifyCheckin)
+	g.POST("/pipeline/helpers/verify-checkin", ctrl.HelperVerifyCheckin)
 
 	g.GET("/protocol/templates", ctrl.GetProtocolTemplates)
 	g.GET("/protocol/templates/defaults", ctrl.GetDefaultProtocolTemplates)

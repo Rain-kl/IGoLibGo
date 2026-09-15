@@ -83,22 +83,34 @@ export class IGoPipelineService extends BaseService {
   static async helperVerifySession(
     data: PipelineHelperVerifySessionRequest,
   ): Promise<PipelineHelperVerifySessionResponse> {
+    const input =
+      data.cookie?.trim() ||
+      data.auth_url?.trim() ||
+      data.auth_code?.trim() ||
+      '';
     return this.post<PipelineHelperVerifySessionResponse>(
-      '/helpers/verify-session',
-      data as unknown as Record<string, unknown>,
+      '/helper/verify-session',
+      { cookie: input },
     );
   }
 
   /**
    * Helper: fetch library layout using specific credentials.
    */
-  static async helperGetLibraryLayout(params?: {
+  static async helperGetLibraryLayout(data: {
     cookie?: string;
+    library_id: number;
     auth_code?: string;
     auth_url?: string;
-  }): Promise<LibraryLayoutResponse[]> {
-    return this.get<LibraryLayoutResponse[]>('/helpers/library-layout', {
-      params,
+  }): Promise<LibraryLayoutResponse> {
+    const cookieInput =
+      data.cookie?.trim() ||
+      data.auth_url?.trim() ||
+      data.auth_code?.trim() ||
+      '';
+    return this.post<LibraryLayoutResponse>('/helper/library-layout', {
+      cookie: cookieInput,
+      library_id: data.library_id,
     });
   }
 
@@ -108,9 +120,14 @@ export class IGoPipelineService extends BaseService {
   static async helperVerifyCheckin(
     data: PipelineHelperVerifyCheckinRequest,
   ): Promise<PipelineHelperVerifyCheckinResponse> {
+    const input =
+      data.checkin_token?.trim() ||
+      data.checkin_url?.trim() ||
+      data.checkin_code?.trim() ||
+      '';
     return this.post<PipelineHelperVerifyCheckinResponse>(
-      '/helpers/verify-checkin',
-      data as unknown as Record<string, unknown>,
+      '/helper/verify-checkin',
+      { token_or_code: input },
     );
   }
 }
