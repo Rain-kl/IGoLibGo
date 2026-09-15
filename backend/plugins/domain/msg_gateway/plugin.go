@@ -138,19 +138,8 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	// 4. Register Admin Push HTTP Routes
 	controller.RegisterAdminPushRoutes(ctx.Router().Group("/api/v1/admin"), loginMW, adminMW)
 
-	botCmdHandler := service.NewBotCommandHandler(nil)
-	service.Register(consts.MessageChannelTypeTelegram, func(cfg do.ChannelConfig, onInbound service.Handler) (service.Channel, error) {
-		if onInbound == nil {
-			onInbound = botCmdHandler.HandleInbound
-		}
-		return telegram.New(cfg, onInbound)
-	})
-	service.Register(consts.MessageChannelTypeQQ, func(cfg do.ChannelConfig, onInbound service.Handler) (service.Channel, error) {
-		if onInbound == nil {
-			onInbound = botCmdHandler.HandleInbound
-		}
-		return qq.New(cfg, onInbound)
-	})
+	service.Register(consts.MessageChannelTypeTelegram, telegram.New)
+	service.Register(consts.MessageChannelTypeQQ, qq.New)
 
 	reg := service.NewBotRegistry()
 	if err := bot.RegisterBuiltins(reg); err != nil {

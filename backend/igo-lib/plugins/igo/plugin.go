@@ -10,6 +10,7 @@ import (
 	"Wavelet/core"
 	"Wavelet/core/contracts"
 	"Wavelet/core/extpoints"
+	"Wavelet/igo-lib/plugins/igo/bot"
 	"Wavelet/igo-lib/plugins/igo/consts"
 	"Wavelet/igo-lib/plugins/igo/controller"
 	"Wavelet/igo-lib/plugins/igo/dao"
@@ -80,6 +81,10 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	}
 	ctx.Bind(func(reg contracts.PushRegistry) {
 		service.RegisterPushEvents(reg)
+	})
+	// Note: IGo 业务命令在 bot/ 注册，不进 msg_gateway — 见 .agents/notes/implemented/architecture/2026-09-15-bot-command-registry.md
+	ctx.Bind(func(reg contracts.BotCommandRegistry) {
+		bot.Register(reg, p.svc)
 	})
 	ctx.Task().Register(consts.TaskTypeTick, p.svc.HandleTick,
 		extpoints.WithTaskType("igo_tick"),

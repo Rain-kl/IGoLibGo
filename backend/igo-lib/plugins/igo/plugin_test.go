@@ -119,6 +119,21 @@ var expectedRoutes = []struct {
 	{"POST", "/api/v1/igo/backup/import"},
 }
 
+type recordingBotReg struct {
+	cmds  []string
+	convs []string
+}
+
+func (r *recordingBotReg) Register(cmd contracts.BotCommand) error {
+	r.cmds = append(r.cmds, cmd.Name())
+	return nil
+}
+
+func (r *recordingBotReg) RegisterConversation(conv contracts.BotConversation) error {
+	r.convs = append(r.convs, conv.Name())
+	return nil
+}
+
 func applyPlugin(t *testing.T) *core.Context {
 	t.Helper()
 	ctx := core.NewContext(context.Background())
@@ -128,6 +143,17 @@ func applyPlugin(t *testing.T) *core.Context {
 	require.Equal(t, consts.PluginName, p.Name())
 	require.NoError(t, p.Apply(ctx))
 	return ctx
+}
+
+func TestPluginRegistersBotCommands(t *testing.T) {
+	ctx := core.NewContext(context.Background())
+	ctx.Provide[contracts.AuthService](&mockAuthService{})
+	ctx.Provide[contracts.PushRegistry](&mockPushRegistry{})
+	reg := &recordingBotReg{}
+	ctx.Provide[contracts.BotCommandRegistry](reg)
+	require.NoError(t, igo.New().Apply(ctx))
+	assert.Equal(t, []string{"show", "run"}, reg.cmds)
+	assert.Equal(t, []string{"igo.login_auth", "igo.checkin_auth"}, reg.convs)
 }
 
 func asGinHandler(t *testing.T, h any, where string) gin.HandlerFunc {
