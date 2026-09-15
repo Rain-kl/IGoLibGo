@@ -62,7 +62,6 @@
 - **标准流程**：上游改代码 + 补测试 + 本地 commit（禁止 push）→ 下游 `git fetch wavelet` 确认带入范围（避免拖入无关提交）→ `git merge wavelet/main` → 下游重跑相关测试验证。
 - **严禁**直接在下游修改框架层代码（会造成双源分叉、合并冲突）。若已误改，先 `git revert` 撤销下游改动，再按标准流程合并上游。
 
-- 切勿删除 `frontend/node_modules`。
 - 保持 `backend/pkg/` 绝对纯净，属于底层通用基础库，**严禁依赖项目上层包（如 `Wavelet/core/*`、`Wavelet/plugins/*`）**；保持 `backend/pkg/util/` 绝对纯净无状态，禁止导入 Gin、GORM、sessions 等 Web/数据库框架包。
 - 测试用例禁止硬编码相对路径创建临时目录，统一使用 Go 内置 `t.TempDir()`。
 - 修改 API Handler 后运行 `make swagger`，完成代码开发后必须依次运行 `make code-check` 与 `make format`。
@@ -127,15 +126,6 @@
 - 插件数据库表结构严禁使用 GORM AutoMigrate，统一编写 Goose SQL 迁移并嵌入二进制。
 - 不创建物理外键（显式建索引）；Go 模型零值需与数据库默认值匹配。
 - **SQL LIKE 查询防注入与转义**：所有含用户输入的模糊查询必须调用 `backend/pkg/util.EscapeLike` 转义通配符，并显式指定 `ESCAPE '\\'` 语法（如 `Where("username LIKE ? ESCAPE '\\'", util.EscapeLike(keyword)+"%")`），同时兼容 PostgreSQL 与 SQLite 方言并杜绝通配符注入攻击。
-
-### 并发与安全防护规范
-- **Goroutine 安全**：禁止直接使用裸 `go func()`；统一使用 `backend/pkg/util.Go`，确保具备未捕获 panic 恢复和调用栈日志记录能力。
-- **Pub/Sub 监听并发安全**：启动 Redis Pub/Sub 订阅监听前，必须捕获局部客户端实例，禁止在 goroutine 闭包中直读可变全局变量；提供停止监听接口时必须维护 `done` 通道等待 goroutine 完整退出后再重置状态，消除数据竞争。
-- **Session 固定攻击防御**：用户登录/授权成功后，必须调用 Session 轮换逻辑，防止 Session 固定攻击。
-- **防账户枚举与时序攻击**：
-  - 登录失败统一返回模糊报错；当查询用户不存在时，必须调用 `pkg/util.DummyCheckPassword` 执行同等开销的 bcrypt 哈希计算，彻底消除时序侧信道攻击。
-  - 验证码、签名 Token 等敏感字符串比对必须使用 `crypto/subtle.ConstantTimeCompare` 常量时间比对。
-- **敏感端点限流**：登录尝试、OAuth 授权发起等敏感接口必须接入基于 Redis 的滑动窗口限流机制，防止暴力破解与缓存资源耗尽。
 
 ## 前端开发规范
 
