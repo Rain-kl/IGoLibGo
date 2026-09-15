@@ -26,14 +26,30 @@ import (
 //go:embed migrations/*/*.sql
 var MigrationsFS embed.FS
 
+// Option configures the igo plugin.
+type Option func(*Plugin)
+
+// WithService allows injecting a custom service for testing.
+func WithService(s *service.Service) Option {
+	return func(p *Plugin) {
+		p.svc = s
+	}
+}
+
 // Plugin implements core.Plugin for IGoLibrary.
 type Plugin struct {
 	svc *service.Service
 }
 
 // New creates the igo plugin.
-func New() *Plugin {
-	return &Plugin{}
+func New(opts ...Option) *Plugin {
+	p := &Plugin{}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(p)
+		}
+	}
+	return p
 }
 
 // Name returns the unique plugin identifier.
@@ -55,7 +71,9 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 		return errors.New("igo: AuthService.RequireAuthMiddleware is not gin.HandlerFunc")
 	}
 
-	p.svc = service.New()
+	if p.svc == nil {
+		p.svc = service.New()
+	}
 	p.svc.SetEmitter(ctx.Events())
 	if taskSvc, err := ctx.Inject[contracts.TaskService](); err == nil && taskSvc != nil {
 		p.svc.SetTasks(taskSvc)

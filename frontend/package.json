@@ -11,7 +11,8 @@
     "start": "next start -p 3010",
     "lint": "eslint",
     "format": "biome format --write .",
-    "format:check": "biome format ."
+    "format:check": "biome format .",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@codemirror/lang-sql": "^6.10.0",
@@ -82,6 +83,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20",

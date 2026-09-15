@@ -13,7 +13,8 @@
     "unknownError": "Something went wrong. Please try again.",
     "loadFailed": "Load failed",
     "previousPage": "Previous page",
-    "nextPage": "Next page"
+    "nextPage": "Next page",
+    "actions": "Actions"
   },
   "layout": {
     "nav": {

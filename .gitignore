@@ -26,6 +26,8 @@ frontend/.next/*
 frontend/next-env.d.ts
 frontend/package-lock.json
 frontend/.env
+frontend/test-results/
+frontend/playwright-report/
 .env.*
 !.env.example
 *.tsbuildinfo
