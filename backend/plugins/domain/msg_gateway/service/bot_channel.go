@@ -83,6 +83,7 @@ func CreateChannel(ctx context.Context, req do.CreateChannelRequest) (do.Channel
 	if err := dao.CreateMessageChannel(ctx, row); err != nil {
 		return do.ChannelDTO{}, err
 	}
+	_ = Reload(ctx)
 	return ToDTO(row, creds, extra), nil
 }
 
@@ -134,6 +135,7 @@ func UpdateChannel(ctx context.Context, id uint64, req do.UpdateChannelRequest) 
 	if err := dao.UpdateMessageChannel(ctx, row); err != nil {
 		return do.ChannelDTO{}, err
 	}
+	_ = Reload(ctx)
 	return ToDTO(row, creds, extra), nil
 }
 
@@ -160,7 +162,11 @@ func DeleteChannel(ctx context.Context, id uint64) error {
 		}
 		return err
 	}
-	return dao.DeleteMessageChannel(ctx, id)
+	if err := dao.DeleteMessageChannel(ctx, id); err != nil {
+		return err
+	}
+	_ = Reload(ctx)
+	return nil
 }
 
 // ProbeChannel verifies the stored credentials against the upstream platform.

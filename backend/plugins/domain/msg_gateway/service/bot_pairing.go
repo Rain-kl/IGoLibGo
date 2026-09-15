@@ -4,6 +4,8 @@
 package service
 
 import (
+	"Wavelet/core"
+	"Wavelet/pkg/logger"
 	"Wavelet/plugins/domain/msg_gateway/consts"
 	"Wavelet/plugins/domain/msg_gateway/dao"
 	"Wavelet/plugins/domain/msg_gateway/model/do"
@@ -11,11 +13,72 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
 )
+
+// Note: 任何未鉴权/未绑定私聊消息自动回复配对码 — 见 .agents/notes/implemented/bug-fix/2026-09-15-telegram-bot-start-reply.md
+
+// HandleInboundMessage processes inbound private chat messages.
+// If the sender's platform identity is not bound to a Wavelet user, it generates/reuses a pairing code and replies.
+// If already bound, it notifies the sender that the account is bound.
+func HandleInboundMessage(ctx context.Context, msg do.InboundMessage, sendFn func(ctx context.Context, channelID uint64, to do.Recipient, text string) error) error {
+	if msg.ChannelID == 0 || msg.PlatformUserID == "" {
+		return nil
+	}
+
+	binding, err := dao.GetBindingByChannelPlatform(ctx, msg.ChannelID, msg.PlatformUserID)
+	if err != nil && !errors.Is(err, consts.ErrRecordNotFound) {
+		logger.ErrorF(ctx, "bot inbound: query binding channel=%d platform_user=%s: %v", msg.ChannelID, msg.PlatformUserID, err)
+		return err
+	}
+
+	recipient := do.Recipient{
+		ChatID:         msg.ChatID,
+		PlatformUserID: msg.PlatformUserID,
+	}
+
+	if err == nil && binding != nil {
+		replyText := "您的账号已成功绑定 Wavelet 平台，后续通知将在此处推送。"
+		if sendFn != nil {
+			return sendFn(ctx, msg.ChannelID, recipient, replyText)
+		}
+		return nil
+	}
+
+	expiryMinutes := 15
+	if c := core.AppContext(ctx); c != nil {
+		if schema, ok := c.Settings().Get("msg_gateway.pairing_code_expiry_minutes"); ok {
+			if val, ok := schema.Default.(int); ok && val > 0 {
+				expiryMinutes = val
+			}
+		}
+	}
+
+	code, err := GenerateCode()
+	if err != nil {
+		logger.ErrorF(ctx, "bot inbound: generate code error: %v", err)
+		return err
+	}
+
+	expiresAt := time.Now().Add(time.Duration(expiryMinutes) * time.Minute)
+	pairing, err := dao.UpsertPairingCode(ctx, msg.ChannelID, msg.PlatformUserID, code, expiresAt)
+	if err != nil {
+		logger.ErrorF(ctx, "bot inbound: upsert pairing code channel=%d platform_user=%s: %v", msg.ChannelID, msg.PlatformUserID, err)
+		return err
+	}
+
+	formattedCode := FormatCode(pairing.Code)
+	replyText := fmt.Sprintf("欢迎使用 Wavelet 机器人！\n您的绑定配对码为：%s（%d分钟内有效）。\n请登录系统，在「消息网关 -> 私聊身份绑定」中选择该频道并输入此配对码以完成绑定。", formattedCode, expiryMinutes)
+
+	if sendFn != nil {
+		return sendFn(ctx, msg.ChannelID, recipient, replyText)
+	}
+	return nil
+}
 
 // GenerateCode returns an 8-character pairing code using crypto/rand.
 func GenerateCode() (string, error) {
