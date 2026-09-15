@@ -207,7 +207,7 @@ func (ctrl *Controller) GetSeatLabels(c *gin.Context) {
 // @Produce json
 // @Param id path int true "场馆 ID"
 // @Param request body do.SaveFavoritesRequest true "收藏列表"
-// @Success 200 {object} response.Any{data=[]do.SeatRef}
+// @Success 204 "无内容"
 // @Failure 400 {object} response.AnyError
 // @Failure 401 {object} response.AnyError
 // @Failure 501 {object} response.AnyError

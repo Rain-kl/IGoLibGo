@@ -45,9 +45,9 @@ interface SeatLayoutGridProps {
 export function SeatLayoutGrid({
   layout,
   loading,
-  selectedSeats,
-  favorites,
-  labels,
+  selectedSeats = [],
+  favorites = [],
+  labels = {},
   onSelectionChange,
   onOpenFavorites,
   onOpenLabels,
@@ -68,7 +68,7 @@ export function SeatLayoutGrid({
 
   // 映射收藏 Set
   const favoriteKeysSet = React.useMemo(() => {
-    return new Set(favorites.map((f) => f.seat_key));
+    return new Set((favorites || []).map((f) => f.seat_key));
   }, [favorites]);
 
   // 计算紧凑映射网格边界：将稀疏坐标映射到紧凑连续的行/列索引
@@ -225,7 +225,7 @@ export function SeatLayoutGrid({
             >
               <Bookmark className='size-3 text-amber-500' />
               <span>
-                {t('favoritesBtn')} ({favorites.length})
+                {t('favoritesBtn')} ({favorites?.length || 0})
               </span>
             </Button>
             <Button

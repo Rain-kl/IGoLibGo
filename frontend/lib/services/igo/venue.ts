@@ -56,11 +56,15 @@ export class IGoVenueService extends BaseService {
   static async saveFavorites(
     id: number,
     data: SaveFavoritesRequest,
-  ): Promise<SeatRef[]> {
-    return this.put<SeatRef[]>(
+  ): Promise<void> {
+    return this.put<void>(
       `/${id}/favorites`,
       data as unknown as Record<string, unknown>,
     );
+  }
+
+  static async getSeatLabels(id: number): Promise<SeatLabel[]> {
+    return this.get<SeatLabel[]>(`/${id}/seat-labels`);
   }
 
   static async setSeatLabels(

@@ -98,14 +98,22 @@ export default function VenuePage() {
     setSelectedSeats([]);
 
     try {
-      const [layoutRes, ruleRes, favsRes] = await Promise.all([
+      const [layoutRes, ruleRes, favsRes, labelsRes] = await Promise.all([
         IGoService.venue.getLibraryLayout(libId),
         IGoService.venue.getLibraryRule(libId).catch(() => null),
         IGoService.venue.getFavorites(libId).catch(() => []),
+        IGoService.venue.getSeatLabels(libId).catch(() => []),
       ]);
       setLayout(layoutRes);
       setRule(ruleRes);
       setFavorites(favsRes || []);
+      const map: Record<string, string> = {};
+      if (Array.isArray(labelsRes)) {
+        for (const item of labelsRes) {
+          map[item.seat_key] = item.text;
+        }
+      }
+      setLabels(map);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '加载场馆详情失败');
     } finally {
@@ -136,7 +144,7 @@ export default function VenuePage() {
     }));
 
     // 合并现有收藏并去重
-    const merged = [...favorites];
+    const merged = [...(favorites || [])];
     for (const item of newItems) {
       if (!merged.some((f) => f.seat_key === item.seat_key)) {
         merged.push(item);
@@ -144,10 +152,10 @@ export default function VenuePage() {
     }
 
     try {
-      const updated = await IGoService.venue.saveFavorites(currentLibId, {
+      await IGoService.venue.saveFavorites(currentLibId, {
         seats: merged,
       });
-      setFavorites(updated);
+      setFavorites(merged);
       toast.success(tCommon('save'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tCommon('unknownError'));
@@ -157,12 +165,12 @@ export default function VenuePage() {
   // 从抽屉移除单个收藏
   const handleRemoveFavorite = async (seatKey: string) => {
     if (!currentLibId) return;
-    const updated = favorites.filter((f) => f.seat_key !== seatKey);
+    const updated = (favorites || []).filter((f) => f.seat_key !== seatKey);
     try {
-      const res = await IGoService.venue.saveFavorites(currentLibId, {
+      await IGoService.venue.saveFavorites(currentLibId, {
         seats: updated,
       });
-      setFavorites(res);
+      setFavorites(updated);
       toast.success(tCommon('delete'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tCommon('unknownError'));

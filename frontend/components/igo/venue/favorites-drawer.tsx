@@ -32,15 +32,15 @@ interface FavoritesDrawerProps {
 export function FavoritesDrawer({
   open,
   onOpenChange,
-  favorites,
-  allSeats,
+  favorites = [],
+  allSeats = [],
   onSelectSeat,
   onRemoveFavorite,
 }: FavoritesDrawerProps) {
   const t = useTranslations('igo.venue');
 
   const seatMap = React.useMemo(() => {
-    return new Map(allSeats.map((s) => [s.seat_key, s]));
+    return new Map((allSeats || []).map((s) => [s.seat_key, s]));
   }, [allSeats]);
 
   return (
@@ -57,7 +57,7 @@ export function FavoritesDrawer({
         </SheetHeader>
 
         <div className='flex-1 overflow-hidden py-4'>
-          {favorites.length === 0 ? (
+          {(favorites || []).length === 0 ? (
             <div className='h-64 flex flex-col items-center justify-center text-center p-6 border-dashed border rounded-lg text-xs text-muted-foreground gap-2'>
               <Bookmark className='size-8 text-muted-foreground/30' />
               <span>{t('emptyFavorites')}</span>
@@ -65,7 +65,7 @@ export function FavoritesDrawer({
           ) : (
             <ScrollArea className='h-full pr-3'>
               <div className='space-y-2'>
-                {favorites.map((fav, index) => {
+                {(favorites || []).map((fav, index) => {
                   const liveSeat = seatMap.get(fav.seat_key);
                   const isOccupied = liveSeat?.is_occupied ?? false;
 
