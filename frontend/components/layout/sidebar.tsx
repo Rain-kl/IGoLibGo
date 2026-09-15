@@ -66,6 +66,7 @@ import {
   ShieldCheck,
   Terminal,
   UserRound,
+  Workflow,
 } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
@@ -82,6 +83,7 @@ type NavItem = {
 const igoNavItems: NavItem[] = [
   { titleKey: 'home', url: '/', icon: Home },
   { titleKey: 'venue', url: '/venue', icon: Building2 },
+  { titleKey: 'pipeline', url: '/pipeline', icon: Workflow },
   { titleKey: 'grab', url: '/grab', icon: Rocket },
   { titleKey: 'leak', url: '/leak', icon: Radio },
   { titleKey: 'tomorrow', url: '/tomorrow', icon: Calendar },
