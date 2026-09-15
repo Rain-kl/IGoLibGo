@@ -20,6 +20,7 @@ func TestBotDAO_ChannelAndBinding(t *testing.T) {
 	_ = idgen.Init(1)
 	db, _, cleanup := testhelper.SetupTestEnvironment(t)
 	defer cleanup()
+	_ = db.Migrator().DropTable(&entity.MessageChannel{}, &entity.MessageBinding{}, &entity.MessagePairingCode{})
 	require.NoError(t, db.AutoMigrate(&entity.MessageChannel{}, &entity.MessageBinding{}, &entity.MessagePairingCode{}))
 
 	dao.SetDBServiceForTest(stubDBService{db: db})

@@ -41,12 +41,10 @@ func (MessageBinding) TableName() string {
 
 // MessagePairingCode is a one-time bind code.
 type MessagePairingCode struct {
-	ID             uint64    `json:"id,string" gorm:"primaryKey;autoIncrement"`
-	Code           string    `json:"code" gorm:"size:32;uniqueIndex;not null"`
+	Code           string    `json:"code" gorm:"primaryKey;size:32"`
 	ChannelID      uint64    `json:"channel_id,string" gorm:"not null;index"`
 	PlatformUserID string    `json:"platform_user_id" gorm:"size:128;not null;index"`
-	UserID         uint64    `json:"user_id,string" gorm:"not null;index"`
-	ExpiresAt      time.Time `json:"expires_at" gorm:"not null;index"`
+	ExpiresAt      time.Time `json:"expires_at" gorm:"not null"`
 	CreatedAt      time.Time `json:"created_at" gorm:"autoCreateTime"`
 }
 
