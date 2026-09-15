@@ -60,17 +60,24 @@ func openMigratedDB(t *testing.T) *gorm.DB {
 }
 
 func TestSQLFilesCoverOwnedTables(t *testing.T) {
-	roots := []string{
-		filepath.Join("..", "migrations", "postgres", "00001_initial.sql"),
-		filepath.Join("..", "migrations", "sqlite", "00001_initial.sql"),
-	}
-	for _, path := range roots {
-		raw, err := os.ReadFile(path)
-		require.NoError(t, err, path)
-		body := string(raw)
+	dialects := []string{"postgres", "sqlite"}
+	for _, dialect := range dialects {
+		dir := filepath.Join("..", "migrations", dialect)
+		entries, err := os.ReadDir(dir)
+		require.NoError(t, err)
+		var combined strings.Builder
+		for _, entry := range entries {
+			if strings.HasSuffix(entry.Name(), ".sql") {
+				raw, err := os.ReadFile(filepath.Join(dir, entry.Name()))
+				require.NoError(t, err)
+				combined.Write(raw)
+				combined.WriteString("\n")
+			}
+		}
+		body := combined.String()
 		for _, table := range consts.OwnedTables {
-			assert.Contains(t, body, "CREATE TABLE IF NOT EXISTS "+table, path)
-			assert.Contains(t, body, "DROP TABLE IF EXISTS "+table, path)
+			assert.Contains(t, body, "CREATE TABLE IF NOT EXISTS "+table, "dialect %s missing CREATE for table %s", dialect, table)
+			assert.Contains(t, body, "DROP TABLE IF EXISTS "+table, "dialect %s missing DROP for table %s", dialect, table)
 		}
 		assert.NotContains(t, strings.ToUpper(body), "FOREIGN KEY")
 		assert.NotContains(t, strings.ToUpper(body), "REFERENCES ")
