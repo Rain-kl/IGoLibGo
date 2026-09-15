@@ -55,15 +55,15 @@ func formatConfigList(configs []do.PipelineConfigDTO) string {
 		if cfg.AutoCheckin {
 			autoCheckinText = "开启"
 		}
-		credStatus := "未授权"
+		authStatus := "未授权"
 		if cfg.HasCookie {
-			credStatus = "有效"
+			authStatus = "有效"
 		}
 		fmt.Fprintf(&sb, "%d. [%s] %s\n", i+1, cfg.ID, cfg.Name)
 		fmt.Fprintf(&sb, "   • 目标场馆: %s (%s楼)\n", cfg.LibraryName, cfg.Floor)
 		fmt.Fprintf(&sb, "   • 目标座位: %s (%s)\n", cfg.SeatName, cfg.SeatKey)
 		fmt.Fprintf(&sb, "   • 自动签到: %s\n", autoCheckinText)
-		fmt.Fprintf(&sb, "   • 凭据状态: %s\n\n", credStatus)
+		fmt.Fprintf(&sb, "   • 凭据状态: %s\n\n", authStatus)
 	}
 	sb.WriteString("发送 /run <配置ID> 即可立即执行。")
 	return sb.String()

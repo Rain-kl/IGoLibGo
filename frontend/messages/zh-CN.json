@@ -2084,7 +2084,16 @@
         "prevStep": "上一步",
         "nextStep": "下一步",
         "save": "保存配置",
-        "saving": "正在保存..."
+        "saving": "正在保存...",
+        "editSubtitle": "直接修改配置参数、场馆与座位（无需重新录入凭据）",
+        "currentVenueAndSeat": "目标场馆与座位",
+        "seatNameLabel": "座位名称",
+        "seatKeyLabel": "座位编号",
+        "saveChanges": "保存修改",
+        "preserveAuthNotice": "当前配置已存在登录凭据，保存时将自动保留原有凭据。",
+        "updateAuthOptional": "更新登录凭据 (可选)",
+        "changeVenueOrSeat": "重新选择场馆与座位",
+        "hideVenueOrSeat": "收起座位选择器"
       },
       "authModal": {
         "title": "重新录入授权凭据",

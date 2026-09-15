@@ -2084,7 +2084,16 @@
         "prevStep": "Previous",
         "nextStep": "Next",
         "save": "Save Config",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "editSubtitle": "Update parameters, venue and seat directly without re-entering credentials",
+        "currentVenueAndSeat": "Target Venue & Seat",
+        "seatNameLabel": "Seat Name",
+        "seatKeyLabel": "Seat Key",
+        "saveChanges": "Save Changes",
+        "preserveAuthNotice": "Existing credentials are saved and will be preserved on save.",
+        "updateAuthOptional": "Update Login Credentials (Optional)",
+        "changeVenueOrSeat": "Reselect Venue & Seat",
+        "hideVenueOrSeat": "Hide Seat Selector"
       },
       "authModal": {
         "title": "Update Authorization Credentials",

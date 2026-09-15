@@ -1,6 +1,4 @@
-// Copyright 2026 Arctel.net
-// SPDX-License-Identifier: Apache-2.0
-
+// Package bot provides bot command handlers and interactive conversation flows.
 package bot
 
 import (

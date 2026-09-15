@@ -227,10 +227,15 @@ export default function PipelinePage() {
         </div>
       )}
 
-      {/* Multi-step Create/Edit Wizard Dialog */}
+      {/* Multi-step Create/Edit Dialog */}
       <PipelineDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setEditingConfig(null);
+          }
+        }}
         editingConfig={editingConfig}
         onSuccess={loadConfigs}
       />

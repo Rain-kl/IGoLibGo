@@ -123,7 +123,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await expect(page.getByRole('button', { name: /立即执行/i })).toBeVisible();
   });
 
-  test('opens 3-step creation wizard dialog and creates a new card', async ({
+  test('opens creation dialog and creates a new card with auto-checkin toggle in step 1', async ({
     page,
   }) => {
     let created = false;
@@ -160,7 +160,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
                   floor: '2',
                   seat_key: 'S-202',
                   seat_name: '202号',
-                  auto_checkin: false,
+                  auto_checkin: true,
                 },
               ]
             : [],
@@ -282,9 +282,12 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
       .click();
     await expect(page.getByText('新增一条龙自动化配置')).toBeVisible();
 
-    // Step 1: Basic Info
+    // Step 1: Basic Info & Auto Check-in Toggle
     await page.getByPlaceholder(/例如: seat01/i).fill('my_seat_202');
     await page.getByPlaceholder(/例如: 张三的考研专座/i).fill('二楼靠窗202');
+
+    // Toggle auto-checkin switch in Step 1 (no credentials required)
+    await page.getByRole('switch').click();
 
     // DO NOT switch tab: Stay on default "微信授权链接" tab!
     // Paste full real WeChat authorization redirect URL with code parameter
@@ -303,23 +306,99 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     // Select seat 202号
     await page.getByText('202号').click();
 
-    // Click "下一步"
-    await page.getByRole('button', { name: /下一步/i }).click();
-
-    // Step 3: Auto Check-In
-    await expect(page.getByText('自动签到设置')).toBeVisible();
-
-    // Toggle auto-checkin switch
-    await page.getByRole('switch').click();
-    await page
-      .getByPlaceholder(/粘贴微信签到授权链接或 Code/i)
-      .fill('https://web.traceint.com/web/index.html#checkin-token-xyz');
-
-    // Save configuration
+    // Directly click "保存配置" on Step 2 (no Step 3 wizard)
     await page.getByRole('button', { name: /保存配置/i }).click();
 
     // Card should appear in list
     await expect(page.getByText('二楼靠窗202')).toBeVisible();
+  });
+
+  test('edits pipeline config directly without creation wizard steps or credential requirements', async ({
+    page,
+  }) => {
+    let updatedName = '';
+    let updatedAutoCheckin = false;
+
+    await page.route('**/api/v1/igo/pipeline/configs', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: 'my_seat_202',
+              name: updatedName || '二楼靠窗202',
+              cookie: 'Authorization=cookie-xxx',
+              library_id: 20,
+              library_name: '总馆二楼',
+              floor: '2',
+              seat_key: 'S-202',
+              seat_name: '202号',
+              auto_checkin: updatedAutoCheckin,
+              updated_at: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+    });
+
+    await page.route(
+      '**/api/v1/igo/pipeline/configs/my_seat_202',
+      async (route) => {
+        if (route.request().method() === 'PUT') {
+          const postData = route.request().postDataJSON();
+          updatedName = postData.name;
+          updatedAutoCheckin = postData.auto_checkin;
+          // Verify no cookie was required or passed when editing without changing credentials
+          expect(postData.cookie).toBeUndefined();
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              data: {
+                id: 'my_seat_202',
+                name: postData.name,
+                library_id: postData.library_id,
+                library_name: postData.library_name,
+                floor: postData.floor,
+                seat_key: postData.seat_key,
+                seat_name: postData.seat_name,
+                auto_checkin: postData.auto_checkin,
+                updated_at: new Date().toISOString(),
+              },
+            }),
+          });
+          return;
+        }
+      },
+    );
+
+    await page.goto('/pipeline');
+    await expect(page.getByText('二楼靠窗202')).toBeVisible();
+
+    // Open dropdown menu on card and click "编辑配置"
+    await page.getByLabel(/操作|actions/i).click();
+    await page.getByRole('menuitem', { name: /编辑配置/i }).click();
+
+    // Edit dialog should display directly with full info, without wizard steps
+    await expect(page.getByText('编辑一条龙自动化配置')).toBeVisible();
+    await expect(page.getByText('直接修改配置参数、场馆与座位')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /下一步/i }),
+    ).not.toBeVisible();
+
+    // Edit name
+    const nameInput = page.getByPlaceholder(/例如: 张三的考研专座/i);
+    await nameInput.fill('二楼靠窗202(已更新)');
+
+    // Toggle auto-checkin switch
+    await page.getByRole('switch').click();
+
+    // Click "保存修改" directly without entering credentials
+    await page.getByRole('button', { name: /保存修改/i }).click();
+
+    // Card should update in list
+    await expect(page.getByText('二楼靠窗202(已更新)')).toBeVisible();
   });
 
   test('validates and rejects empty authorization input on step 1 and prevents advancing', async ({
