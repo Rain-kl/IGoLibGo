@@ -448,6 +448,7 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 
 	var verifyRes response.Response[map[string]any]
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &verifyRes))
+	assert.Equal(t, true, verifyRes.Data["valid"])
 	assert.NotEmpty(t, verifyRes.Data["libraries"])
 
 	// 10.4 library-layout without cookie -> 400 Bad Request

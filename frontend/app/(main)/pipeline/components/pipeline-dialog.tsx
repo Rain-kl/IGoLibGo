@@ -164,8 +164,15 @@ export function PipelineDialog({
         cookie: rawInput,
       });
 
-      if (res.valid) {
-        setVerifiedCookie(res.cookie);
+      const isValid = Boolean(
+        res &&
+          (res.valid ||
+            res.cookie ||
+            (res.libraries && res.libraries.length > 0)),
+      );
+
+      if (isValid) {
+        setVerifiedCookie(res.cookie || rawInput);
         setCookieExpiresAt(res.expires_at || null);
         if (res.libraries && res.libraries.length > 0) {
           setVenueList(res.libraries);
@@ -231,7 +238,12 @@ export function PipelineDialog({
       (cookie.trim() && cookie.trim() !== verifiedCookie)
     ) {
       sessionRes = await handleVerifySession();
-      valid = Boolean(sessionRes?.valid);
+      valid = Boolean(
+        sessionRes &&
+          (sessionRes.valid ||
+            sessionRes.cookie ||
+            (sessionRes.libraries && sessionRes.libraries.length > 0)),
+      );
     }
 
     if (valid) {
@@ -265,7 +277,8 @@ export function PipelineDialog({
             : undefined,
       });
 
-      if (res.valid) {
+      const isValid = Boolean(res && (res.valid || res.token));
+      if (isValid) {
         setVerifiedCheckinToken(res.token);
         toast.success('微信签到授权验证成功！');
       } else {

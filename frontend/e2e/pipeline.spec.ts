@@ -711,4 +711,90 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     // Empty state should be visible after deletion
     await expect(page.getByText('暂无自动化卡片')).toBeVisible();
   });
+
+  test('successfully verifies session and moves to Step 2 even when valid field is omitted from response', async ({
+    page,
+  }) => {
+    await page.route('**/api/v1/igo/pipeline/configs', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
+
+    await page.route('**/api/v1/igo/pipeline/verify-session', async (route) => {
+      // Simulate response where backend omitted "valid: true"
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            cookie: 'Authorization=eyJhbGciOiJSUzI1NiJ9...; SERVERID=123',
+            expires_at: '2026-09-15T12:08:41+08:00',
+            libraries: [
+              {
+                library_id: 210,
+                name: '公共阅览室（一）',
+                floor: '2楼',
+                is_open: true,
+                total_seats: 292,
+                used_seats: 83,
+                booked_seats: 0,
+              },
+            ],
+          },
+        }),
+      });
+    });
+
+    await page.route('**/api/v1/igo/pipeline/library-layout', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            library_id: 210,
+            name: '公共阅览室（一）',
+            floor: '2楼',
+            seats: [
+              {
+                seat_key: 'SEAT-210-01',
+                seat_name: '210-01',
+                is_occupied: false,
+                x: 1,
+                y: 1,
+              },
+            ],
+          },
+        }),
+      });
+    });
+
+    await page.goto('/pipeline');
+    await page
+      .getByRole('button', { name: /新增自动化卡片/i })
+      .first()
+      .click();
+
+    await page.getByPlaceholder(/例如: seat01/i).fill('my_seat_resilient');
+    await page.getByPlaceholder(/例如: 张三的考研专座/i).fill('容错验证测试');
+
+    // Enter auth URL on default tab
+    await page
+      .getByPlaceholder(/粘贴以 open.weixin.qq.com 开头的授权链接或 Code/i)
+      .fill(
+        'https://web.traceint.com/web/index.html?code=081a2b3c4d5e6f7a8b9c0d1e2f3a4b5c&state=STATE',
+      );
+
+    // Click "下一步" (triggers handleNextFromStep1 -> verify-session)
+    await page.getByRole('button', { name: /下一步/i }).click();
+
+    // Verify success toast appears instead of error toast
+    await expect(page.getByText('TraceInt 凭据验证成功！')).toBeVisible();
+
+    // Verify Step 2 "场馆与座位选择" is reached and venue name is loaded
+    await expect(page.getByText('场馆与座位选择')).toBeVisible();
+    await expect(page.getByText('公共阅览室（一）')).toBeVisible();
+  });
 });

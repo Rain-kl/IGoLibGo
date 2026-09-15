@@ -467,7 +467,7 @@ export interface PipelineHelperVerifySessionRequest {
 }
 
 export interface PipelineHelperVerifySessionResponse {
-  valid: boolean;
+  valid?: boolean;
   cookie: string;
   expires_at?: string;
   libraries?: LibrarySummary[];
@@ -480,7 +480,7 @@ export interface PipelineHelperVerifyCheckinRequest {
 }
 
 export interface PipelineHelperVerifyCheckinResponse {
-  valid: boolean;
+  valid?: boolean;
   token: string;
   expires_at?: string;
 }

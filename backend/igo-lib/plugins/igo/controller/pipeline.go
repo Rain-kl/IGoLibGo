@@ -128,7 +128,7 @@ func (ctrl *Controller) RunPipeline(c *gin.Context) {
 // @Produce json
 // @Param body body do.HelperVerifySessionRequest true "登录凭据"
 // @Success 200 {object} response.Response{data=map[string]any}
-// @Router /api/v1/igo/pipeline/helper/verify-session [post]
+// @Router /api/v1/igo/pipeline/verify-session [post]
 //
 //nolint:dupl // distinct helper verification endpoint
 func (ctrl *Controller) HelperVerifySession(c *gin.Context) {
@@ -142,6 +142,7 @@ func (ctrl *Controller) HelperVerifySession(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusOK, response.OK(gin.H{
+			"valid":      true,
 			"libraries":  libs,
 			"cookie":     cookie,
 			"expires_at": exp,
@@ -156,7 +157,7 @@ func (ctrl *Controller) HelperVerifySession(c *gin.Context) {
 // @Produce json
 // @Param body body do.HelperLibraryLayoutRequest true "场馆与凭据"
 // @Success 200 {object} response.Response{data=do.LibraryLayoutResponse}
-// @Router /api/v1/igo/pipeline/helper/library-layout [post]
+// @Router /api/v1/igo/pipeline/library-layout [post]
 func (ctrl *Controller) HelperGetLibraryLayout(c *gin.Context) {
 	ctrl.withUser(c, func(userID uint64) {
 		req, ok := bindJSON[do.HelperLibraryLayoutRequest](c)
@@ -175,7 +176,7 @@ func (ctrl *Controller) HelperGetLibraryLayout(c *gin.Context) {
 // @Produce json
 // @Param body body do.HelperVerifyCheckinRequest true "签到凭据"
 // @Success 200 {object} response.Response{data=map[string]any}
-// @Router /api/v1/igo/pipeline/helper/verify-checkin [post]
+// @Router /api/v1/igo/pipeline/verify-checkin [post]
 //
 //nolint:dupl // distinct helper verification endpoint
 func (ctrl *Controller) HelperVerifyCheckin(c *gin.Context) {
@@ -189,6 +190,7 @@ func (ctrl *Controller) HelperVerifyCheckin(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusOK, response.OK(gin.H{
+			"valid":      true,
 			"device":     devs,
 			"token":      token,
 			"expires_at": exp,
