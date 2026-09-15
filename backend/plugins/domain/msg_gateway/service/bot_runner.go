@@ -5,6 +5,7 @@ package service
 
 import (
 	"Wavelet/pkg/logger"
+	"Wavelet/pkg/util"
 	"Wavelet/plugins/domain/msg_gateway/dao"
 	"Wavelet/plugins/domain/msg_gateway/model/do"
 	"context"
@@ -48,12 +49,15 @@ func Lookup(typ string) (Factory, bool) {
 }
 
 // Note: Bot Runner 生命周期管理 — 见 .agents/notes/implemented/bug-fix/2026-09-15-telegram-bot-start-reply.md
+// Note: Connect 绑定 runner lifetime 而非 HTTP 请求 ctx，CRUD 异步 Reload — 见 .agents/notes/implemented/bug-fix/2026-09-15-bot-runner-request-ctx-and-nested-config.md
 
 // Runner manages lifecycle for long-lived channel adapters (WebSocket, long-polling, etc.).
 type Runner struct {
 	mu       sync.RWMutex
+	reloadMu sync.Mutex
 	running  bool
 	cancel   context.CancelFunc
+	life     context.Context
 	channels map[uint64]Channel
 }
 
@@ -75,47 +79,56 @@ func Reload(ctx context.Context) error {
 	return GlobalRunner.Reload(ctx)
 }
 
+// ReloadAsync reconnects channels on the runner lifetime, off the caller goroutine.
+func ReloadAsync() {
+	GlobalRunner.ReloadAsync()
+}
+
 // Start loads enabled channels and starts long-polling or WebSocket connections.
 func (r *Runner) Start(ctx context.Context) error {
+	r.reloadMu.Lock()
+	defer r.reloadMu.Unlock()
+
 	r.mu.Lock()
 	if r.running {
 		r.mu.Unlock()
 		return nil
 	}
 
-	runCtx, cancel := context.WithCancel(ctx)
+	life, cancel := context.WithCancel(ctx)
+	r.life = life
 	r.cancel = cancel
 	r.running = true
 	r.channels = make(map[uint64]Channel)
 	r.mu.Unlock()
 
-	logger.InfoF(runCtx, "[MessageGateway] Starting bot channel runners...")
-	return r.syncChannels(runCtx)
+	logger.InfoF(life, "[MessageGateway] Starting bot channel runners...")
+	return r.syncChannels(life)
 }
 
-func (r *Runner) syncChannels(ctx context.Context) error {
-	rows, err := dao.ListEnabledMessageChannels(ctx)
+func (r *Runner) syncChannels(life context.Context) error {
+	rows, err := dao.ListEnabledMessageChannels(life)
 	if err != nil {
-		logger.ErrorF(ctx, "[MessageGateway] List enabled channels error: %v", err)
+		logger.ErrorF(life, "[MessageGateway] List enabled channels error: %v", err)
 		return err
 	}
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	for i := range rows {
 		row := &rows[i]
-		if _, exists := r.channels[row.ID]; exists {
+		r.mu.RLock()
+		_, exists := r.channels[row.ID]
+		r.mu.RUnlock()
+		if exists {
 			continue
 		}
 		factory, ok := Lookup(row.Type)
 		if !ok {
-			logger.WarnF(ctx, "[MessageGateway] Channel type %s not registered for channel %d", row.Type, row.ID)
+			logger.WarnF(life, "[MessageGateway] Channel type %s not registered for channel %d", row.Type, row.ID)
 			continue
 		}
 		cfg, err := channelConfigFromRow(row)
 		if err != nil {
-			logger.ErrorF(ctx, "[MessageGateway] Channel config decode error channel=%d: %v", row.ID, err)
+			logger.ErrorF(life, "[MessageGateway] Channel config decode error channel=%d: %v", row.ID, err)
 			continue
 		}
 		ch, err := factory(cfg, func(inboundCtx context.Context, msg do.InboundMessage) error {
@@ -125,15 +138,17 @@ func (r *Runner) syncChannels(ctx context.Context) error {
 			return HandleInboundMessage(inboundCtx, msg, r.SendText)
 		})
 		if err != nil {
-			logger.ErrorF(ctx, "[MessageGateway] Factory construct error channel=%d: %v", row.ID, err)
+			logger.ErrorF(life, "[MessageGateway] Factory construct error channel=%d: %v", row.ID, err)
 			continue
 		}
-		if err := ch.Connect(ctx); err != nil {
-			logger.ErrorF(ctx, "[MessageGateway] Connect error channel=%d: %v", row.ID, err)
+		if err := ch.Connect(life); err != nil {
+			logger.ErrorF(life, "[MessageGateway] Connect error channel=%d: %v", row.ID, err)
 			continue
 		}
+		r.mu.Lock()
 		r.channels[row.ID] = ch
-		logger.InfoF(ctx, "[MessageGateway] Connected bot channel %d (%s: %s)", row.ID, row.Type, row.Name)
+		r.mu.Unlock()
+		logger.InfoF(life, "[MessageGateway] Connected bot channel %d (%s: %s)", row.ID, row.Type, row.Name)
 	}
 	return nil
 }
@@ -152,34 +167,66 @@ func (r *Runner) SendText(ctx context.Context, channelID uint64, to do.Recipient
 
 // Stop disconnects all running bot channels.
 func (r *Runner) Stop() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.reloadMu.Lock()
+	defer r.reloadMu.Unlock()
 
+	r.mu.Lock()
 	if !r.running {
+		r.mu.Unlock()
 		return
 	}
 	if r.cancel != nil {
 		r.cancel()
 	}
-	for id, ch := range r.channels {
-		_ = ch.Disconnect(context.Background())
-		delete(r.channels, id)
-	}
+	old := r.channels
+	r.channels = make(map[uint64]Channel)
 	r.running = false
+	r.life = nil
+	r.cancel = nil
+	r.mu.Unlock()
+
+	for _, ch := range old {
+		_ = ch.Disconnect(context.Background())
+	}
 }
 
 // Reload disconnects existing channels and re-synchronizes with the database.
+// Connect uses the runner lifetime, never the caller's request context, so HTTP
+// cancellation cannot stop long polling.
 func (r *Runner) Reload(ctx context.Context) error {
+	r.reloadMu.Lock()
+	defer r.reloadMu.Unlock()
+
 	r.mu.Lock()
 	if !r.running {
 		r.mu.Unlock()
 		return nil
 	}
-	for id, ch := range r.channels {
-		_ = ch.Disconnect(ctx)
-		delete(r.channels, id)
-	}
+	old := r.channels
+	r.channels = make(map[uint64]Channel)
+	life := r.life
 	r.mu.Unlock()
 
-	return r.syncChannels(ctx)
+	for _, ch := range old {
+		_ = ch.Disconnect(ctx)
+	}
+	if life == nil {
+		life = context.Background()
+	}
+	return r.syncChannels(life)
+}
+
+// ReloadAsync runs Reload on a background goroutine so HTTP handlers do not wait
+// on upstream Bot API calls such as Telegram getMe.
+func (r *Runner) ReloadAsync() {
+	r.mu.RLock()
+	running := r.running
+	life := r.life
+	r.mu.RUnlock()
+	if !running {
+		return
+	}
+	util.Go(func() {
+		_ = r.Reload(life)
+	})
 }

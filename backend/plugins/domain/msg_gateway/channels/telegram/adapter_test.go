@@ -31,6 +31,9 @@ func TestBuildTeleSettingsLongPollWindow(t *testing.T) {
 	if pref.URL != "https://tg.example.com/api" {
 		t.Errorf("base_url trailing slash should be trimmed, got %q", pref.URL)
 	}
+	if pref.Client == nil || pref.Client.Timeout <= longPollWindow {
+		t.Fatalf("HTTP client timeout must exceed long-poll window, client=%v", pref.Client)
+	}
 }
 
 func TestHandleUpdate_DropsGroups(t *testing.T) {

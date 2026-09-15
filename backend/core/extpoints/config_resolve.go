@@ -132,7 +132,7 @@ func (r *ConfigRegistry) Bind(prefix string, target any) error {
 // assignFields writes resolved values into a freshly walked target struct.
 func assignFields(elem reflect.Value, fields []configField, values map[string]any) error {
 	for _, f := range fields {
-		field := elem.FieldByName(fieldNameForPath(elem.Type(), f.path))
+		field := elem.FieldByIndex(f.index)
 		if !field.IsValid() || !field.CanSet() {
 			return fmt.Errorf("%w: field for key %q is not settable", ErrConfigTarget, f.key)
 		}

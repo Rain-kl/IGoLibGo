@@ -13,6 +13,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -51,11 +52,17 @@ func (a *Adapter) Capabilities() do.Capability {
 // into a tight loop against the Bot API.
 const longPollWindow = 10 * time.Second
 
+// botHTTPTimeout covers getMe plus one long-poll round. It must exceed longPollWindow
+// so getUpdates is not cut off, and it must be finite so a blocked Bot API cannot hang
+// the runner forever.
+const botHTTPTimeout = 30 * time.Second
+
 // buildTeleSettings assembles the telebot settings.
 func buildTeleSettings(cfg do.ChannelConfig) tele.Settings {
 	pref := tele.Settings{
 		Token:  cfg.Credentials["bot_token"],
 		Poller: &tele.LongPoller{Timeout: longPollWindow},
+		Client: &http.Client{Timeout: botHTTPTimeout},
 	}
 	if base := strings.TrimSpace(cfg.Extra["base_url"]); base != "" {
 		pref.URL = strings.TrimSuffix(base, "/")

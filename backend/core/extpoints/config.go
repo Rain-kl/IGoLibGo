@@ -78,10 +78,11 @@ type ConfigBinding struct {
 
 // configField is a single leaf discovered while walking a binding struct's tags.
 // key is the fully qualified dotted path used for resolution; path is the raw `config`
-// tag value used to locate the Go field again during Bind.
+// tag of this leaf; index locates the field from the walked root (including nested structs).
 type configField struct {
 	key        string
 	path       string
+	index      []int
 	env        string
 	autoEnable string
 	def        string
@@ -217,23 +218,34 @@ func bindingStruct(target any, prefix string) (reflect.Value, error) {
 
 // walkConfigFields collects leaf configuration declarations from `config` tagged fields.
 // A field without a `config` tag is skipped, except for embedded structs which are
-// recursed into so their own tags resolve under the same prefix.
+// recursed into so their own tags resolve under the same prefix. Named nested structs
+// that carry a `config` tag (e.g. hostConfig.Log `config:"log"`) are also recursed so
+// env tags such as LOG_LEVEL bind to log.level instead of treating the struct as a leaf.
+// Note: 嵌套 config 结构体必须展开到叶子，否则 LOG_LEVEL 绑不上 — 见 .agents/notes/implemented/bug-fix/2026-09-15-bot-runner-request-ctx-and-nested-config.md
 func walkConfigFields(t reflect.Type, prefix string) ([]configField, error) {
-	var out []configField
+	return walkConfigFieldsFrom(t, prefix, nil)
+}
 
+func walkConfigFieldsFrom(t reflect.Type, prefix string, parentIndex []int) ([]configField, error) {
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+
+	var out []configField
 	for i := range t.NumField() {
 		sf := t.Field(i)
 		if sf.PkgPath != "" {
 			continue
 		}
 
+		index := append(append([]int{}, parentIndex...), sf.Index...)
 		path := sf.Tag.Get("config")
 		if path == "-" {
 			continue
 		}
 		if path == "" {
-			if sf.Type.Kind() == reflect.Struct && sf.Type != durationType {
-				nested, err := walkConfigFields(sf.Type, prefix)
+			if isConfigStruct(sf.Type) {
+				nested, err := walkConfigFieldsFrom(sf.Type, prefix, index)
 				if err != nil {
 					return nil, err
 				}
@@ -242,9 +254,19 @@ func walkConfigFields(t reflect.Type, prefix string) ([]configField, error) {
 			continue
 		}
 
+		if isConfigStruct(sf.Type) {
+			nested, err := walkConfigFieldsFrom(sf.Type, joinKey(prefix, path), index)
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, nested...)
+			continue
+		}
+
 		out = append(out, configField{
 			key:        joinKey(prefix, path),
 			path:       path,
+			index:      index,
 			env:        sf.Tag.Get("env"),
 			autoEnable: sf.Tag.Get("autoEnable"),
 			def:        sf.Tag.Get("default"),
@@ -254,6 +276,16 @@ func walkConfigFields(t reflect.Type, prefix string) ([]configField, error) {
 	}
 
 	return out, nil
+}
+
+func isConfigStruct(t reflect.Type) bool {
+	if t == durationType {
+		return false
+	}
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	return t.Kind() == reflect.Struct
 }
 
 func joinKey(prefix, path string) string {
