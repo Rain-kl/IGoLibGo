@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -32,9 +33,11 @@ func defaultQRCodeDataURL() string {
 
 // Service is the igo business facade.
 type Service struct {
-	client *traceint.Client
-	tasks  contracts.TaskService
-	events Emitter
+	client       *traceint.Client
+	tasks        contracts.TaskService
+	events       Emitter
+	backfillOnce sync.Once
+	backfillErr  error
 }
 
 // New creates a Service with the default TraceInt HTTP client.

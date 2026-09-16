@@ -53,6 +53,8 @@ const (
 	TableCheckInSessions     = "igo_checkin_sessions"
 	TableDashboardMetrics    = "igo_dashboard_metrics"
 	TablePipelineConfigs     = "igo_pipeline_configs"
+	TableAccounts            = "igo_accounts"
+	TableCheckInInfos        = "igo_checkin_infos"
 )
 
 // API error codes.
@@ -61,6 +63,7 @@ const (
 	CodeNotFound        = "not_found"
 	CodeTraceInt        = "traceint_error"
 	CodeConflict        = "conflict"
+	CodeNeedAuth        = "need_auth"
 
 	TaskTypeTick        = "igo:tick"
 	TaskTypeCookieWatch = "igo:cookie_watch"
@@ -100,6 +103,8 @@ var OwnedTables = []string{
 	TableCheckInSessions,
 	TableDashboardMetrics,
 	TablePipelineConfigs,
+	TableAccounts,
+	TableCheckInInfos,
 }
 
 // ErrNotImplemented is returned by service stubs before business logic is migrated.
@@ -128,6 +133,22 @@ func (e *CodedError) Unwrap() error { return e.Err }
 // NewError builds a CodedError.
 func NewError(status int, code, msg string) *CodedError {
 	return &CodedError{Status: status, Code: code, Msg: msg}
+}
+
+// NeedAuthError tells the HTTP layer to return 409 with need_auth payload.
+type NeedAuthError struct {
+	Kind      string
+	AccountID uint64
+	AuthURL   string
+	Msg       string
+}
+
+// Error implements the error interface.
+func (e *NeedAuthError) Error() string {
+	if e == nil {
+		return ""
+	}
+	return e.Msg
 }
 
 // SupportedTaskKinds lists task kinds accepted by /tasks/:kind/*.

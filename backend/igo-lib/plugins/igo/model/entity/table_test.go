@@ -28,6 +28,8 @@ func TestTableNamesMatchOwnedTables(t *testing.T) {
 		entity.CheckInSession{}.TableName():          {},
 		entity.DashboardMetrics{}.TableName():        {},
 		entity.PipelineConfig{}.TableName():          {},
+		entity.Account{}.TableName():                 {},
+		entity.CheckInInfo{}.TableName():             {},
 	}
 	assert.Len(t, got, len(consts.OwnedTables))
 	for _, name := range consts.OwnedTables {

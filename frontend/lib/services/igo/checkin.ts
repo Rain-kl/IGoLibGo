@@ -6,13 +6,16 @@ import type {
   CheckInAuthFromCodeRequest,
   CheckInAuthorizationResponse,
   CheckInDeviceResponse,
+  CheckInInfoDTO,
   CheckInSessionResponse,
   CheckInSignRequest,
   CheckInSignResponse,
   CheckInVenueProfile,
   CheckInVenueProfilesResponse,
+  CreateCheckInInfoRequest,
   QRCodeResponse,
   SaveCheckInVenueProfileRequest,
+  SignCheckInInfoRequest,
 } from './types';
 
 export class IGoCheckInService extends BaseService {
@@ -70,5 +73,40 @@ export class IGoCheckInService extends BaseService {
 
   static async listVenueProfiles(): Promise<CheckInVenueProfilesResponse> {
     return this.get<CheckInVenueProfilesResponse>('/profiles');
+  }
+
+  static listInfos(): Promise<CheckInInfoDTO[]> {
+    return this.get<CheckInInfoDTO[]>('/infos');
+  }
+
+  static createInfo(data: CreateCheckInInfoRequest): Promise<CheckInInfoDTO> {
+    return this.post<CheckInInfoDTO>(
+      '/infos',
+      data as unknown as Record<string, unknown>,
+    );
+  }
+
+  static updateInfo(
+    id: string,
+    data: CreateCheckInInfoRequest,
+  ): Promise<CheckInInfoDTO> {
+    return this.put<CheckInInfoDTO>(
+      `/infos/${id}`,
+      data as unknown as Record<string, unknown>,
+    );
+  }
+
+  static deleteInfo(id: string): Promise<void> {
+    return this.delete<void>(`/infos/${id}`);
+  }
+
+  static signInfo(
+    id: string,
+    data: SignCheckInInfoRequest,
+  ): Promise<CheckInSignResponse> {
+    return this.post<CheckInSignResponse>(
+      `/infos/${id}/sign`,
+      data as unknown as Record<string, unknown>,
+    );
   }
 }

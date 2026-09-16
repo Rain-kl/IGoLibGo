@@ -113,6 +113,9 @@ func UpdatePipelineConfig(ctx context.Context, row *entity.PipelineConfig) error
 		"minor":              row.Minor,
 		"latitude":           row.Latitude,
 		"longitude":          row.Longitude,
+		"account_id":         row.AccountID,
+		"checkin_account_id": row.CheckinAccountID,
+		"checkin_info_id":    row.CheckinInfoID,
 		colUpdatedAt:         row.UpdatedAt,
 	})
 	if res.Error != nil {

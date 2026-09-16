@@ -52,6 +52,19 @@ func (ctrl *Controller) reply(c *gin.Context, err error) bool {
 	if err == nil {
 		return false
 	}
+	var na *consts.NeedAuthError
+	if errors.As(err, &na) {
+		c.Abort()
+		c.JSON(http.StatusConflict, gin.H{
+			"error": gin.H{"code": consts.CodeNeedAuth, "message": na.Msg},
+			"data": gin.H{
+				"need_auth":  na.Kind,
+				"account_id": strconv.FormatUint(na.AccountID, 10),
+				"auth_url":   na.AuthURL,
+			},
+		})
+		return true
+	}
 	var coded *consts.CodedError
 	if errors.As(err, &coded) {
 		response.AbortWithErrorCode(c, coded.Status, coded.Code, coded.Msg)
@@ -103,6 +116,15 @@ func bindOptionalJSON[T any](c *gin.Context) (T, bool) {
 		return req, true
 	}
 	return bindJSON[T](c)
+}
+
+func parseUint64ID(c *gin.Context) (uint64, bool) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		response.AbortBadRequestWithCode(c, consts.CodeInvalidID, "ID 格式错误")
+		return 0, false
+	}
+	return id, true
 }
 
 func parseLibraryID(c *gin.Context) (int, bool) {

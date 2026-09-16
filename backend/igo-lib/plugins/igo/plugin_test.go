@@ -91,6 +91,19 @@ var expectedRoutes = []struct {
 	{"PUT", "/api/v1/igo/global-leak/blacklist"},
 	{"GET", "/api/v1/igo/global-leak/selected-libraries"},
 	{"PUT", "/api/v1/igo/global-leak/selected-libraries"},
+	{"GET", "/api/v1/igo/accounts"},
+	{"POST", "/api/v1/igo/accounts"},
+	{"GET", "/api/v1/igo/accounts/:id"},
+	{"PUT", "/api/v1/igo/accounts/:id"},
+	{"DELETE", "/api/v1/igo/accounts/:id"},
+	{"POST", "/api/v1/igo/accounts/:id/login"},
+	{"POST", "/api/v1/igo/accounts/:id/checkin-auth"},
+	{"GET", "/api/v1/igo/checkin/infos"},
+	{"POST", "/api/v1/igo/checkin/infos"},
+	{"GET", "/api/v1/igo/checkin/infos/:id"},
+	{"PUT", "/api/v1/igo/checkin/infos/:id"},
+	{"DELETE", "/api/v1/igo/checkin/infos/:id"},
+	{"POST", "/api/v1/igo/checkin/infos/:id/sign"},
 	{"GET", "/api/v1/igo/checkin/session"},
 	{"GET", "/api/v1/igo/checkin/auth-qrcode"},
 	{"POST", "/api/v1/igo/checkin/from-code"},
@@ -246,8 +259,10 @@ func TestPlugin_RegistersMigrations(t *testing.T) {
 	assert.ElementsMatch(t, []string{
 		"migrations/postgres/00001_initial.sql",
 		"migrations/postgres/00002_pipeline_configs.sql",
+		"migrations/postgres/00003_accounts_and_checkin_infos.sql",
 		"migrations/sqlite/00001_initial.sql",
 		"migrations/sqlite/00002_pipeline_configs.sql",
+		"migrations/sqlite/00003_accounts_and_checkin_infos.sql",
 	}, matches)
 }
 

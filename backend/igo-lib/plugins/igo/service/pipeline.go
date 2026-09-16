@@ -67,8 +67,10 @@ func (s *Service) CreatePipelineConfig(ctx context.Context, userID uint64, req d
 	if req.SeatKey == "" {
 		return nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "必须选择目标座位")
 	}
+	if req.AutoCheckin && req.CheckinInfoID == 0 {
+		return nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "开启自动签到时必须选择签到信息")
+	}
 
-	// Check if ID already exists
 	existing, err := dao.GetPipelineConfig(ctx, req.ID)
 	if err != nil {
 		return nil, err
@@ -77,55 +79,40 @@ func (s *Service) CreatePipelineConfig(ctx context.Context, userID uint64, req d
 		return nil, consts.NewError(http.StatusConflict, consts.CodeConflict, fmt.Sprintf("配置 ID「%s」已被占用，请更换其他名称", req.ID))
 	}
 
-	// Resolve cookie (could be auth link or raw cookie)
-	cookie, exp, err := s.resolveCookie(ctx, userID, req.Cookie)
+	occupy, info, checkinAcc, err := s.loadPipelineRefs(ctx, userID, req.AccountID, req.CheckinAccountID, req.CheckinInfoID, req.AutoCheckin)
 	if err != nil {
 		return nil, err
-	}
-
-	// Verify cookie by calling TraceInt
-	tpl, err := s.templates(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	_, err = s.api(ctx, userID).ListLibraries(ctx, tpl, cookie)
-	if err != nil {
-		return nil, consts.NewError(http.StatusBadRequest, consts.CodeTraceInt, fmt.Sprintf("TraceInt 登录凭据验证失败: %v", err))
-	}
-
-	var checkinToken string
-	var checkinExp *time.Time
-	if req.AutoCheckin {
-		checkinToken, checkinExp, err = s.resolveConfigCheckinToken(ctx, userID, req.CheckinToken)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	row := &entity.PipelineConfig{
 		ID:               req.ID,
 		UserID:           userID,
 		Name:             req.Name,
-		Cookie:           cookie,
-		CookieExpiresAt:  exp,
+		Cookie:           occupy.Cookie,
+		CookieExpiresAt:  occupy.CookieExpiresAt,
 		LibraryID:        req.LibraryID,
 		LibraryName:      req.LibraryName,
 		Floor:            req.Floor,
 		SeatKey:          req.SeatKey,
 		SeatName:         req.SeatName,
 		AutoCheckin:      req.AutoCheckin,
-		CheckinToken:     checkinToken,
-		CheckinExpiresAt: checkinExp,
-		BeaconUUID:       req.BeaconUUID,
-		Major:            req.Major,
-		Minor:            req.Minor,
-		Latitude:         req.Latitude,
-		Longitude:        req.Longitude,
+		CheckinToken:     checkinAcc.CheckinToken,
+		CheckinExpiresAt: checkinAcc.CheckinExpiresAt,
+		AccountID:        occupy.ID,
+		CheckinAccountID: req.CheckinAccountID,
+		CheckinInfoID:    req.CheckinInfoID,
+	}
+	if info != nil {
+		row.BeaconUUID = info.BeaconUUID
+		row.Major = info.Major
+		row.Minor = info.Minor
+		row.Latitude = info.Latitude
+		row.Longitude = info.Longitude
 	}
 	if err := dao.CreatePipelineConfig(ctx, row); err != nil {
 		return nil, err
 	}
-	dto := toPipelineDTO(row)
+	dto := s.toPipelineDTO(ctx, row)
 	return &dto, nil
 }
 
@@ -137,7 +124,7 @@ func (s *Service) ListPipelineConfigs(ctx context.Context, userID uint64) ([]do.
 	}
 	out := make([]do.PipelineConfigDTO, 0, len(rows))
 	for i := range rows {
-		out = append(out, toPipelineDTO(&rows[i]))
+		out = append(out, s.toPipelineDTO(ctx, &rows[i]))
 	}
 	return out, nil
 }
@@ -151,7 +138,7 @@ func (s *Service) GetPipelineConfig(ctx context.Context, userID uint64, id strin
 	if row == nil {
 		return nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到该一条龙配置")
 	}
-	dto := toPipelineDTO(row)
+	dto := s.toPipelineDTO(ctx, row)
 	return &dto, nil
 }
 
@@ -175,16 +162,12 @@ func applyPipelineConfigFields(row *entity.PipelineConfig, req *do.UpdatePipelin
 		row.SeatName = req.SeatName
 	}
 	row.AutoCheckin = req.AutoCheckin
-	if req.BeaconUUID != "" {
-		row.BeaconUUID = req.BeaconUUID
+	if req.AccountID != 0 {
+		row.AccountID = req.AccountID
 	}
-	row.Major = req.Major
-	row.Minor = req.Minor
-	if req.Latitude != "" {
-		row.Latitude = req.Latitude
-	}
-	if req.Longitude != "" {
-		row.Longitude = req.Longitude
+	row.CheckinAccountID = req.CheckinAccountID
+	if req.CheckinInfoID != 0 || !req.AutoCheckin {
+		row.CheckinInfoID = req.CheckinInfoID
 	}
 }
 
@@ -199,29 +182,29 @@ func (s *Service) UpdatePipelineConfig(ctx context.Context, userID uint64, id st
 	}
 
 	applyPipelineConfigFields(row, &req)
-
-	if strings.TrimSpace(req.Cookie) != "" {
-		cookie, exp, err := s.resolveCookie(ctx, userID, req.Cookie)
-		if err != nil {
-			return nil, err
-		}
-		row.Cookie = cookie
-		row.CookieExpiresAt = exp
+	if row.AutoCheckin && row.CheckinInfoID == 0 {
+		return nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "开启自动签到时必须选择签到信息")
 	}
-
-	if req.AutoCheckin && strings.TrimSpace(req.CheckinToken) != "" {
-		token, exp, err := s.resolveCheckinToken(ctx, userID, req.CheckinToken)
-		if err != nil {
-			return nil, err
-		}
-		row.CheckinToken = token
-		row.CheckinExpiresAt = exp
+	occupy, info, checkinAcc, err := s.loadPipelineRefs(ctx, userID, row.AccountID, row.CheckinAccountID, row.CheckinInfoID, row.AutoCheckin)
+	if err != nil {
+		return nil, err
+	}
+	row.Cookie = occupy.Cookie
+	row.CookieExpiresAt = occupy.CookieExpiresAt
+	row.CheckinToken = checkinAcc.CheckinToken
+	row.CheckinExpiresAt = checkinAcc.CheckinExpiresAt
+	if info != nil {
+		row.BeaconUUID = info.BeaconUUID
+		row.Major = info.Major
+		row.Minor = info.Minor
+		row.Latitude = info.Latitude
+		row.Longitude = info.Longitude
 	}
 
 	if err := dao.UpdatePipelineConfig(ctx, row); err != nil {
 		return nil, err
 	}
-	dto := toPipelineDTO(row)
+	dto := s.toPipelineDTO(ctx, row)
 	return &dto, nil
 }
 
@@ -230,30 +213,34 @@ func (s *Service) DeletePipelineConfig(ctx context.Context, userID uint64, id st
 	return dao.DeletePipelineConfig(ctx, id, userID)
 }
 
-func (s *Service) applyPipelineOverrides(ctx context.Context, id string, row *entity.PipelineConfig, overrideReq *do.RunPipelineRequest) {
+func (s *Service) applyPipelineOverrides(ctx context.Context, row *entity.PipelineConfig, occupy, checkinAcc *entity.Account, overrideReq *do.RunPipelineRequest) {
 	if overrideReq == nil {
 		return
 	}
-	if strings.TrimSpace(overrideReq.Cookie) != "" {
+	if occupy != nil && strings.TrimSpace(overrideReq.Cookie) != "" {
 		c, exp, err := s.resolveCookie(ctx, row.UserID, overrideReq.Cookie)
 		if err == nil {
-			row.Cookie = c
-			row.CookieExpiresAt = exp
-			_ = dao.UpdatePipelineCookie(ctx, id, c, exp)
+			occupy.Cookie = c
+			occupy.CookieExpiresAt = exp
+			_ = dao.UpdateAccount(ctx, occupy)
 		}
 	}
-	if strings.TrimSpace(overrideReq.CheckinToken) != "" {
+	if checkinAcc != nil && strings.TrimSpace(overrideReq.CheckinToken) != "" {
 		t, exp, err := s.resolveCheckinToken(ctx, row.UserID, overrideReq.CheckinToken)
 		if err == nil {
-			row.CheckinToken = t
-			row.CheckinExpiresAt = exp
-			_ = dao.UpdatePipelineCheckinToken(ctx, id, t, exp)
+			checkinAcc.CheckinToken = t
+			checkinAcc.CheckinExpiresAt = exp
+			_ = dao.UpdateAccount(ctx, checkinAcc)
 		}
 	}
 }
 
-func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client, tpl do.ProtocolTemplatesResponse, row *entity.PipelineConfig, id, execTime string) (*do.PipelineRunResult, bool) {
-	if strings.TrimSpace(row.Cookie) == "" {
+func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client, tpl do.ProtocolTemplatesResponse, row *entity.PipelineConfig, occupy, checkinAcc *entity.Account, id, execTime string) (*do.PipelineRunResult, bool) {
+	cookie := ""
+	if occupy != nil {
+		cookie = occupy.Cookie
+	}
+	if strings.TrimSpace(cookie) == "" {
 		return &do.PipelineRunResult{
 			Success:    false,
 			ConfigID:   id,
@@ -265,7 +252,7 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 		}, false
 	}
 
-	if _, err := cli.ListLibraries(ctx, tpl, row.Cookie); err != nil {
+	if _, err := cli.ListLibraries(ctx, tpl, cookie); err != nil {
 		return &do.PipelineRunResult{
 			Success:    false,
 			ConfigID:   id,
@@ -278,7 +265,11 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 	}
 
 	if row.AutoCheckin {
-		if strings.TrimSpace(row.CheckinToken) == "" {
+		token := ""
+		if checkinAcc != nil {
+			token = checkinAcc.CheckinToken
+		}
+		if strings.TrimSpace(token) == "" {
 			return &do.PipelineRunResult{
 				Success:    false,
 				ConfigID:   id,
@@ -289,7 +280,7 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 				ExecutedAt: execTime,
 			}, false
 		}
-		if _, err := cli.GetCheckInDevices(ctx, tpl, row.CheckinToken); err != nil {
+		if _, err := cli.GetCheckInDevices(ctx, tpl, token); err != nil {
 			return &do.PipelineRunResult{
 				Success:    false,
 				ConfigID:   id,
@@ -305,8 +296,12 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 	return nil, true
 }
 
-func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client, tpl do.ProtocolTemplatesResponse, row *entity.PipelineConfig, id, execTime string) (*do.PipelineRunResult, string, bool) {
-	layout, err := cli.GetLayout(ctx, tpl, row.Cookie, row.LibraryID)
+func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client, tpl do.ProtocolTemplatesResponse, row *entity.PipelineConfig, occupy *entity.Account, id, execTime string) (*do.PipelineRunResult, string, bool) {
+	cookie := ""
+	if occupy != nil {
+		cookie = occupy.Cookie
+	}
+	layout, err := cli.GetLayout(ctx, tpl, cookie, row.LibraryID)
 	if err != nil {
 		return &do.PipelineRunResult{ //nolint:nilerr // result encapsulates failure
 			Success:    false,
@@ -343,7 +338,7 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 		}, "", false
 	}
 
-	resOk, err := cli.ReserveSeat(ctx, tpl, row.Cookie, row.LibraryID, row.SeatKey)
+	resOk, err := cli.ReserveSeat(ctx, tpl, cookie, row.LibraryID, row.SeatKey)
 	if err != nil || !resOk {
 		errMsg := "未知原因"
 		if err != nil {
@@ -363,7 +358,18 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 	return nil, reservationStatus, true
 }
 
-func (s *Service) executeBeaconCheckin(ctx context.Context, cli *traceint.Client, tpl do.ProtocolTemplatesResponse, row *entity.PipelineConfig, id, execTime, reservationStatus string) *do.PipelineRunResult {
+func (s *Service) executeBeaconCheckin(ctx context.Context, cli *traceint.Client, tpl do.ProtocolTemplatesResponse, row *entity.PipelineConfig, checkinAcc *entity.Account, info *entity.CheckInInfo, id, execTime, reservationStatus string) *do.PipelineRunResult {
+	if info == nil || !beaconComplete(info) {
+		return &do.PipelineRunResult{
+			Success:           true,
+			ConfigID:          id,
+			Name:              row.Name,
+			ReservationStatus: reservationStatus,
+			CheckinStatus:     "签到信息不完整",
+			Message:           fmt.Sprintf("已成功占座 [%s %s]，请先补全签到信息的 Beacon 与坐标后再打卡", row.LibraryName, row.SeatName),
+			ExecutedAt:        execTime,
+		}
+	}
 	serverTime, err := cli.GetCheckInServerTime(ctx, tpl)
 	if err != nil {
 		return &do.PipelineRunResult{ //nolint:nilerr // result encapsulates failure
@@ -377,16 +383,21 @@ func (s *Service) executeBeaconCheckin(ctx context.Context, cli *traceint.Client
 		}
 	}
 
-	lat, _ := strconv.ParseFloat(row.Latitude, 64)
-	lng, _ := strconv.ParseFloat(row.Longitude, 64)
-	signReq := do.CheckInSignRequest{
-		BeaconUUID: row.BeaconUUID,
-		Major:      row.Major,
-		Minor:      row.Minor,
-		Latitude:   lat,
-		Longitude:  lng,
+	lat, _ := strconv.ParseFloat(info.Latitude, 64)
+	lng, _ := strconv.ParseFloat(info.Longitude, 64)
+	token := ""
+	if checkinAcc != nil {
+		token = checkinAcc.CheckinToken
 	}
-	signResp, err := cli.SignCheckIn(ctx, tpl, row.CheckinToken, signReq, serverTime)
+	signReq := do.CheckInSignRequest{
+		ExpectedLibraryID: row.LibraryID,
+		BeaconUUID:        info.BeaconUUID,
+		Major:             info.Major,
+		Minor:             info.Minor,
+		Latitude:          lat,
+		Longitude:         lng,
+	}
+	signResp, err := cli.SignCheckIn(ctx, tpl, token, signReq, serverTime)
 	if err != nil {
 		return &do.PipelineRunResult{ //nolint:nilerr // result encapsulates failure
 			Success:           true,
@@ -427,7 +438,34 @@ func (s *Service) RunPipeline(ctx context.Context, userID uint64, id string, ove
 		return nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, fmt.Sprintf("未找到一条龙配置「%s」", id))
 	}
 
-	s.applyPipelineOverrides(ctx, id, row, overrideReq)
+	if row.AccountID == 0 {
+		_ = s.backfillOnePipeline(ctx, row)
+		if userID != 0 {
+			row, err = dao.GetPipelineConfigByUser(ctx, id, userID)
+		} else {
+			row, err = dao.GetPipelineConfig(ctx, id)
+		}
+		if err != nil {
+			return nil, err
+		}
+		if row == nil || row.AccountID == 0 {
+			return &do.PipelineRunResult{
+				Success:    false,
+				ConfigID:   id,
+				Name:       id,
+				NeedAuth:   "LOGIN",
+				AuthURL:    consts.WeChatLoginAuthURL,
+				Message:    "TraceInt 账户未授权或凭据为空，请重新登录授权",
+				ExecutedAt: time.Now().Format("2006-01-02 15:04:05"),
+			}, nil
+		}
+	}
+
+	occupy, info, checkinAcc, err := s.loadPipelineRefs(ctx, row.UserID, row.AccountID, row.CheckinAccountID, row.CheckinInfoID, row.AutoCheckin)
+	if err != nil {
+		return nil, err
+	}
+	s.applyPipelineOverrides(ctx, row, occupy, checkinAcc, overrideReq)
 
 	execTime := time.Now().Format("2006-01-02 15:04:05")
 	tpl, err := s.templates(ctx, row.UserID)
@@ -436,11 +474,11 @@ func (s *Service) RunPipeline(ctx context.Context, userID uint64, id string, ove
 	}
 	cli := s.api(ctx, row.UserID)
 
-	if authErrRes, ok := s.validatePipelineAuth(ctx, cli, tpl, row, id, execTime); !ok {
+	if authErrRes, ok := s.validatePipelineAuth(ctx, cli, tpl, row, occupy, checkinAcc, id, execTime); !ok {
 		return authErrRes, nil
 	}
 
-	resErr, resStatus, ok := s.checkAndReserveSeat(ctx, cli, tpl, row, id, execTime)
+	resErr, resStatus, ok := s.checkAndReserveSeat(ctx, cli, tpl, row, occupy, id, execTime)
 	if !ok {
 		return resErr, nil
 	}
@@ -456,14 +494,29 @@ func (s *Service) RunPipeline(ctx context.Context, userID uint64, id string, ove
 		}, nil
 	}
 
-	return s.executeBeaconCheckin(ctx, cli, tpl, row, id, execTime, resStatus), nil
+	return s.executeBeaconCheckin(ctx, cli, tpl, row, checkinAcc, info, id, execTime, resStatus), nil
 }
 
 // HelperVerifySession probes a cookie and lists accessible libraries.
-func (s *Service) HelperVerifySession(ctx context.Context, userID uint64, rawInput string) ([]do.LibrarySummary, string, *time.Time, error) {
-	cookie, exp, err := s.resolveCookie(ctx, userID, rawInput)
-	if err != nil {
-		return nil, "", nil, err
+func (s *Service) HelperVerifySession(ctx context.Context, userID uint64, rawInput string, accountID uint64) ([]do.LibrarySummary, string, *time.Time, error) {
+	var cookie string
+	var exp *time.Time
+	var err error
+	if strings.TrimSpace(rawInput) == "" && accountID != 0 {
+		acc, accErr := dao.GetAccountByUser(ctx, accountID, userID)
+		if accErr != nil {
+			return nil, "", nil, accErr
+		}
+		if acc == nil {
+			return nil, "", nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到该账户")
+		}
+		cookie = acc.Cookie
+		exp = acc.CookieExpiresAt
+	} else {
+		cookie, exp, err = s.resolveCookie(ctx, userID, rawInput)
+		if err != nil {
+			return nil, "", nil, err
+		}
 	}
 	tpl, err := s.templates(ctx, userID)
 	if err != nil {
@@ -476,14 +529,50 @@ func (s *Service) HelperVerifySession(ctx context.Context, userID uint64, rawInp
 	return libs, cookie, exp, nil
 }
 
-// HelperGetLibraryLayout fetches seat layout for a library using provided cookie.
-func (s *Service) HelperGetLibraryLayout(ctx context.Context, userID uint64, cookie string, libID int) (*do.LibraryLayoutResponse, error) {
+// HelperGetLibraryLayout fetches seat layout for a library.
+// Explicit cookie wins, then account_id, then a still-valid stored session.
+func (s *Service) HelperGetLibraryLayout(ctx context.Context, userID uint64, cookie string, accountID uint64, libID int) (*do.LibraryLayoutResponse, error) {
+	if strings.TrimSpace(cookie) == "" && accountID != 0 {
+		acc, err := dao.GetAccountByUser(ctx, accountID, userID)
+		if err != nil {
+			return nil, err
+		}
+		if acc == nil {
+			return nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到该账户")
+		}
+		cookie = acc.Cookie
+	}
+	resolved, _, err := s.resolveCookiePreferStored(ctx, userID, cookie)
+	if err != nil {
+		return nil, err
+	}
 	tpl, err := s.templates(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	layout, err := s.api(ctx, userID).GetLayout(ctx, tpl, cookie, libID)
+	layout, err := s.api(ctx, userID).GetLayout(ctx, tpl, resolved, libID)
 	return layout, wrapTrace(err)
+}
+
+func (s *Service) resolveCookiePreferStored(ctx context.Context, userID uint64, rawInput string) (string, *time.Time, error) {
+	if strings.TrimSpace(rawInput) != "" {
+		return s.resolveCookie(ctx, userID, rawInput)
+	}
+	row, err := dao.GetSession(ctx, userID)
+	if err != nil {
+		return "", nil, err
+	}
+	if row == nil || strings.TrimSpace(row.Cookie) == "" {
+		return "", nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "请传入登录凭据或先完成 TraceInt 登录")
+	}
+	exp := traceint.CookieExpiration(row.Cookie)
+	if exp == nil {
+		exp = row.ExpiresAt
+	}
+	if exp != nil && !exp.After(time.Now()) {
+		return "", nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "登录凭据已过期，请传入 cookie")
+	}
+	return row.Cookie, exp, nil
 }
 
 // HelperVerifyCheckin validates checkin authorization token or code and retrieves device list.
@@ -551,14 +640,17 @@ func (s *Service) resolveCheckinToken(ctx context.Context, userID uint64, input 
 	return input, nil, nil
 }
 
-func toPipelineDTO(row *entity.PipelineConfig) do.PipelineConfigDTO {
+func (s *Service) toPipelineDTO(ctx context.Context, row *entity.PipelineConfig) do.PipelineConfigDTO {
 	if row == nil {
 		return do.PipelineConfigDTO{}
 	}
-	return do.PipelineConfigDTO{
+	dto := do.PipelineConfigDTO{
 		ID:               row.ID,
 		UserID:           row.UserID,
 		Name:             row.Name,
+		AccountID:        row.AccountID,
+		CheckinAccountID: row.CheckinAccountID,
+		CheckinInfoID:    row.CheckinInfoID,
 		HasCookie:        row.Cookie != "",
 		CookieMasked:     traceint.MaskCookie(row.Cookie),
 		CookieExpiresAt:  row.CookieExpiresAt,
@@ -578,4 +670,83 @@ func toPipelineDTO(row *entity.PipelineConfig) do.PipelineConfigDTO {
 		CreatedAt:        row.CreatedAt,
 		UpdatedAt:        row.UpdatedAt,
 	}
+	if row.AccountID != 0 {
+		if acc, err := dao.GetAccountByUser(ctx, row.AccountID, row.UserID); err == nil && acc != nil {
+			a := toAccountDTO(acc)
+			dto.Account = &a
+			dto.HasCookie = acc.Cookie != ""
+			dto.CookieMasked = traceint.MaskCookie(acc.Cookie)
+			dto.CookieExpiresAt = acc.CookieExpiresAt
+		}
+	}
+	checkinID := row.CheckinAccountID
+	if checkinID == 0 {
+		checkinID = row.AccountID
+	}
+	if checkinID != 0 {
+		if acc, err := dao.GetAccountByUser(ctx, checkinID, row.UserID); err == nil && acc != nil {
+			a := toAccountDTO(acc)
+			if row.CheckinAccountID != 0 {
+				dto.CheckinAccount = &a
+			}
+			dto.HasCheckinToken = acc.CheckinToken != ""
+			dto.CheckinExpiresAt = acc.CheckinExpiresAt
+		}
+	}
+	if row.CheckinInfoID != 0 {
+		if info, err := dao.GetCheckInInfoByUser(ctx, row.CheckinInfoID, row.UserID); err == nil && info != nil {
+			d := toCheckInInfoDTO(info)
+			dto.CheckinInfo = &d
+			dto.BeaconUUID = info.BeaconUUID
+			dto.Major = info.Major
+			dto.Minor = info.Minor
+			dto.Latitude = info.Latitude
+			dto.Longitude = info.Longitude
+		}
+	}
+	return dto
+}
+
+func (s *Service) loadPipelineRefs(ctx context.Context, userID, accountID, checkinAccountID, checkinInfoID uint64, autoCheckin bool) (*entity.Account, *entity.CheckInInfo, *entity.Account, error) {
+	if accountID == 0 {
+		return nil, nil, nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "必须选择占座账户")
+	}
+	occupy, err := dao.GetAccountByUser(ctx, accountID, userID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if occupy == nil {
+		return nil, nil, nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到占座账户")
+	}
+	checkinAcc := occupy
+	if checkinAccountID != 0 {
+		checkinAcc, err = dao.GetAccountByUser(ctx, checkinAccountID, userID)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if checkinAcc == nil {
+			return nil, nil, nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到打卡账户")
+		}
+	}
+	var info *entity.CheckInInfo
+	if checkinInfoID != 0 {
+		info, err = dao.GetCheckInInfoByUser(ctx, checkinInfoID, userID)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if info == nil {
+			return nil, nil, nil, consts.NewError(http.StatusNotFound, consts.CodeNotFound, "未找到签到信息")
+		}
+	} else if autoCheckin {
+		return nil, nil, nil, consts.NewError(http.StatusBadRequest, consts.CodeValidationError, "开启自动签到时必须选择签到信息")
+	}
+	return occupy, info, checkinAcc, nil
+}
+
+func beaconComplete(info *entity.CheckInInfo) bool {
+	if info == nil {
+		return false
+	}
+	_, ok := traceint.NormalizeUUID(info.BeaconUUID)
+	return ok && strings.TrimSpace(info.Latitude) != "" && strings.TrimSpace(info.Longitude) != ""
 }

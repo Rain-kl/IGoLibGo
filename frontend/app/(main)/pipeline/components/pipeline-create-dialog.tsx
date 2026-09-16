@@ -39,6 +39,8 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { IGoService } from '@/lib/services/igo';
 import type {
+  AccountDTO,
+  CheckInInfoDTO,
   CreatePipelineConfigRequest,
   LibraryLayoutResponse,
   LibrarySummary,
@@ -75,15 +77,12 @@ export function PipelineCreateDialog({
   );
   const [isVerifyingAuth, setIsVerifyingAuth] = React.useState(false);
 
-  // Auto Check-in toggle (no credentials required)
   const [autoCheckin, setAutoCheckin] = React.useState(false);
-
-  // Beacon parameters (Required when autoCheckin is true)
-  const [beaconLat, setBeaconLat] = React.useState('');
-  const [beaconLng, setBeaconLng] = React.useState('');
-  const [beaconMac, setBeaconMac] = React.useState('');
-  const [major, setMajor] = React.useState('');
-  const [minor, setMinor] = React.useState('');
+  const [accounts, setAccounts] = React.useState<AccountDTO[]>([]);
+  const [infos, setInfos] = React.useState<CheckInInfoDTO[]>([]);
+  const [occupyAccountId, setOccupyAccountId] = React.useState('');
+  const [checkinAccountId, setCheckinAccountId] = React.useState('');
+  const [checkinInfoId, setCheckinInfoId] = React.useState('');
 
   // Step 2: Venue and Seat Selection
   const [venueList, setVenueList] = React.useState<LibrarySummary[]>([]);
@@ -108,11 +107,17 @@ export function PipelineCreateDialog({
       setVerifiedCookie('');
       setCookieExpiresAt(null);
       setAutoCheckin(false);
-      setBeaconLat('');
-      setBeaconLng('');
-      setBeaconMac('');
-      setMajor('');
-      setMinor('');
+      setOccupyAccountId('');
+      setCheckinAccountId('');
+      setCheckinInfoId('');
+      IGoService.account
+        .list()
+        .then(setAccounts)
+        .catch(() => setAccounts([]));
+      IGoService.checkin
+        .listInfos()
+        .then(setInfos)
+        .catch(() => setInfos([]));
       setSelectedLibId(null);
       setSelectedSeatKey('');
       setSelectedSeatName('');
@@ -155,6 +160,14 @@ export function PipelineCreateDialog({
             setSelectedLibId(res.libraries[0].library_id);
           }
         }
+        const acc = await IGoService.account.create({
+          name: name.trim() || configId.trim() || '账户',
+          cookie: res.cookie || rawInput,
+        });
+        setOccupyAccountId(acc.id);
+        setAccounts((prev) =>
+          prev.some((a) => a.id === acc.id) ? prev : [...prev, acc],
+        );
         toast.success('TraceInt 凭据验证成功！');
         return res;
       }
@@ -180,6 +193,7 @@ export function PipelineCreateDialog({
         (authType === 'cookie' ? cookie : authUrl).trim();
       const layout = await IGoService.pipeline.helperGetLibraryLayout({
         cookie: targetCookie || undefined,
+        account_id: occupyAccountId || undefined,
         library_id: libId,
       });
       setCurrentLayout(layout);
@@ -204,42 +218,27 @@ export function PipelineCreateDialog({
       return;
     }
 
-    if (autoCheckin) {
-      if (
-        !beaconLat.trim() ||
-        !beaconLng.trim() ||
-        !beaconMac.trim() ||
-        major.trim() === '' ||
-        minor.trim() === ''
-      ) {
-        toast.error(t('dialog.beaconValidationError'));
-        return;
-      }
-      const majorNum = Number(major);
-      if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
-        toast.error(t('dialog.majorRangeError'));
-        return;
-      }
-      const minorNum = Number(minor);
-      if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
-        toast.error(t('dialog.minorRangeError'));
-        return;
-      }
-    } else {
-      if (major.trim() !== '') {
-        const majorNum = Number(major);
-        if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
-          toast.error(t('dialog.majorRangeError'));
-          return;
+    if (autoCheckin && !checkinInfoId) {
+      toast.error(t('dialog.selectCheckinInfo'));
+      return;
+    }
+    if (occupyAccountId) {
+      try {
+        const sessionRes = await IGoService.pipeline.helperVerifySession({
+          account_id: occupyAccountId,
+        });
+        if (sessionRes.libraries?.length) {
+          setVenueList(sessionRes.libraries);
+          const targetLibId =
+            selectedLibId || sessionRes.libraries[0].library_id;
+          setSelectedLibId(targetLibId);
+          await fetchLayoutForVenue(targetLibId);
         }
+        setStep(2);
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : '获取场馆失败');
       }
-      if (minor.trim() !== '') {
-        const minorNum = Number(minor);
-        if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
-          toast.error(t('dialog.minorRangeError'));
-          return;
-        }
-      }
+      return;
     }
 
     // Verify session
@@ -311,13 +310,8 @@ export function PipelineCreateDialog({
       return;
     }
 
-    const effectiveCookie =
-      verifiedCookie ||
-      (authType === 'cookie' ? cookie : authUrl).trim() ||
-      undefined;
-
-    if (!effectiveCookie) {
-      toast.error('创建一条龙自动化卡片必须录入登录凭据');
+    if (!occupyAccountId) {
+      toast.error('请选择或录入占座账户');
       return;
     }
 
@@ -326,18 +320,15 @@ export function PipelineCreateDialog({
       const req: CreatePipelineConfigRequest = {
         id: configId.trim(),
         name: name.trim(),
+        account_id: occupyAccountId,
+        checkin_account_id: checkinAccountId || undefined,
+        checkin_info_id: autoCheckin ? checkinInfoId : undefined,
         library_id: selectedVenue.library_id,
         library_name: selectedVenue.name,
         floor: selectedVenue.floor,
         seat_key: selectedSeatKey,
         seat_name: selectedSeatName,
         auto_checkin: autoCheckin,
-        cookie: effectiveCookie,
-        latitude: beaconLat.trim() || undefined,
-        longitude: beaconLng.trim() || undefined,
-        beacon_uuid: beaconMac.trim() || undefined,
-        major: major.trim() !== '' ? Number(major) : 0,
-        minor: minor.trim() !== '' ? Number(minor) : 0,
       };
       await IGoService.pipeline.createConfig(req);
       toast.success('一条龙自动化卡片创建成功！');
@@ -443,104 +434,70 @@ export function PipelineCreateDialog({
                 />
               </div>
 
-              {/* Beacon Parameters (Required when autoCheckin is true) */}
+              <div className='space-y-1.5'>
+                <Label className='text-xs font-semibold'>占座账户</Label>
+                <Select
+                  value={occupyAccountId}
+                  onValueChange={setOccupyAccountId}
+                >
+                  <SelectTrigger aria-label='占座账户'>
+                    <SelectValue placeholder='选择已有账户或在下方录入凭据创建' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {autoCheckin && (
                 <div className='space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3.5'>
-                  <div className='flex items-center justify-between'>
-                    <Label className='text-xs font-semibold text-foreground flex items-center gap-1.5'>
-                      <Radio className='size-3.5 text-primary' />
-                      <span>{t('dialog.customBeaconRequired')}</span>
-                    </Label>
-                    <span className='text-[10px] text-destructive font-medium'>
-                      {t('dialog.requiredTag')}
-                    </span>
-                  </div>
-
-                  <div className='grid grid-cols-2 gap-2.5'>
-                    <div className='space-y-1'>
-                      <Label
-                        htmlFor='create-beacon-lat'
-                        className='text-[11px] font-medium'
-                      >
-                        {t('dialog.latLabel')}{' '}
-                        <span className='text-destructive'>*</span>
-                      </Label>
-                      <Input
-                        id='create-beacon-lat'
-                        placeholder={t('dialog.latPlaceholder')}
-                        value={beaconLat}
-                        onChange={(e) => setBeaconLat(e.target.value)}
-                        className='h-8 text-xs font-mono'
-                      />
-                    </div>
-                    <div className='space-y-1'>
-                      <Label
-                        htmlFor='create-beacon-lng'
-                        className='text-[11px] font-medium'
-                      >
-                        {t('dialog.lngLabel')}{' '}
-                        <span className='text-destructive'>*</span>
-                      </Label>
-                      <Input
-                        id='create-beacon-lng'
-                        placeholder={t('dialog.lngPlaceholder')}
-                        value={beaconLng}
-                        onChange={(e) => setBeaconLng(e.target.value)}
-                        className='h-8 text-xs font-mono'
-                      />
-                    </div>
-                  </div>
-
-                  <div className='space-y-1'>
-                    <Label
-                      htmlFor='create-beacon-mac'
-                      className='text-[11px] font-medium'
+                  <div className='space-y-1.5'>
+                    <Label className='text-xs font-semibold'>签到信息</Label>
+                    <Select
+                      value={checkinInfoId}
+                      onValueChange={setCheckinInfoId}
                     >
-                      {t('dialog.macLabel')}{' '}
-                      <span className='text-destructive'>*</span>
-                    </Label>
-                    <Input
-                      id='create-beacon-mac'
-                      placeholder={t('dialog.macPlaceholder')}
-                      value={beaconMac}
-                      onChange={(e) => setBeaconMac(e.target.value)}
-                      className='h-8 text-xs font-mono'
-                    />
+                      <SelectTrigger aria-label='签到信息'>
+                        <SelectValue placeholder='选择签到信息' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {infos.map((info) => (
+                          <SelectItem key={info.id} value={info.id}>
+                            {info.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <a
+                      href='/checkin'
+                      className='text-xs text-primary hover:underline'
+                    >
+                      去远程签到页新建
+                    </a>
                   </div>
-
-                  <div className='grid grid-cols-2 gap-2.5'>
-                    <div className='space-y-1'>
-                      <Label
-                        htmlFor='create-beacon-major'
-                        className='text-[11px] font-medium'
-                      >
-                        {t('dialog.majorLabel')}{' '}
-                        <span className='text-destructive'>*</span>
-                      </Label>
-                      <Input
-                        id='create-beacon-major'
-                        placeholder={t('dialog.majorPlaceholder')}
-                        value={major}
-                        onChange={(e) => setMajor(e.target.value)}
-                        className='h-8 text-xs font-mono'
-                      />
-                    </div>
-                    <div className='space-y-1'>
-                      <Label
-                        htmlFor='create-beacon-minor'
-                        className='text-[11px] font-medium'
-                      >
-                        {t('dialog.minorLabel')}{' '}
-                        <span className='text-destructive'>*</span>
-                      </Label>
-                      <Input
-                        id='create-beacon-minor'
-                        placeholder={t('dialog.minorPlaceholder')}
-                        value={minor}
-                        onChange={(e) => setMinor(e.target.value)}
-                        className='h-8 text-xs font-mono'
-                      />
-                    </div>
+                  <div className='space-y-1.5'>
+                    <Label className='text-xs font-semibold'>
+                      打卡账户（可选，默认与占座相同）
+                    </Label>
+                    <Select
+                      value={checkinAccountId}
+                      onValueChange={setCheckinAccountId}
+                    >
+                      <SelectTrigger aria-label='打卡账户'>
+                        <SelectValue placeholder='与占座账户相同' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accounts.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}

@@ -137,7 +137,7 @@ func (ctrl *Controller) HelperVerifySession(c *gin.Context) {
 		if !ok {
 			return
 		}
-		libs, cookie, exp, err := ctrl.svc.HelperVerifySession(c.Request.Context(), userID, req.Cookie)
+		libs, cookie, exp, err := ctrl.svc.HelperVerifySession(c.Request.Context(), userID, req.Cookie, req.AccountID)
 		if ctrl.reply(c, err) {
 			return
 		}
@@ -150,12 +150,13 @@ func (ctrl *Controller) HelperVerifySession(c *gin.Context) {
 	})
 }
 
-// HelperGetLibraryLayout loads the seat layout for a library using the supplied cookie.
+// HelperGetLibraryLayout loads the seat layout for a library.
+// Cookie, account_id, or a still-valid stored TraceInt session may supply credentials.
 // @Summary 辅助接口：获取场馆座位排布图
 // @Tags IGo-Pipeline
 // @Accept json
 // @Produce json
-// @Param body body do.HelperLibraryLayoutRequest true "场馆与凭据"
+// @Param body body do.HelperLibraryLayoutRequest true "场馆；cookie / account_id 可选，否则用未过期已存凭证"
 // @Success 200 {object} response.Any{data=do.LibraryLayoutResponse}
 // @Router /api/v1/igo/pipeline/library-layout [post]
 func (ctrl *Controller) HelperGetLibraryLayout(c *gin.Context) {
@@ -164,7 +165,7 @@ func (ctrl *Controller) HelperGetLibraryLayout(c *gin.Context) {
 		if !ok {
 			return
 		}
-		layout, err := ctrl.svc.HelperGetLibraryLayout(c.Request.Context(), userID, req.Cookie, req.LibraryID)
+		layout, err := ctrl.svc.HelperGetLibraryLayout(c.Request.Context(), userID, req.Cookie, req.AccountID, req.LibraryID)
 		ctrl.jsonOK(c, layout, err)
 	})
 }

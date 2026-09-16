@@ -55,6 +55,19 @@ func UpsertCheckInSession(ctx context.Context, row *entity.CheckInSession) error
 	return upsertByUser(ctx, &row.ID, row, []string{"token", "saved_at", "expires_at", "can_auto_restore", colUpdatedAt})
 }
 
+// ListAllCheckInSessions returns every stored check-in session.
+func ListAllCheckInSessions(ctx context.Context) ([]entity.CheckInSession, error) {
+	gdb, err := db(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var rows []entity.CheckInSession
+	if err := gdb.Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
 // DeleteCheckInSession removes the remote-check-in session for a user.
 func DeleteCheckInSession(ctx context.Context, userID uint64) error {
 	gdb, err := db(ctx)

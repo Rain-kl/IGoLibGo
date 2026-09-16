@@ -40,6 +40,8 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { IGoService } from '@/lib/services/igo';
 import type {
+  AccountDTO,
+  CheckInInfoDTO,
   LibraryLayoutResponse,
   LibrarySummary,
   PipelineConfigDTO,
@@ -77,12 +79,11 @@ export function PipelineEditDialog({
   const [seatKey, setSeatKey] = React.useState('');
   const [seatName, setSeatName] = React.useState('');
 
-  // Beacon Settings
-  const [beaconLat, setBeaconLat] = React.useState('');
-  const [beaconLng, setBeaconLng] = React.useState('');
-  const [beaconMac, setBeaconMac] = React.useState('');
-  const [major, setMajor] = React.useState('');
-  const [minor, setMinor] = React.useState('');
+  const [accounts, setAccounts] = React.useState<AccountDTO[]>([]);
+  const [infos, setInfos] = React.useState<CheckInInfoDTO[]>([]);
+  const [occupyAccountId, setOccupyAccountId] = React.useState('');
+  const [checkinAccountId, setCheckinAccountId] = React.useState('');
+  const [checkinInfoId, setCheckinInfoId] = React.useState('');
 
   // Optional Venue/Seat Picker
   const [showVenuePicker, setShowVenuePicker] = React.useState(false);
@@ -115,19 +116,17 @@ export function PipelineEditDialog({
       setFloor(config.floor || '');
       setSeatKey(config.seat_key);
       setSeatName(config.seat_name);
-      setBeaconLat(config.latitude || '');
-      setBeaconLng(config.longitude || '');
-      setBeaconMac(config.beacon_uuid || '');
-      setMajor(
-        config.major !== undefined && config.major !== null && config.major > 0
-          ? String(config.major)
-          : '',
-      );
-      setMinor(
-        config.minor !== undefined && config.minor !== null && config.minor > 0
-          ? String(config.minor)
-          : '',
-      );
+      setOccupyAccountId(config.account_id || '');
+      setCheckinAccountId(config.checkin_account_id || '');
+      setCheckinInfoId(config.checkin_info_id || '');
+      IGoService.account
+        .list()
+        .then(setAccounts)
+        .catch(() => setAccounts([]));
+      IGoService.checkin
+        .listInfos()
+        .then(setInfos)
+        .catch(() => setInfos([]));
 
       // Reset optional sections
       setShowVenuePicker(false);
@@ -243,65 +242,24 @@ export function PipelineEditDialog({
       toast.error('座位名称不能为空');
       return;
     }
-    if (autoCheckin) {
-      if (
-        !beaconLat.trim() ||
-        !beaconLng.trim() ||
-        !beaconMac.trim() ||
-        major.trim() === '' ||
-        minor.trim() === ''
-      ) {
-        toast.error(t('dialog.beaconValidationError'));
-        return;
-      }
-      const majorNum = Number(major);
-      if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
-        toast.error(t('dialog.majorRangeError'));
-        return;
-      }
-      const minorNum = Number(minor);
-      if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
-        toast.error(t('dialog.minorRangeError'));
-        return;
-      }
-    } else {
-      if (major.trim() !== '') {
-        const majorNum = Number(major);
-        if (isNaN(majorNum) || majorNum < 0 || majorNum > 65535) {
-          toast.error(t('dialog.majorRangeError'));
-          return;
-        }
-      }
-      if (minor.trim() !== '') {
-        const minorNum = Number(minor);
-        if (isNaN(minorNum) || minorNum < 0 || minorNum > 65535) {
-          toast.error(t('dialog.minorRangeError'));
-          return;
-        }
-      }
+    if (autoCheckin && !checkinInfoId) {
+      toast.error(t('dialog.selectCheckinInfo'));
+      return;
     }
-
-    const effectiveCookie =
-      verifiedCookie ||
-      (showAuthUpdate && (authType === 'cookie' ? cookie : authUrl).trim()) ||
-      undefined;
 
     setIsSaving(true);
     try {
       const req: UpdatePipelineConfigRequest = {
         name: name.trim(),
+        account_id: occupyAccountId || undefined,
+        checkin_account_id: checkinAccountId || undefined,
+        checkin_info_id: autoCheckin ? checkinInfoId : undefined,
         library_id: libraryId,
         library_name: libraryName,
         floor,
         seat_key: seatKey.trim(),
         seat_name: seatName.trim(),
         auto_checkin: autoCheckin,
-        cookie: effectiveCookie,
-        latitude: beaconLat.trim() || undefined,
-        longitude: beaconLng.trim() || undefined,
-        beacon_uuid: beaconMac.trim() || undefined,
-        major: major.trim() !== '' ? Number(major) : 0,
-        minor: minor.trim() !== '' ? Number(minor) : 0,
       };
 
       await IGoService.pipeline.updateConfig(config.id, req);
@@ -570,87 +528,66 @@ export function PipelineEditDialog({
             )}
           </div>
 
-          {/* Section 3: Beacon Settings (Required when autoCheckin is true) */}
-          {autoCheckin && (
-            <div className='space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3.5'>
-              <div className='flex items-center justify-between'>
-                <span className='text-xs font-semibold flex items-center gap-1.5'>
-                  <Radio className='size-3.5 text-primary' />
-                  {t('dialog.customBeaconRequired')}
-                </span>
-                <span className='text-[10px] text-destructive font-medium'>
-                  {t('dialog.requiredTag')}
-                </span>
-              </div>
-
-              <div className='grid grid-cols-2 gap-2.5'>
-                <div className='space-y-1'>
-                  <Label className='text-[11px] text-muted-foreground'>
-                    {t('dialog.latLabel')}
-                    <span className='text-destructive ml-0.5'>*</span>
-                  </Label>
-                  <Input
-                    placeholder={t('dialog.latPlaceholder')}
-                    value={beaconLat}
-                    onChange={(e) => setBeaconLat(e.target.value)}
-                    className='h-8 text-xs font-mono'
-                  />
-                </div>
-                <div className='space-y-1'>
-                  <Label className='text-[11px] text-muted-foreground'>
-                    {t('dialog.lngLabel')}
-                    <span className='text-destructive ml-0.5'>*</span>
-                  </Label>
-                  <Input
-                    placeholder={t('dialog.lngPlaceholder')}
-                    value={beaconLng}
-                    onChange={(e) => setBeaconLng(e.target.value)}
-                    className='h-8 text-xs font-mono'
-                  />
-                </div>
-              </div>
-
-              <div className='space-y-1'>
-                <Label className='text-[11px] text-muted-foreground'>
-                  {t('dialog.macLabel')}
-                  <span className='text-destructive ml-0.5'>*</span>
-                </Label>
-                <Input
-                  placeholder={t('dialog.macPlaceholder')}
-                  value={beaconMac}
-                  onChange={(e) => setBeaconMac(e.target.value)}
-                  className='h-8 text-xs font-mono'
-                />
-              </div>
-
-              <div className='grid grid-cols-2 gap-2.5'>
-                <div className='space-y-1'>
-                  <Label className='text-[11px] text-muted-foreground'>
-                    {t('dialog.majorLabel')}
-                    <span className='text-destructive ml-0.5'>*</span>
-                  </Label>
-                  <Input
-                    placeholder={t('dialog.majorPlaceholder')}
-                    value={major}
-                    onChange={(e) => setMajor(e.target.value)}
-                    className='h-8 text-xs font-mono'
-                  />
-                </div>
-                <div className='space-y-1'>
-                  <Label className='text-[11px] text-muted-foreground'>
-                    {t('dialog.minorLabel')}
-                    <span className='text-destructive ml-0.5'>*</span>
-                  </Label>
-                  <Input
-                    placeholder={t('dialog.minorPlaceholder')}
-                    value={minor}
-                    onChange={(e) => setMinor(e.target.value)}
-                    className='h-8 text-xs font-mono'
-                  />
-                </div>
-              </div>
+          <div className='space-y-3 rounded-lg border border-border/40 p-3.5'>
+            <div className='space-y-1.5'>
+              <Label>占座账户</Label>
+              <Select
+                value={occupyAccountId}
+                onValueChange={setOccupyAccountId}
+              >
+                <SelectTrigger aria-label='占座账户'>
+                  <SelectValue placeholder='选择占座账户' />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
+            {autoCheckin && (
+              <>
+                <div className='space-y-1.5'>
+                  <Label>签到信息</Label>
+                  <Select
+                    value={checkinInfoId}
+                    onValueChange={setCheckinInfoId}
+                  >
+                    <SelectTrigger aria-label='签到信息'>
+                      <SelectValue placeholder='选择签到信息' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {infos.map((info) => (
+                        <SelectItem key={info.id} value={info.id}>
+                          {info.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className='space-y-1.5'>
+                  <Label>打卡账户（可选）</Label>
+                  <Select
+                    value={checkinAccountId}
+                    onValueChange={setCheckinAccountId}
+                  >
+                    <SelectTrigger aria-label='打卡账户'>
+                      <SelectValue placeholder='与占座账户相同' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Section 4: Login Credentials Status & Optional Update */}
           <div className='space-y-3 rounded-lg border border-border/40 p-3.5 bg-muted/10'>

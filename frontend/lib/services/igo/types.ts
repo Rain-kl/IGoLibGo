@@ -249,6 +249,66 @@ export interface CheckInDeviceResponse {
   beacon_uuids: string[];
 }
 
+export interface AccountDTO {
+  id: string;
+  name: string;
+  has_cookie: boolean;
+  cookie_masked?: string;
+  cookie_expires_at?: string;
+  has_checkin_token: boolean;
+  checkin_expires_at?: string;
+  nickname: string;
+  school: string;
+  student_name: string;
+  student_number: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateAccountRequest {
+  name: string;
+  cookie?: string;
+  checkin_token?: string;
+}
+
+export interface AccountCheckinAuthResponse {
+  account: AccountDTO;
+  device?: CheckInDeviceResponse;
+}
+
+export interface CheckInInfoDTO {
+  id: string;
+  name: string;
+  beacon_uuid: string;
+  major: number;
+  minor: number;
+  latitude: string;
+  longitude: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCheckInInfoRequest {
+  name: string;
+  beacon_uuid?: string;
+  major?: number;
+  minor?: number;
+  latitude?: string;
+  longitude?: string;
+}
+
+export interface SignCheckInInfoRequest {
+  account_id: string;
+  expected_library_id: number;
+  expected_library_name?: string;
+}
+
+export interface CheckInNeedAuth {
+  need_auth: 'CHECKIN' | 'LOGIN';
+  account_id: string;
+  auth_url: string;
+}
+
 export interface CheckInSignRequest {
   expected_library_id: number;
   expected_library_name?: string;
@@ -381,6 +441,12 @@ export interface BackupImportRequest {
 export interface PipelineConfigDTO {
   id: string;
   name: string;
+  account_id?: string;
+  checkin_account_id?: string;
+  checkin_info_id?: string;
+  account?: AccountDTO;
+  checkin_account?: AccountDTO;
+  checkin_info?: CheckInInfoDTO;
   cookie?: string;
   cookie_masked?: string;
   has_cookie?: boolean;
@@ -406,36 +472,28 @@ export interface PipelineConfigDTO {
 export interface CreatePipelineConfigRequest {
   id: string;
   name: string;
-  cookie: string;
+  account_id: string;
+  checkin_account_id?: string;
+  checkin_info_id?: string;
   library_id: number;
   library_name: string;
   floor: string;
   seat_key: string;
   seat_name: string;
   auto_checkin: boolean;
-  checkin_token?: string;
-  beacon_uuid?: string;
-  major?: number;
-  minor?: number;
-  latitude?: string;
-  longitude?: string;
 }
 
 export interface UpdatePipelineConfigRequest {
   name?: string;
-  cookie?: string;
+  account_id?: string;
+  checkin_account_id?: string;
+  checkin_info_id?: string;
   library_id?: number;
   library_name?: string;
   floor?: string;
   seat_key?: string;
   seat_name?: string;
   auto_checkin?: boolean;
-  checkin_token?: string;
-  beacon_uuid?: string;
-  major?: number;
-  minor?: number;
-  latitude?: string;
-  longitude?: string;
 }
 
 export interface RunPipelineRequest {
@@ -457,6 +515,7 @@ export interface PipelineExecutionResult {
 
 export interface PipelineHelperVerifySessionRequest {
   cookie?: string;
+  account_id?: string;
   auth_code?: string;
   auth_url?: string;
 }

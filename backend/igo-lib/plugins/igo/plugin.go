@@ -61,7 +61,6 @@ func (p *Plugin) Name() string {
 // Apply registers migrations, DAO, and authenticated /api/v1/igo routes.
 func (p *Plugin) Apply(ctx *core.Context) error {
 	ctx.Migrations().Register(consts.PluginName, MigrationsFS)
-	ctx.Bind(dao.SetDBService)
 
 	authSvc, err := ctx.Inject[contracts.AuthService]()
 	if err != nil || authSvc == nil {
@@ -75,6 +74,12 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	if p.svc == nil {
 		p.svc = service.New()
 	}
+	ctx.Bind(func(db contracts.DBService) {
+		dao.SetDBService(db)
+		if err := p.svc.BackfillAccountsAndCheckinInfos(ctx.GoContext()); err != nil {
+			fmt.Printf("[igo] account backfill: %v\n", err)
+		}
+	})
 	p.svc.SetEmitter(ctx.Events())
 	if taskSvc, err := ctx.Inject[contracts.TaskService](); err == nil && taskSvc != nil {
 		p.svc.SetTasks(taskSvc)
@@ -149,6 +154,21 @@ func (p *Plugin) Apply(ctx *core.Context) error {
 	g.PUT("/global-leak/blacklist", ctrl.SaveGlobalLeakBlacklist)
 	g.GET("/global-leak/selected-libraries", ctrl.GetGlobalLeakSelectedLibraries)
 	g.PUT("/global-leak/selected-libraries", ctrl.SaveGlobalLeakSelectedLibraries)
+
+	g.GET("/accounts", ctrl.ListAccounts)
+	g.POST("/accounts", ctrl.CreateAccount)
+	g.GET("/accounts/:id", ctrl.GetAccount)
+	g.PUT("/accounts/:id", ctrl.UpdateAccount)
+	g.DELETE("/accounts/:id", ctrl.DeleteAccount)
+	g.POST("/accounts/:id/login", ctrl.LoginAccount)
+	g.POST("/accounts/:id/checkin-auth", ctrl.AuthorizeAccountCheckin)
+
+	g.GET("/checkin/infos", ctrl.ListCheckInInfos)
+	g.POST("/checkin/infos", ctrl.CreateCheckInInfo)
+	g.GET("/checkin/infos/:id", ctrl.GetCheckInInfo)
+	g.PUT("/checkin/infos/:id", ctrl.UpdateCheckInInfo)
+	g.DELETE("/checkin/infos/:id", ctrl.DeleteCheckInInfo)
+	g.POST("/checkin/infos/:id/sign", ctrl.SignCheckInInfo)
 
 	g.GET("/checkin/session", ctrl.GetCheckInSession)
 	g.GET("/checkin/auth-qrcode", ctrl.GetCheckInAuthQRCode)

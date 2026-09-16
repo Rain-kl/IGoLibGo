@@ -60,6 +60,72 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
         }),
       });
     });
+
+    await page.route('**/api/v1/igo/accounts', async (route) => {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON() || {};
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: {
+              id: '1',
+              name: body.name || '考研号',
+              has_cookie: true,
+              has_checkin_token: true,
+              nickname: '',
+              school: '',
+              student_name: '',
+              student_number: '',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: '1',
+              name: '考研号',
+              has_cookie: true,
+              has_checkin_token: true,
+              nickname: '',
+              school: '',
+              student_name: '',
+              student_number: '',
+              created_at: '2026-09-16T00:00:00Z',
+              updated_at: '2026-09-16T00:00:00Z',
+            },
+          ],
+        }),
+      });
+    });
+    await page.route('**/api/v1/igo/checkin/infos', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: '10',
+              name: '主馆签到',
+              beacon_uuid: 'FDA50693-A4E2-4FB1-AFCF-C6EB07647825',
+              major: 10001,
+              minor: 1980,
+              latitude: '31.2304',
+              longitude: '121.4737',
+              created_at: '2026-09-16T00:00:00Z',
+              updated_at: '2026-09-16T00:00:00Z',
+            },
+          ],
+        }),
+      });
+    });
   });
 
   test('renders pipeline page and shows empty state when no cards exist', async ({
@@ -134,13 +200,9 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
         expect(postData.id).toBe('my_seat_202');
         expect(postData.name).toBe('二楼靠窗202');
         expect(postData.auto_checkin).toBe(true);
-        expect(postData.latitude).toBe('31.2304');
-        expect(postData.longitude).toBe('121.4737');
-        expect(postData.beacon_uuid).toBe(
-          'FDA50693-A4E2-4FB1-AFCF-C6EB07647825',
-        );
-        expect(postData.major).toBe(10001);
-        expect(postData.minor).toBe(1980);
+        expect(postData.account_id).toBeTruthy();
+        expect(postData.checkin_info_id).toBe('10');
+        expect(postData.beacon_uuid).toBeUndefined();
         await route.fulfill({
           status: 201,
           contentType: 'application/json',
@@ -180,9 +242,10 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
       const postData = route.request().postDataJSON();
       // Enforce real backend contract: empty cookie must fail with 400 validation error
       if (
-        !postData?.cookie ||
-        typeof postData.cookie !== 'string' ||
-        postData.cookie.trim() === ''
+        !postData?.account_id &&
+        (!postData?.cookie ||
+          typeof postData.cookie !== 'string' ||
+          postData.cookie.trim() === '')
       ) {
         await route.fulfill({
           status: 400,
@@ -231,9 +294,10 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await page.route('**/api/v1/igo/pipeline/library-layout', async (route) => {
       const postData = route.request().postDataJSON();
       if (
-        !postData?.cookie ||
-        typeof postData.cookie !== 'string' ||
-        postData.cookie.trim() === ''
+        !postData?.account_id &&
+        (!postData?.cookie ||
+          typeof postData.cookie !== 'string' ||
+          postData.cookie.trim() === '')
       ) {
         await route.fulfill({
           status: 400,
@@ -294,25 +358,12 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await page.getByPlaceholder(/例如: seat01/i).fill('my_seat_202');
     await page.getByPlaceholder(/例如: 张三的考研专座/i).fill('二楼靠窗202');
 
-    // Toggle auto-checkin switch in Step 1 (no credentials required)
     await page.getByRole('switch').click();
-
-    // Fill in required beacon parameters when auto-checkin is enabled
-    await page.locator('#create-beacon-lat').fill('31.2304');
-    await page.locator('#create-beacon-lng').fill('121.4737');
-    await page
-      .locator('#create-beacon-mac')
-      .fill('FDA50693-A4E2-4FB1-AFCF-C6EB07647825');
-    await page.locator('#create-beacon-major').fill('10001');
-    await page.locator('#create-beacon-minor').fill('1980');
-
-    // DO NOT switch tab: Stay on default "微信授权链接" tab!
-    // Paste full real WeChat authorization redirect URL with code parameter
-    const sampleWeChatAuthUrl =
-      'https://web.traceint.com/web/index.html?code=081a2b3c4d5e6f7a8b9c0d1e2f3a4b5c&state=STATE';
-    await page
-      .getByPlaceholder(/粘贴以 open.weixin.qq.com 开头的授权链接或 Code/i)
-      .fill(sampleWeChatAuthUrl);
+    await expect(page.locator('#create-beacon-lat')).toHaveCount(0);
+    await page.getByLabel('占座账户').click();
+    await page.getByRole('option', { name: '考研号' }).click();
+    await page.getByLabel('签到信息').click();
+    await page.getByRole('option', { name: '主馆签到' }).click();
 
     // Click "下一步" -> triggers verify-session with non-empty payload
     await page.getByRole('button', { name: /下一步/i }).click();
@@ -368,13 +419,8 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
           updatedAutoCheckin = postData.auto_checkin;
           // Verify no cookie was required or passed when editing without changing credentials
           expect(postData.auto_checkin).toBe(true);
-          expect(postData.latitude).toBe('31.2304');
-          expect(postData.longitude).toBe('121.4737');
-          expect(postData.beacon_uuid).toBe(
-            'FDA50693-A4E2-4FB1-AFCF-C6EB07647825',
-          );
-          expect(postData.major).toBe(10001);
-          expect(postData.minor).toBe(1980);
+          expect(postData.checkin_info_id).toBe('10');
+          expect(postData.beacon_uuid).toBeUndefined();
           await route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -388,11 +434,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
                 seat_key: postData.seat_key,
                 seat_name: postData.seat_name,
                 auto_checkin: postData.auto_checkin,
-                latitude: postData.latitude,
-                longitude: postData.longitude,
-                beacon_uuid: postData.beacon_uuid,
-                major: postData.major,
-                minor: postData.minor,
+                checkin_info_id: postData.checkin_info_id,
                 updated_at: new Date().toISOString(),
               },
             }),
@@ -420,17 +462,9 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     const nameInput = page.getByPlaceholder(/例如: 张三的考研专座/i);
     await nameInput.fill('二楼靠窗202(已更新)');
 
-    // Toggle auto-checkin switch
     await page.getByRole('switch').click();
-
-    // Fill in required beacon parameters when auto-checkin is toggled on
-    await page.getByPlaceholder(/如 31.2304/i).fill('31.2304');
-    await page.getByPlaceholder(/如 121.4737/i).fill('121.4737');
-    await page
-      .getByPlaceholder(/如 FDA50693-A4E2-4FB1-AFCF-C6EB07647825/i)
-      .fill('FDA50693-A4E2-4FB1-AFCF-C6EB07647825');
-    await page.getByPlaceholder(/如 10001 \(0-65535\)/i).fill('10001');
-    await page.getByPlaceholder(/如 1980 \(0-65535\)/i).fill('1980');
+    await page.getByLabel('签到信息').click();
+    await page.getByRole('option', { name: '主馆签到' }).click();
 
     // Click "保存修改" directly without entering credentials
     await page.getByRole('button', { name: /保存修改/i }).click();
@@ -912,7 +946,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await expect(page.getByText('公共阅览室（一）')).toBeVisible();
   });
 
-  test('validates and blocks advancing in create dialog when auto-checkin is enabled with missing or invalid beacon parameters', async ({
+  test('validates and blocks advancing in create dialog when auto-checkin is enabled without a check-in info', async ({
     page,
   }) => {
     await page.route('**/api/v1/igo/pipeline/configs', async (route) => {
@@ -931,45 +965,11 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
 
     await page.getByPlaceholder(/例如: seat01/i).fill('seat_validate');
     await page.getByPlaceholder(/例如: 张三的考研专座/i).fill('校验测试');
-
-    // Enable auto-checkin
+    await page.getByLabel('占座账户').click();
+    await page.getByRole('option', { name: '考研号' }).click();
     await page.getByRole('switch').click();
-
-    // Fill valid auth code
-    await page
-      .getByPlaceholder(/粘贴以 open.weixin.qq.com 开头的授权链接或 Code/i)
-      .fill('081a2b3c4d5e6f7a8b9c0d1e2f3a4b5c');
-
-    // 1. Missing beacon fields -> click "下一步"
     await page.getByRole('button', { name: /下一步/i }).click();
-    await expect(
-      page.getByText(
-        '开启自动签到时，必须填写完整的 Beacon 打卡参数（纬度、经度、MAC/UUID、Major、Minor）',
-      ),
-    ).toBeVisible();
-
-    // 2. Fill lat, lng, mac, but major out of range
-    await page.locator('#create-beacon-lat').fill('31.2304');
-    await page.locator('#create-beacon-lng').fill('121.4737');
-    await page.locator('#create-beacon-mac').fill('AA:BB:CC:DD:EE:FF');
-    await page.locator('#create-beacon-major').fill('70000');
-    await page.locator('#create-beacon-minor').fill('100');
-
-    await page.getByRole('button', { name: /下一步/i }).click();
-    await expect(
-      page.getByText('Major 必须介于 0 和 65535 之间'),
-    ).toBeVisible();
-
-    // 3. Fill valid major, but negative minor
-    await page.locator('#create-beacon-major').fill('10001');
-    await page.locator('#create-beacon-minor').fill('-5');
-
-    await page.getByRole('button', { name: /下一步/i }).click();
-    await expect(
-      page.getByText('Minor 必须介于 0 和 65535 之间'),
-    ).toBeVisible();
-
-    // Verify still on Step 1
+    await expect(page.getByText('请选择签到信息')).toBeVisible();
     await expect(page.getByText('基本信息与凭据')).toBeVisible();
   });
 
@@ -1009,11 +1009,7 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     // Leave beacon fields empty and click save
     await page.getByRole('button', { name: /保存修改/i }).click();
 
-    await expect(
-      page.getByText(
-        '开启自动签到时，必须填写完整的 Beacon 打卡参数（纬度、经度、MAC/UUID、Major、Minor）',
-      ),
-    ).toBeVisible();
+    await expect(page.getByText('请选择签到信息')).toBeVisible();
     // Edit dialog remains open
     await expect(page.getByText('编辑一条龙自动化配置')).toBeVisible();
   });
@@ -1072,35 +1068,17 @@ test.describe('All-in-One Automation Pipeline E2E', () => {
     await page.getByLabel(/操作|actions/i).click();
     await page.getByRole('menuitem', { name: /编辑配置/i }).click();
 
-    // 1. When auto-checkin is disabled, beacon inputs should NOT be visible
-    await expect(page.getByPlaceholder(/如 31.2304/i)).not.toBeVisible();
-    await expect(
-      page.getByPlaceholder(/如 10001 \(0-65535\)/i),
-    ).not.toBeVisible();
-
-    // 2. Toggle switch ON -> Beacon parameters become visible
+    await expect(page.getByLabel('签到信息')).toHaveCount(0);
     await page.getByRole('switch').click();
-    await expect(page.getByPlaceholder(/如 31.2304/i)).toBeVisible();
-    await expect(page.getByPlaceholder(/如 10001 \(0-65535\)/i)).toBeVisible();
-
-    // Fill in beacon parameters
-    await page.getByPlaceholder(/如 31.2304/i).fill('31.2304');
-    await page.getByPlaceholder(/如 121.4737/i).fill('121.4737');
-    await page
-      .getByPlaceholder(/如 FDA50693-A4E2-4FB1-AFCF-C6EB07647825/i)
-      .fill('FDA50693-A4E2-4FB1-AFCF-C6EB07647825');
-    await page.getByPlaceholder(/如 10001 \(0-65535\)/i).fill('10001');
-    await page.getByPlaceholder(/如 1980 \(0-65535\)/i).fill('1980');
-
-    // Click "保存修改"
+    await expect(page.getByLabel('签到信息')).toBeVisible();
+    await page.getByLabel('签到信息').click();
+    await page.getByRole('option', { name: '主馆签到' }).click();
     await page.getByRole('button', { name: /保存修改/i }).click();
 
-    // Verify backend received auto_checkin true and valid major/minor
     expect(capturedReq).not.toBeNull();
     const result = capturedReq!;
     expect(result.auto_checkin).toBe(true);
-    expect(result.major).toBe(10001);
-    expect(result.minor).toBe(1980);
-    expect(result.beacon_uuid).toBe('FDA50693-A4E2-4FB1-AFCF-C6EB07647825');
+    expect(result.checkin_info_id).toBe('10');
+    expect(result.beacon_uuid).toBeUndefined();
   });
 });

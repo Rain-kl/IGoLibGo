@@ -28,6 +28,9 @@ type PipelineConfig struct {
 	Minor            int        `gorm:"not null;default:0" json:"minor"`
 	Latitude         string     `gorm:"size:32;not null;default:''" json:"latitude"`
 	Longitude        string     `gorm:"size:32;not null;default:''" json:"longitude"`
+	AccountID        uint64     `gorm:"not null;default:0" json:"account_id,string"`
+	CheckinAccountID uint64     `gorm:"not null;default:0" json:"checkin_account_id,string"`
+	CheckinInfoID    uint64     `gorm:"not null;default:0" json:"checkin_info_id,string"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`
 }

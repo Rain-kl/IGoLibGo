@@ -90,6 +90,57 @@ definitions:
       ttl_minutes:
         type: integer
     type: object
+  do.AccountCheckinAuthRequest:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
+  do.AccountCheckinAuthResponse:
+    properties:
+      account:
+        $ref: '#/definitions/do.AccountDTO'
+      device:
+        $ref: '#/definitions/do.CheckInDeviceResponse'
+    type: object
+  do.AccountDTO:
+    properties:
+      checkin_expires_at:
+        type: string
+      cookie_expires_at:
+        type: string
+      cookie_masked:
+        type: string
+      created_at:
+        type: string
+      has_checkin_token:
+        type: boolean
+      has_cookie:
+        type: boolean
+      id:
+        example: "0"
+        type: string
+      name:
+        type: string
+      nickname:
+        type: string
+      school:
+        type: string
+      student_name:
+        type: string
+      student_number:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  do.AccountLoginRequest:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
   do.ActivityLogEntry:
     properties:
       created_at:
@@ -246,6 +297,28 @@ definitions:
       student_number:
         type: string
     type: object
+  do.CheckInInfoDTO:
+    properties:
+      beacon_uuid:
+        type: string
+      created_at:
+        type: string
+      id:
+        example: "0"
+        type: string
+      latitude:
+        type: string
+      longitude:
+        type: string
+      major:
+        type: integer
+      minor:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   do.CheckInSessionResponse:
     properties:
       authorized:
@@ -349,6 +422,17 @@ definitions:
       title:
         type: string
     type: object
+  do.CreateAccountRequest:
+    properties:
+      checkin_token:
+        type: string
+      cookie:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
   do.CreateChannelRequest:
     properties:
       credentials:
@@ -366,25 +450,11 @@ definitions:
       type:
         type: string
     type: object
-  do.CreatePipelineConfigRequest:
+  do.CreateCheckInInfoRequest:
     properties:
-      auto_checkin:
-        type: boolean
       beacon_uuid:
         type: string
-      checkin_token:
-        type: string
-      cookie:
-        type: string
-      floor:
-        type: string
-      id:
-        type: string
       latitude:
-        type: string
-      library_id:
-        type: integer
-      library_name:
         type: string
       longitude:
         type: string
@@ -394,12 +464,38 @@ definitions:
         type: integer
       name:
         type: string
+    required:
+    - name
+    type: object
+  do.CreatePipelineConfigRequest:
+    properties:
+      account_id:
+        example: "0"
+        type: string
+      auto_checkin:
+        type: boolean
+      checkin_account_id:
+        example: "0"
+        type: string
+      checkin_info_id:
+        example: "0"
+        type: string
+      floor:
+        type: string
+      id:
+        type: string
+      library_id:
+        type: integer
+      library_name:
+        type: string
+      name:
+        type: string
       seat_key:
         type: string
       seat_name:
         type: string
     required:
-    - cookie
+    - account_id
     - id
     - library_id
     - name
@@ -517,12 +613,14 @@ definitions:
     type: object
   do.HelperLibraryLayoutRequest:
     properties:
+      account_id:
+        example: "0"
+        type: string
       cookie:
         type: string
       library_id:
         type: integer
     required:
-    - cookie
     - library_id
     type: object
   do.HelperVerifyCheckinRequest:
@@ -534,10 +632,11 @@ definitions:
     type: object
   do.HelperVerifySessionRequest:
     properties:
+      account_id:
+        example: "0"
+        type: string
       cookie:
         type: string
-    required:
-    - cookie
     type: object
   do.LibraryLayoutResponse:
     properties:
@@ -616,11 +715,26 @@ definitions:
     type: object
   do.PipelineConfigDTO:
     properties:
+      account:
+        $ref: '#/definitions/do.AccountDTO'
+      account_id:
+        example: "0"
+        type: string
       auto_checkin:
         type: boolean
       beacon_uuid:
         type: string
+      checkin_account:
+        $ref: '#/definitions/do.AccountDTO'
+      checkin_account_id:
+        example: "0"
+        type: string
       checkin_expires_at:
+        type: string
+      checkin_info:
+        $ref: '#/definitions/do.CheckInInfoDTO'
+      checkin_info_id:
+        example: "0"
         type: string
       cookie_expires_at:
         type: string
@@ -974,6 +1088,19 @@ definitions:
       traceint_graphql_overrides_enabled:
         type: boolean
     type: object
+  do.SignCheckInInfoRequest:
+    properties:
+      account_id:
+        example: "0"
+        type: string
+      expected_library_id:
+        type: integer
+      expected_library_name:
+        type: string
+    required:
+    - account_id
+    - expected_library_id
+    type: object
   do.TaskLaunchRecord:
     properties:
       kind:
@@ -1049,6 +1176,11 @@ definitions:
     - scheduled_start
     - seat
     type: object
+  do.UpdateAccountRequest:
+    properties:
+      name:
+        type: string
+    type: object
   do.UpdateChannelRequest:
     properties:
       credentials:
@@ -1064,23 +1196,11 @@ definitions:
       name:
         type: string
     type: object
-  do.UpdatePipelineConfigRequest:
+  do.UpdateCheckInInfoRequest:
     properties:
-      auto_checkin:
-        type: boolean
       beacon_uuid:
         type: string
-      checkin_token:
-        type: string
-      cookie:
-        type: string
-      floor:
-        type: string
       latitude:
-        type: string
-      library_id:
-        type: integer
-      library_name:
         type: string
       longitude:
         type: string
@@ -1088,6 +1208,28 @@ definitions:
         type: integer
       minor:
         type: integer
+      name:
+        type: string
+    type: object
+  do.UpdatePipelineConfigRequest:
+    properties:
+      account_id:
+        example: "0"
+        type: string
+      auto_checkin:
+        type: boolean
+      checkin_account_id:
+        example: "0"
+        type: string
+      checkin_info_id:
+        example: "0"
+        type: string
+      floor:
+        type: string
+      library_id:
+        type: integer
+      library_name:
+        type: string
       name:
         type: string
       seat_key:
@@ -5014,6 +5156,178 @@ paths:
       summary: 获取公共配置
       tags:
       - config
+  /api/v1/igo/accounts:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.AccountDTO'
+                  type: array
+              type: object
+      summary: 获取账户列表
+      tags:
+      - igo
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账户
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.AccountDTO'
+              type: object
+      summary: 创建账户
+      tags:
+      - igo
+  /api/v1/igo/accounts/{id}:
+    delete:
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: 无内容
+      summary: 删除账户
+      tags:
+      - igo
+    get:
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.AccountDTO'
+              type: object
+      summary: 获取账户
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 账户
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.UpdateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.AccountDTO'
+              type: object
+      summary: 更新账户
+      tags:
+      - igo
+  /api/v1/igo/accounts/{id}/checkin-auth:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 凭据
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.AccountCheckinAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.AccountCheckinAuthResponse'
+              type: object
+      summary: 账户签到授权
+      tags:
+      - igo
+  /api/v1/igo/accounts/{id}/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 凭据
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.AccountLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.AccountDTO'
+              type: object
+      summary: 账户登录授权
+      tags:
+      - igo
   /api/v1/igo/activity-logs:
     get:
       parameters:
@@ -5198,6 +5512,147 @@ paths:
           schema:
             $ref: '#/definitions/response.AnyError'
       summary: 签到授权
+      tags:
+      - igo
+  /api/v1/igo/checkin/infos:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/do.CheckInInfoDTO'
+                  type: array
+              type: object
+      summary: 获取签到信息列表
+      tags:
+      - igo
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 签到信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.CreateCheckInInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInInfoDTO'
+              type: object
+      summary: 创建签到信息
+      tags:
+      - igo
+  /api/v1/igo/checkin/infos/{id}:
+    delete:
+      parameters:
+      - description: 签到信息 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: 无内容
+      summary: 删除签到信息
+      tags:
+      - igo
+    get:
+      parameters:
+      - description: 签到信息 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInInfoDTO'
+              type: object
+      summary: 获取签到信息
+      tags:
+      - igo
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 签到信息 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 签到信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.UpdateCheckInInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInInfoDTO'
+              type: object
+      summary: 更新签到信息
+      tags:
+      - igo
+  /api/v1/igo/checkin/infos/{id}/sign:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 签到信息 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 打卡参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/do.SignCheckInInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Any'
+            - properties:
+                data:
+                  $ref: '#/definitions/do.CheckInSignResponse'
+              type: object
+      summary: 使用账户凭证与签到信息打卡
       tags:
       - igo
   /api/v1/igo/checkin/profiles:

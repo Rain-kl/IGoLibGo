@@ -90,6 +90,7 @@ export class IGoPipelineService extends BaseService {
       '';
     return this.post<PipelineHelperVerifySessionResponse>('/verify-session', {
       cookie: input,
+      account_id: data.account_id,
     });
   }
 
@@ -98,6 +99,7 @@ export class IGoPipelineService extends BaseService {
    */
   static async helperGetLibraryLayout(data: {
     cookie?: string;
+    account_id?: string;
     library_id: number;
     auth_code?: string;
     auth_url?: string;
@@ -109,6 +111,7 @@ export class IGoPipelineService extends BaseService {
       '';
     return this.post<LibraryLayoutResponse>('/library-layout', {
       cookie: cookieInput,
+      account_id: data.account_id,
       library_id: data.library_id,
     });
   }

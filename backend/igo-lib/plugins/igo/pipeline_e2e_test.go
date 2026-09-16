@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -118,6 +119,9 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 		&igoentity.Settings{},
 		&igoentity.Session{},
 		&igoentity.Venue{},
+		&igoentity.Account{},
+		&igoentity.CheckInInfo{},
+		&igoentity.CheckInSession{},
 	))
 
 	dao.SetDBService(stubDBService{db: db})
@@ -142,14 +146,15 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 			return
 		}
 
-		// Beacon time
-		if strings.Contains(r.URL.Path, "currentTime") {
-			_, _ = w.Write([]byte(`{"code":0,"msg":"success","data":{"time":1700000000}}`))
+		if strings.Contains(r.URL.Path, "devices") {
+			_, _ = w.Write([]byte(`{"code":0,"msg":"ok","data":{"user":{"user_nick":"测试"},"devices":["FDA50693-A4E2-4FB1-AFCF-C6EB07647825"]}}`))
 			return
 		}
-
-		// Beacon sign
-		if strings.Contains(r.URL.Path, "signCheckIn") {
+		if strings.Contains(r.URL.Path, "getTime") || strings.Contains(r.URL.Path, "currentTime") {
+			_, _ = w.Write([]byte("1700000000"))
+			return
+		}
+		if strings.Contains(r.URL.Path, "sign") {
 			_, _ = w.Write([]byte(`{"code":0,"msg":"打卡成功","data":{"status":1}}`))
 			return
 		}
@@ -231,25 +236,55 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 	// ==========================================
 	// 1. User 101 creates a pipeline card: my_exam_seat
 	// ==========================================
-	createBody := `{
+	accBody := `{
+		"name": "考研号",
+		"cookie": "Authorization=traceint-auth-cookie-valid-12345",
+		"checkin_token": "valid-checkin-token-xyz"
+	}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/igo/accounts", strings.NewReader(accBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+	require.Equal(t, http.StatusCreated, w.Code)
+	var accResp struct {
+		Data do.AccountDTO `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &accResp))
+
+	infoBody := `{
+		"name": "考研签到",
+		"beacon_uuid": "FDA50693-A4E2-4FB1-AFCF-C6EB07647825",
+		"major": 10001,
+		"minor": 1984,
+		"latitude": "30.123456",
+		"longitude": "120.123456"
+	}`
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/checkin/infos", strings.NewReader(infoBody))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	engine.ServeHTTP(w, req)
+	require.Equal(t, http.StatusCreated, w.Code)
+	var infoResp struct {
+		Data do.CheckInInfoDTO `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &infoResp))
+
+	createBody := fmt.Sprintf(`{
 		"id": "my_exam_seat",
 		"name": "考研专座01",
-		"cookie": "Authorization=traceint-auth-cookie-valid-12345",
+		"account_id": "%s",
+		"checkin_info_id": "%s",
 		"library_id": 10,
 		"library_name": "总馆一楼",
 		"floor": "1",
 		"seat_key": "S-101",
 		"seat_name": "101号",
-		"auto_checkin": true,
-		"checkin_token": "valid-checkin-token-xyz",
-		"latitude": "30.123456",
-		"longitude": "120.123456",
-		"beacon_uuid": "AA:BB:CC:DD:EE:FF"
-	}`
+		"auto_checkin": true
+	}`, strconv.FormatUint(accResp.Data.ID, 10), strconv.FormatUint(infoResp.Data.ID, 10))
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/configs", strings.NewReader(createBody))
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/configs", strings.NewReader(createBody))
 	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
+	w = httptest.NewRecorder()
 	engine.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusCreated, w.Code)
@@ -387,18 +422,28 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 
-	// User 102 creates their own card: user102_seat
-	u2Body := `{
+	u2AccBody := `{"name":"用户B","cookie":"Authorization=traceint-user102-cookie"}`
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/accounts", strings.NewReader(u2AccBody))
+	req.Header.Set("Content-Type", "application/json")
+	engine.ServeHTTP(w, req)
+	require.Equal(t, http.StatusCreated, w.Code)
+	var u2Acc struct {
+		Data do.AccountDTO `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &u2Acc))
+
+	u2Body := fmt.Sprintf(`{
 		"id": "user102_seat",
 		"name": "用户B的座位",
-		"cookie": "Authorization=traceint-user102-cookie",
+		"account_id": "%s",
 		"library_id": 20,
 		"library_name": "总馆二楼",
 		"floor": "2",
 		"seat_key": "S-201",
 		"seat_name": "201号",
 		"auto_checkin": false
-	}`
+	}`, strconv.FormatUint(u2Acc.Data.ID, 10))
 	w = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/configs", strings.NewReader(u2Body))
 	req.Header.Set("Content-Type", "application/json")
@@ -451,9 +496,9 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 	assert.Equal(t, true, verifyRes.Data["valid"])
 	assert.NotEmpty(t, verifyRes.Data["libraries"])
 
-	// 10.4 library-layout without cookie -> 400 Bad Request
+	// 10.4 library-layout without cookie and without stored session -> 400
 	w = httptest.NewRecorder()
-	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/library-layout", strings.NewReader(`{"library_id":20}`))
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/igo/pipeline/library-layout", strings.NewReader(`{"cookie":"","library_id":20}`))
 	req.Header.Set("Content-Type", "application/json")
 	engine.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)

@@ -1,6 +1,7 @@
 // Copyright 2026 Arctel.net
 // SPDX-License-Identifier: Apache-2.0
 
+import { IGoAccountService } from './account';
 import { IGoCheckInService } from './checkin';
 import { IGoConfigService } from './config';
 import { IGoDashboardService } from './dashboard';
@@ -16,6 +17,7 @@ export * from './session';
 export * from './venue';
 export * from './reservation';
 export * from './tasks';
+export * from './account';
 export * from './checkin';
 export * from './config';
 export * from './pipeline';
@@ -27,6 +29,7 @@ export const IGoService = {
   reservation: IGoReservationService,
   task: IGoTaskService,
   checkin: IGoCheckInService,
+  account: IGoAccountService,
   config: IGoConfigService,
   pipeline: IGoPipelineService,
 } as const;

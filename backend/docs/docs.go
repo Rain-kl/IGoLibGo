@@ -4559,6 +4559,297 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/igo/accounts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取账户列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.AccountDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "创建账户",
+                "parameters": [
+                    {
+                        "description": "账户",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.CreateAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.AccountDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/accounts/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取账户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.AccountDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "更新账户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "账户",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.UpdateAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.AccountDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "igo"
+                ],
+                "summary": "删除账户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/accounts/{id}/checkin-auth": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "账户签到授权",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "凭据",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.AccountCheckinAuthRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.AccountCheckinAuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/accounts/{id}/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "账户登录授权",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "账户 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "凭据",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.AccountLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.AccountDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/igo/activity-logs": {
             "get": {
                 "produces": [
@@ -4859,6 +5150,245 @@ const docTemplate = `{
                         "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.AnyError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/infos": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取签到信息列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/do.CheckInInfoDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "创建签到信息",
+                "parameters": [
+                    {
+                        "description": "签到信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.CreateCheckInInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInInfoDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/infos/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "获取签到信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "签到信息 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInInfoDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "更新签到信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "签到信息 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "签到信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.UpdateCheckInInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInInfoDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "igo"
+                ],
+                "summary": "删除签到信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "签到信息 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "无内容"
+                    }
+                }
+            }
+        },
+        "/api/v1/igo/checkin/infos/{id}/sign": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "igo"
+                ],
+                "summary": "使用账户凭证与签到信息打卡",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "签到信息 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "打卡参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/do.SignCheckInInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Any"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/do.CheckInSignResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -9123,6 +9653,84 @@ const docTemplate = `{
                 }
             }
         },
+        "do.AccountCheckinAuthRequest": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.AccountCheckinAuthResponse": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "$ref": "#/definitions/do.AccountDTO"
+                },
+                "device": {
+                    "$ref": "#/definitions/do.CheckInDeviceResponse"
+                }
+            }
+        },
+        "do.AccountDTO": {
+            "type": "object",
+            "properties": {
+                "checkin_expires_at": {
+                    "type": "string"
+                },
+                "cookie_expires_at": {
+                    "type": "string"
+                },
+                "cookie_masked": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "has_checkin_token": {
+                    "type": "boolean"
+                },
+                "has_cookie": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "school": {
+                    "type": "string"
+                },
+                "student_name": {
+                    "type": "string"
+                },
+                "student_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.AccountLoginRequest": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
         "do.ActivityLogEntry": {
             "type": "object",
             "properties": {
@@ -9360,6 +9968,39 @@ const docTemplate = `{
                 }
             }
         },
+        "do.CheckInInfoDTO": {
+            "type": "object",
+            "properties": {
+                "beacon_uuid": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "latitude": {
+                    "type": "string"
+                },
+                "longitude": {
+                    "type": "string"
+                },
+                "major": {
+                    "type": "integer"
+                },
+                "minor": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "do.CheckInSessionResponse": {
             "type": "object",
             "properties": {
@@ -9517,6 +10158,23 @@ const docTemplate = `{
                 }
             }
         },
+        "do.CreateAccountRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "checkin_token": {
+                    "type": "string"
+                },
+                "cookie": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "do.CreateChannelRequest": {
             "type": "object",
             "properties": {
@@ -9543,41 +10201,16 @@ const docTemplate = `{
                 }
             }
         },
-        "do.CreatePipelineConfigRequest": {
+        "do.CreateCheckInInfoRequest": {
             "type": "object",
             "required": [
-                "cookie",
-                "id",
-                "library_id",
-                "name",
-                "seat_key"
+                "name"
             ],
             "properties": {
-                "auto_checkin": {
-                    "type": "boolean"
-                },
                 "beacon_uuid": {
                     "type": "string"
                 },
-                "checkin_token": {
-                    "type": "string"
-                },
-                "cookie": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
                 "latitude": {
-                    "type": "string"
-                },
-                "library_id": {
-                    "type": "integer"
-                },
-                "library_name": {
                     "type": "string"
                 },
                 "longitude": {
@@ -9588,6 +10221,48 @@ const docTemplate = `{
                 },
                 "minor": {
                     "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.CreatePipelineConfigRequest": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "id",
+                "library_id",
+                "name",
+                "seat_key"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "auto_checkin": {
+                    "type": "boolean"
+                },
+                "checkin_account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "checkin_info_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "floor": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -9771,10 +10446,13 @@ const docTemplate = `{
         "do.HelperLibraryLayoutRequest": {
             "type": "object",
             "required": [
-                "cookie",
                 "library_id"
             ],
             "properties": {
+                "account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
                 "cookie": {
                     "type": "string"
                 },
@@ -9796,10 +10474,11 @@ const docTemplate = `{
         },
         "do.HelperVerifySessionRequest": {
             "type": "object",
-            "required": [
-                "cookie"
-            ],
             "properties": {
+                "account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
                 "cookie": {
                     "type": "string"
                 }
@@ -9922,14 +10601,35 @@ const docTemplate = `{
         "do.PipelineConfigDTO": {
             "type": "object",
             "properties": {
+                "account": {
+                    "$ref": "#/definitions/do.AccountDTO"
+                },
+                "account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
                 "auto_checkin": {
                     "type": "boolean"
                 },
                 "beacon_uuid": {
                     "type": "string"
                 },
+                "checkin_account": {
+                    "$ref": "#/definitions/do.AccountDTO"
+                },
+                "checkin_account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
                 "checkin_expires_at": {
                     "type": "string"
+                },
+                "checkin_info": {
+                    "$ref": "#/definitions/do.CheckInInfoDTO"
+                },
+                "checkin_info_id": {
+                    "type": "string",
+                    "example": "0"
                 },
                 "cookie_expires_at": {
                     "type": "string"
@@ -10467,6 +11167,25 @@ const docTemplate = `{
                 }
             }
         },
+        "do.SignCheckInInfoRequest": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "expected_library_id"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "expected_library_id": {
+                    "type": "integer"
+                },
+                "expected_library_name": {
+                    "type": "string"
+                }
+            }
+        },
         "do.TaskLaunchRecord": {
             "type": "object",
             "properties": {
@@ -10581,6 +11300,14 @@ const docTemplate = `{
                 }
             }
         },
+        "do.UpdateAccountRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "do.UpdateChannelRequest": {
             "type": "object",
             "properties": {
@@ -10604,31 +11331,13 @@ const docTemplate = `{
                 }
             }
         },
-        "do.UpdatePipelineConfigRequest": {
+        "do.UpdateCheckInInfoRequest": {
             "type": "object",
             "properties": {
-                "auto_checkin": {
-                    "type": "boolean"
-                },
                 "beacon_uuid": {
                     "type": "string"
                 },
-                "checkin_token": {
-                    "type": "string"
-                },
-                "cookie": {
-                    "type": "string"
-                },
-                "floor": {
-                    "type": "string"
-                },
                 "latitude": {
-                    "type": "string"
-                },
-                "library_id": {
-                    "type": "integer"
-                },
-                "library_name": {
                     "type": "string"
                 },
                 "longitude": {
@@ -10639,6 +11348,38 @@ const docTemplate = `{
                 },
                 "minor": {
                     "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "do.UpdatePipelineConfigRequest": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "auto_checkin": {
+                    "type": "boolean"
+                },
+                "checkin_account_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "checkin_info_id": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "floor": {
+                    "type": "string"
+                },
+                "library_id": {
+                    "type": "integer"
+                },
+                "library_name": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"

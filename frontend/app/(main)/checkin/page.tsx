@@ -6,70 +6,109 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { MapPin } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { IGoService } from '@/lib/services/igo';
-import type {
-  ActivityLogEntry,
-  BoundLibraryResponse,
-  CheckInDeviceResponse,
-  CheckInSessionResponse,
-  ReservationResponse,
-} from '@/lib/services/igo/types';
-
-import { CheckInAuthCard } from '@/components/igo/checkin/checkin-auth-card';
-import { CheckInDeviceTable } from '@/components/igo/checkin/checkin-device-table';
-import { CheckInActionPanel } from '@/components/igo/checkin/checkin-action-panel';
-import { ActivityLogStream } from '@/components/igo/common/activity-log-stream';
+import type { AccountDTO, CheckInInfoDTO } from '@/lib/services/igo/types';
+import { AccountList } from '@/components/igo/checkin/account-list';
+import { CheckInInfoList } from '@/components/igo/checkin/checkin-info-list';
+import { CheckInSignBar } from '@/components/igo/checkin/checkin-sign-bar';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function CheckInPage() {
   const t = useTranslations('igo.checkin');
-
-  const [session, setSession] = React.useState<CheckInSessionResponse | null>(
-    null,
-  );
-  const [device, setDevice] = React.useState<CheckInDeviceResponse | null>(
-    null,
-  );
-  const [boundInfo, setBoundInfo] = React.useState<BoundLibraryResponse | null>(
-    null,
-  );
-  const [reservation, setReservation] =
-    React.useState<ReservationResponse | null>(null);
-  const [logs, setLogs] = React.useState<ActivityLogEntry[]>([]);
+  const tCommon = useTranslations('common');
+  const [accounts, setAccounts] = React.useState<AccountDTO[]>([]);
+  const [infos, setInfos] = React.useState<CheckInInfoDTO[]>([]);
+  const [libraryId, setLibraryId] = React.useState<number | undefined>();
+  const [libraryName, setLibraryName] = React.useState<string | undefined>();
   const [loading, setLoading] = React.useState(true);
+  const [editingInfoId, setEditingInfoId] = React.useState<string | null>(null);
+  const [authOpen, setAuthOpen] = React.useState(false);
+  const [authKind, setAuthKind] = React.useState<'login' | 'checkin'>(
+    'checkin',
+  );
+  const [authAccount, setAuthAccount] = React.useState<AccountDTO | null>(null);
+  const [authInput, setAuthInput] = React.useState('');
+  const [authSaving, setAuthSaving] = React.useState(false);
 
-  const loadData = React.useCallback(async (isSilent = false) => {
-    if (!isSilent) setLoading(true);
+  const loadData = React.useCallback(async () => {
+    setLoading(true);
     try {
-      const [sessRes, devRes, boundRes, logsRes, reservRes] = await Promise.all(
-        [
-          IGoService.checkin.getSession().catch(() => null),
-          IGoService.checkin.getDevices().catch(() => null),
-          IGoService.venue.getBoundLibrary().catch(() => null),
-          IGoService.dashboard.listActivityLogs({ limit: 40 }).catch(() => []),
-          IGoService.reservation.getReservation().catch(() => null),
-        ],
-      );
-
-      setSession(sessRes);
-      setDevice(devRes);
-      setBoundInfo(boundRes);
-      setLogs(logsRes || []);
-      setReservation(reservRes);
+      const [accs, list, bound] = await Promise.all([
+        IGoService.account.list().catch(() => []),
+        IGoService.checkin.listInfos().catch(() => []),
+        IGoService.venue.getBoundLibrary().catch(() => null),
+      ]);
+      setAccounts(accs || []);
+      setInfos(list || []);
+      if (bound?.library?.library_id) {
+        setLibraryId(bound.library.library_id);
+        setLibraryName(bound.library.name);
+      }
     } finally {
-      if (!isSilent) setLoading(false);
+      setLoading(false);
     }
   }, []);
 
   React.useEffect(() => {
     loadData();
-    const timer = setInterval(() => loadData(true), 10000);
-    return () => clearInterval(timer);
   }, [loadData]);
+
+  const openAuth = (account: AccountDTO, kind: 'login' | 'checkin') => {
+    setAuthAccount(account);
+    setAuthKind(kind);
+    setAuthInput('');
+    setAuthOpen(true);
+  };
+
+  const submitAuth = async () => {
+    if (!authAccount || !authInput.trim()) return;
+    setAuthSaving(true);
+    try {
+      if (authKind === 'login') {
+        await IGoService.account.login(authAccount.id, {
+          code: authInput.trim(),
+        });
+      } else {
+        const res = await IGoService.account.checkinAuth(authAccount.id, {
+          code: authInput.trim(),
+        });
+        const uuid = res.device?.beacon_uuids?.[0];
+        const editing = infos.find((i) => i.id === editingInfoId);
+        if (uuid && editing && !editing.beacon_uuid) {
+          await IGoService.checkin.updateInfo(editing.id, {
+            name: editing.name,
+            beacon_uuid: uuid,
+            major: editing.major,
+            minor: editing.minor,
+            latitude: editing.latitude,
+            longitude: editing.longitude,
+          });
+        }
+      }
+      toast.success(t('authSuccess'));
+      setAuthOpen(false);
+      loadData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : tCommon('unknownError'));
+    } finally {
+      setAuthSaving(false);
+    }
+  };
 
   return (
     <div className='py-6 px-1 space-y-6 w-full'>
-      {/* 1. 标准页面标题 */}
       <div className='flex items-center gap-2'>
         <MapPin className='size-5 text-primary' />
         <div>
@@ -77,35 +116,62 @@ export default function CheckInPage() {
             {t('title')}
           </h1>
           <p className='text-sm text-muted-foreground mt-0.5'>
-            {t('description')}
+            {t('pageDesc')}
           </p>
         </div>
       </div>
 
-      {/* 2. 微信签到授权卡片 */}
-      <CheckInAuthCard
-        session={session}
+      <AccountList
+        accounts={accounts}
         loading={loading}
-        onRefresh={() => loadData(true)}
+        onRefresh={loadData}
+        onAuthorize={openAuth}
       />
-
-      {/* 3. 授权设备与 Beacon 列表 */}
-      <CheckInDeviceTable device={device} loading={loading} />
-
-      {/* 4. 打卡操作与模拟配置 */}
-      <CheckInActionPanel
-        boundInfo={boundInfo}
-        device={device}
-        currentReservation={reservation}
-        onSuccess={() => loadData(true)}
-      />
-
-      {/* 5. 实时活动日志 */}
-      <ActivityLogStream
-        logs={logs}
+      <CheckInInfoList
+        infos={infos}
         loading={loading}
-        onRefresh={() => loadData(true)}
+        editingId={editingInfoId}
+        onEditingIdChange={setEditingInfoId}
+        onRefresh={loadData}
       />
+      <CheckInSignBar
+        accounts={accounts}
+        infos={infos}
+        defaultLibraryId={libraryId}
+        defaultLibraryName={libraryName}
+        onNeedCheckinAuth={(id) => {
+          const acc = accounts.find((a) => a.id === id);
+          if (acc) openAuth(acc, 'checkin');
+        }}
+      />
+
+      <Dialog open={authOpen} onOpenChange={setAuthOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {authKind === 'login' ? t('authLogin') : t('authCheckin')}
+            </DialogTitle>
+            <DialogDescription>{t('manualDialogDesc')}</DialogDescription>
+          </DialogHeader>
+          <div className='space-y-1.5'>
+            <Label htmlFor='auth-code'>{t('qrLinkInputLabel')}</Label>
+            <Textarea
+              id='auth-code'
+              value={authInput}
+              onChange={(e) => setAuthInput(e.target.value)}
+              placeholder={t('qrLinkPlaceholder')}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={submitAuth}
+              disabled={authSaving || !authInput.trim()}
+            >
+              {t('parseAndLoginBtn')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

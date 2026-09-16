@@ -7,64 +7,62 @@ import "time"
 
 // PipelineConfigDTO is the data transfer object for a pipeline configuration card.
 type PipelineConfigDTO struct {
-	ID               string     `json:"id"`
-	UserID           uint64     `json:"user_id,string"`
-	Name             string     `json:"name"`
-	HasCookie        bool       `json:"has_cookie"`
-	CookieMasked     string     `json:"cookie_masked"`
-	CookieExpiresAt  *time.Time `json:"cookie_expires_at,omitempty"`
-	LibraryID        int        `json:"library_id"`
-	LibraryName      string     `json:"library_name"`
-	Floor            string     `json:"floor"`
-	SeatKey          string     `json:"seat_key"`
-	SeatName         string     `json:"seat_name"`
-	AutoCheckin      bool       `json:"auto_checkin"`
-	HasCheckinToken  bool       `json:"has_checkin_token"`
-	CheckinExpiresAt *time.Time `json:"checkin_expires_at,omitempty"`
-	BeaconUUID       string     `json:"beacon_uuid"`
-	Major            int        `json:"major"`
-	Minor            int        `json:"minor"`
-	Latitude         string     `json:"latitude"`
-	Longitude        string     `json:"longitude"`
-	CreatedAt        time.Time  `json:"created_at"`
-	UpdatedAt        time.Time  `json:"updated_at"`
+	ID               string          `json:"id"`
+	UserID           uint64          `json:"user_id,string"`
+	Name             string          `json:"name"`
+	AccountID        uint64          `json:"account_id,string"`
+	CheckinAccountID uint64          `json:"checkin_account_id,string"`
+	CheckinInfoID    uint64          `json:"checkin_info_id,string"`
+	Account          *AccountDTO     `json:"account,omitempty"`
+	CheckinAccount   *AccountDTO     `json:"checkin_account,omitempty"`
+	CheckinInfo      *CheckInInfoDTO `json:"checkin_info,omitempty"`
+	HasCookie        bool            `json:"has_cookie"`
+	CookieMasked     string          `json:"cookie_masked"`
+	CookieExpiresAt  *time.Time      `json:"cookie_expires_at,omitempty"`
+	LibraryID        int             `json:"library_id"`
+	LibraryName      string          `json:"library_name"`
+	Floor            string          `json:"floor"`
+	SeatKey          string          `json:"seat_key"`
+	SeatName         string          `json:"seat_name"`
+	AutoCheckin      bool            `json:"auto_checkin"`
+	HasCheckinToken  bool            `json:"has_checkin_token"`
+	CheckinExpiresAt *time.Time      `json:"checkin_expires_at,omitempty"`
+	BeaconUUID       string          `json:"beacon_uuid"`
+	Major            int             `json:"major"`
+	Minor            int             `json:"minor"`
+	Latitude         string          `json:"latitude"`
+	Longitude        string          `json:"longitude"`
+	CreatedAt        time.Time       `json:"created_at"`
+	UpdatedAt        time.Time       `json:"updated_at"`
 }
 
 // CreatePipelineConfigRequest represents the payload for creating a pipeline config card.
 type CreatePipelineConfigRequest struct {
-	ID           string `json:"id" binding:"required"`
-	Name         string `json:"name" binding:"required"`
-	Cookie       string `json:"cookie" binding:"required"`
-	LibraryID    int    `json:"library_id" binding:"required"`
-	LibraryName  string `json:"library_name"`
-	Floor        string `json:"floor"`
-	SeatKey      string `json:"seat_key" binding:"required"`
-	SeatName     string `json:"seat_name"`
-	AutoCheckin  bool   `json:"auto_checkin"`
-	CheckinToken string `json:"checkin_token"`
-	BeaconUUID   string `json:"beacon_uuid"`
-	Major        int    `json:"major"`
-	Minor        int    `json:"minor"`
-	Latitude     string `json:"latitude"`
-	Longitude    string `json:"longitude"`
+	ID               string `json:"id" binding:"required"`
+	Name             string `json:"name" binding:"required"`
+	AccountID        uint64 `json:"account_id,string" binding:"required"`
+	CheckinAccountID uint64 `json:"checkin_account_id,string"`
+	CheckinInfoID    uint64 `json:"checkin_info_id,string"`
+	LibraryID        int    `json:"library_id" binding:"required"`
+	LibraryName      string `json:"library_name"`
+	Floor            string `json:"floor"`
+	SeatKey          string `json:"seat_key" binding:"required"`
+	SeatName         string `json:"seat_name"`
+	AutoCheckin      bool   `json:"auto_checkin"`
 }
 
 // UpdatePipelineConfigRequest represents the payload for updating a pipeline config card.
 type UpdatePipelineConfigRequest struct {
-	Name         string `json:"name"`
-	Cookie       string `json:"cookie"`
-	LibraryID    int    `json:"library_id"`
-	LibraryName  string `json:"library_name"`
-	Floor        string `json:"floor"`
-	SeatKey      string `json:"seat_key"`
-	SeatName     string `json:"seat_name"`
-	AutoCheckin  bool   `json:"auto_checkin"`
-	CheckinToken string `json:"checkin_token"`
-	BeaconUUID   string `json:"beacon_uuid"`
-	Major        int    `json:"major"`
-	Minor        int    `json:"minor"`
-	Latitude     string `json:"latitude"`
-	Longitude    string `json:"longitude"`
+	Name             string `json:"name"`
+	AccountID        uint64 `json:"account_id,string"`
+	CheckinAccountID uint64 `json:"checkin_account_id,string"`
+	CheckinInfoID    uint64 `json:"checkin_info_id,string"`
+	LibraryID        int    `json:"library_id"`
+	LibraryName      string `json:"library_name"`
+	Floor            string `json:"floor"`
+	SeatKey          string `json:"seat_key"`
+	SeatName         string `json:"seat_name"`
+	AutoCheckin      bool   `json:"auto_checkin"`
 }
 
 // RunPipelineRequest represents optional override credentials for execution.
@@ -88,12 +86,15 @@ type PipelineRunResult struct {
 
 // HelperVerifySessionRequest is the payload to verify a raw cookie and list libraries.
 type HelperVerifySessionRequest struct {
-	Cookie string `json:"cookie" binding:"required"`
+	Cookie    string `json:"cookie"`
+	AccountID uint64 `json:"account_id,string"`
 }
 
-// HelperLibraryLayoutRequest is the payload to fetch layout for a specific library with a cookie.
+// HelperLibraryLayoutRequest is the payload to fetch layout for a specific library.
+// Cookie, account_id, or a still-valid stored TraceInt session may supply credentials.
 type HelperLibraryLayoutRequest struct {
-	Cookie    string `json:"cookie" binding:"required"`
+	Cookie    string `json:"cookie"`
+	AccountID uint64 `json:"account_id,string"`
 	LibraryID int    `json:"library_id" binding:"required"`
 }
 
