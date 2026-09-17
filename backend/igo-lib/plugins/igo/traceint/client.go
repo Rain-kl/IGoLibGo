@@ -7,7 +7,9 @@ package traceint
 import (
 	"Wavelet/igo-lib/plugins/igo/model/do"
 	"bytes"
+	"compress/gzip"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -32,10 +34,27 @@ type Client struct {
 }
 
 func (c *Client) http() *http.Client {
+	base := &http.Client{Timeout: 15 * time.Second}
 	if c != nil && c.HTTP != nil {
-		return c.HTTP
+		cloned := *c.HTTP
+		base = &cloned
 	}
-	return &http.Client{Timeout: 15 * time.Second}
+	base.Transport = forceHTTP1(base.Transport)
+	return base
+}
+
+func forceHTTP1(rt http.RoundTripper) http.RoundTripper {
+	if rt == nil {
+		rt = http.DefaultTransport
+	}
+	tr, ok := rt.(*http.Transport)
+	if !ok {
+		return rt
+	}
+	clone := tr.Clone()
+	clone.ForceAttemptHTTP2 = false
+	clone.TLSNextProto = map[string]func(authority string, c *tls.Conn) http.RoundTripper{}
+	return clone
 }
 
 func (c *Client) retries() int {
@@ -92,41 +111,59 @@ func (c *Client) GetCookie(ctx context.Context, templates do.ProtocolTemplatesRe
 	return header, nil
 }
 
-func (c *Client) graphql(ctx context.Context, templates do.ProtocolTemplatesResponse, cookie, payload string, tomorrow bool) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, templates.GraphQLEndpointURL, bytes.NewReader([]byte(payload)))
-	if err != nil {
-		return nil, err
-	}
-	ua, referer, origin, ver := desktopUA, templates.GraphQLDefaultRefererURL, templates.GraphQLDefaultOriginURL, appVersion
-	if tomorrow {
-		ua, referer, origin, ver = tomorrowUA, templates.GraphQLTomorrowRefererURL, templates.GraphQLTomorrowOriginURL, "2.2.5"
-	}
+func applyDesktopGraphQLHeaders(req *http.Request, cookie, origin, referer, ua, ver string) {
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 	req.Header.Set("Cookie", cookie)
+	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Origin", origin)
 	req.Header.Set("Referer", referer)
 	req.Header.Set("User-Agent", ua)
 	req.Header.Set("App-Version", ver)
 	req.Header.Set("app-version", ver)
 	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7")
+	req.Header.Set("Sec-Fetch-Site", "same-site")
+	req.Header.Set("Sec-Fetch-Mode", "cors")
+	req.Header.Set("Sec-Fetch-Dest", "empty")
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Del("Expect")
+}
+
+func decodeHTTPBody(encoding string, body []byte) ([]byte, error) {
+	switch strings.ToLower(strings.TrimSpace(encoding)) {
+	case "", "identity":
+		return body, nil
+	case "gzip":
+		r, err := gzip.NewReader(bytes.NewReader(body))
+		if err != nil {
+			return nil, err
+		}
+		defer func() { _ = r.Close() }()
+		return io.ReadAll(r)
+	default:
+		return body, nil
+	}
+}
+
+func (c *Client) graphql(ctx context.Context, templates do.ProtocolTemplatesResponse, cookie, payload string, tomorrow bool) ([]byte, error) {
+	ua, referer, origin, ver := desktopUA, templates.GraphQLDefaultRefererURL, templates.GraphQLDefaultOriginURL, appVersion
+	if tomorrow {
+		ua, referer, origin, ver = tomorrowUA, templates.GraphQLTomorrowRefererURL, templates.GraphQLTomorrowOriginURL, "2.2.5"
+	}
+	payloadBytes := []byte(payload)
 	var lastErr error
 	attempts := c.retries()
+	cli := c.http()
 	for i := 0; i < attempts; i++ {
-		if i > 0 {
-			req, err = http.NewRequestWithContext(ctx, http.MethodPost, templates.GraphQLEndpointURL, bytes.NewReader([]byte(payload)))
-			if err != nil {
-				return nil, err
-			}
-			req.Header.Set("Cookie", cookie)
-			req.Header.Set("Origin", origin)
-			req.Header.Set("Referer", referer)
-			req.Header.Set("User-Agent", ua)
-			req.Header.Set("App-Version", ver)
-			req.Header.Set("app-version", ver)
-			req.Header.Set("Accept", "*/*")
-			req.Header.Set("Content-Type", "application/json")
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, templates.GraphQLEndpointURL, bytes.NewReader(payloadBytes))
+		if err != nil {
+			return nil, err
 		}
-		resp, err := c.http().Do(req)
+		applyDesktopGraphQLHeaders(req, cookie, origin, referer, ua, ver)
+		resp, err := cli.Do(req)
 		if err != nil {
 			lastErr = fmt.Errorf("TraceInt 请求失败: %w", err)
 			continue
@@ -135,6 +172,11 @@ func (c *Client) graphql(ctx context.Context, templates do.ProtocolTemplatesResp
 		_ = resp.Body.Close()
 		if readErr != nil {
 			lastErr = readErr
+			continue
+		}
+		body, err = decodeHTTPBody(resp.Header.Get("Content-Encoding"), body)
+		if err != nil {
+			lastErr = err
 			continue
 		}
 		if resp.StatusCode >= http.StatusInternalServerError && i+1 < attempts {

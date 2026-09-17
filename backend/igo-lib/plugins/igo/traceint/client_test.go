@@ -106,6 +106,54 @@ func TestExtractCode_UserURL(t *testing.T) {
 	assert.Equal(t, "081D0KGa1dplpM0ZzzIa1ss0tZ0D0KGP", code)
 }
 
+func TestListLibraries_UsesDesktopGraphQLFingerprint(t *testing.T) {
+	var got *http.Request
+	client := &Client{
+		HTTP: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				got = req.Clone(req.Context())
+				if req.Body != nil {
+					_, _ = io.Copy(io.Discard, req.Body)
+				}
+				body := `{"data":{"userAuth":{"reserve":{"libs":[{"lib_id":1,"lib_name":"馆","lib_floor":"1","is_open":true,"lib_rt":{"seats_total":1,"seats_used":0,"seats_booking":0}}]}}}}`
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     make(http.Header),
+					Body:       io.NopCloser(strings.NewReader(body)),
+					Request:    req,
+					Proto:      "HTTP/1.1",
+					ProtoMajor: 1,
+					ProtoMinor: 1,
+				}, nil
+			}),
+		},
+	}
+	libs, err := client.ListLibraries(context.Background(), DefaultTemplates(), "Authorization=tok")
+	require.NoError(t, err)
+	require.Len(t, libs, 1)
+	require.NotNil(t, got)
+	assert.Equal(t, 1, got.ProtoMajor)
+	assert.Equal(t, 1, got.ProtoMinor)
+	assert.Equal(t, "keep-alive", got.Header.Get("Connection"))
+	assert.Equal(t, "https://web.traceint.com", got.Header.Get("Origin"))
+	assert.Equal(t, "https://web.traceint.com/web/index.html", got.Header.Get("Referer"))
+	assert.Equal(t, desktopUA, got.Header.Get("User-Agent"))
+	assert.Equal(t, "2.0.11", got.Header.Get("App-Version"))
+	assert.Equal(t, "*/*", got.Header.Get("Accept"))
+	assert.Equal(t, "application/json", got.Header.Get("Content-Type"))
+	assert.Equal(t, "gzip, deflate, br", got.Header.Get("Accept-Encoding"))
+	assert.Equal(t, "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7", got.Header.Get("Accept-Language"))
+	assert.Equal(t, "same-site", got.Header.Get("Sec-Fetch-Site"))
+	assert.Equal(t, "cors", got.Header.Get("Sec-Fetch-Mode"))
+	assert.Equal(t, "empty", got.Header.Get("Sec-Fetch-Dest"))
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
 func TestBuildCookieHeader_CaseInsensitive(t *testing.T) {
 	cookies := []*http.Cookie{
 		{Name: "authorization", Value: "Bearer token"},

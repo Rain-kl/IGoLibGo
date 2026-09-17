@@ -326,6 +326,68 @@ func TestRunPipeline_SeparateOccupyAndCheckinAccounts(t *testing.T) {
 	assert.Contains(t, res.CheckinStatus, "打卡成功")
 }
 
+func TestRunPipeline_PacesBetweenTraceIntRequests(t *testing.T) {
+	var paces int
+	svc := setupService(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		body, _ := io.ReadAll(r.Body)
+		bodyStr := string(body)
+		if strings.Contains(r.URL.Path, "graphql") {
+			if strings.Contains(bodyStr, "lib_layout") {
+				_, _ = io.WriteString(w, `{"data":{"userAuth":{"reserve":{"libs":[{
+					"lib_id":101,"lib_name":"总馆三楼","lib_floor":"3","is_open":true,
+					"lib_layout":{"seats":[{"key":"SK-100","name":"100号","type":1,"status":false,"x":1,"y":1}]}
+				}]}}}}`)
+				return
+			}
+			if strings.Contains(bodyStr, "reserueSeat") {
+				_, _ = io.WriteString(w, `{"data":{"userAuth":{"reserve":{"reserueSeat":true}}}}`)
+				return
+			}
+			_, _ = io.WriteString(w, `{"data":{"userAuth":{"reserve":{"libs":[{"lib_id":101,"lib_name":"总馆三楼","lib_floor":"3","is_open":true}]}}}}`)
+			return
+		}
+		if strings.Contains(r.URL.Path, "time") {
+			_, _ = io.WriteString(w, "1726390000")
+			return
+		}
+		if strings.Contains(r.URL.Path, "devices") {
+			_, _ = io.WriteString(w, `{"code":0,"msg":"ok","data":{"user":{"user_nick":"乙"},"devices":["FDA50693-A4E2-4FB1-AFCF-C6EB07647825"]}}`)
+			return
+		}
+		if strings.Contains(r.URL.Path, "sign") {
+			_, _ = io.WriteString(w, `{"code":0,"msg":"签到成功","data":{"status":1}}`)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+	svc.SetPipelinePace(func(context.Context) error {
+		paces++
+		return nil
+	})
+	ctx := context.Background()
+	acc, err := svc.CreateAccount(ctx, 4, do.CreateAccountRequest{
+		Name: "节流号", Cookie: "Authorization=c", CheckinToken: "tok-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+	})
+	require.NoError(t, err)
+	info, err := svc.CreateCheckInInfo(ctx, 4, do.CreateCheckInInfoRequest{
+		Name: "节流签到", BeaconUUID: "FDA50693-A4E2-4FB1-AFCF-C6EB07647825",
+		Major: 1, Minor: 2, Latitude: "31.2", Longitude: "121.4",
+	})
+	require.NoError(t, err)
+	_, err = svc.CreatePipelineConfig(ctx, 4, do.CreatePipelineConfigRequest{
+		ID: "pace", Name: "节流", AccountID: acc.ID, CheckinInfoID: info.ID,
+		LibraryID: 101, LibraryName: "总馆三楼", Floor: "3",
+		SeatKey: "SK-100", SeatName: "100号", AutoCheckin: true,
+	})
+	require.NoError(t, err)
+	res, err := svc.RunPipeline(ctx, 4, "pace", nil)
+	require.NoError(t, err)
+	assert.True(t, res.Success)
+	// list + devices + layout + reserve + server time (not after final sign)
+	assert.Equal(t, 5, paces)
+}
+
 func TestCreatePipelineConfig_AutoCheckinRequiresInfo(t *testing.T) {
 	svc := setupService(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

@@ -202,6 +202,7 @@ func TestPipeline_EndToEndUserFlow(t *testing.T) {
 
 	svc := service.New()
 	svc.SetHTTPClient(&http.Client{Timeout: 5 * time.Second, Transport: rewriteHost(srv.URL)})
+	svc.SetPipelinePace(func(context.Context) error { return nil })
 
 	igoPlugin := igo.New(igo.WithService(svc))
 	require.NoError(t, igoPlugin.Apply(coreCtx))

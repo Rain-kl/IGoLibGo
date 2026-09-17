@@ -32,12 +32,15 @@ func defaultQRCodeDataURL() string {
 }
 
 // Service is the igo business facade.
+const pipelineRequestInterval = 10 * time.Second
+
 type Service struct {
 	client       *traceint.Client
 	tasks        contracts.TaskService
 	events       Emitter
 	backfillOnce sync.Once
 	backfillErr  error
+	pipelinePace func(context.Context) error
 }
 
 // New creates a Service with the default TraceInt HTTP client.
@@ -55,6 +58,28 @@ func (s *Service) SetHTTPClient(c *http.Client) {
 
 // SetTasks injects the platform task dispatcher.
 func (s *Service) SetTasks(tasks contracts.TaskService) { s.tasks = tasks }
+
+// SetPipelinePace replaces the delay used between 一条龙 TraceInt calls (tests).
+func (s *Service) SetPipelinePace(fn func(context.Context) error) {
+	s.pipelinePace = fn
+}
+
+func (s *Service) pacePipeline(ctx context.Context) error {
+	wait := s.pipelinePace
+	if wait == nil {
+		wait = func(ctx context.Context) error {
+			timer := time.NewTimer(pipelineRequestInterval)
+			defer timer.Stop()
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-timer.C:
+				return nil
+			}
+		}
+	}
+	return wait(ctx)
+}
 
 func (s *Service) api(ctx context.Context, userID uint64) *traceint.Client {
 	base := s.client

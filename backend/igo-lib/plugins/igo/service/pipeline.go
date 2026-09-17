@@ -263,6 +263,12 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 			ExecutedAt: execTime,
 		}, false
 	}
+	if err := s.pacePipeline(ctx); err != nil {
+		return &do.PipelineRunResult{
+			Success: false, ConfigID: id, Name: row.Name,
+			Message: err.Error(), ExecutedAt: execTime,
+		}, false
+	}
 
 	if row.AutoCheckin {
 		token := ""
@@ -291,6 +297,12 @@ func (s *Service) validatePipelineAuth(ctx context.Context, cli *traceint.Client
 				ExecutedAt: execTime,
 			}, false
 		}
+		if err := s.pacePipeline(ctx); err != nil {
+			return &do.PipelineRunResult{
+				Success: false, ConfigID: id, Name: row.Name,
+				Message: err.Error(), ExecutedAt: execTime,
+			}, false
+		}
 	}
 
 	return nil, true
@@ -309,6 +321,12 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 			Name:       row.Name,
 			Message:    fmt.Sprintf("获取场馆「%s」布局失败: %v", row.LibraryName, err),
 			ExecutedAt: execTime,
+		}, "", false
+	}
+	if err := s.pacePipeline(ctx); err != nil {
+		return &do.PipelineRunResult{
+			Success: false, ConfigID: id, Name: row.Name,
+			Message: err.Error(), ExecutedAt: execTime,
 		}, "", false
 	}
 
@@ -354,6 +372,15 @@ func (s *Service) checkAndReserveSeat(ctx context.Context, cli *traceint.Client,
 		}, "", false
 	}
 
+	if row.AutoCheckin {
+		if err := s.pacePipeline(ctx); err != nil {
+			return &do.PipelineRunResult{
+				Success: false, ConfigID: id, Name: row.Name,
+				Message: err.Error(), ExecutedAt: execTime,
+			}, "", false
+		}
+	}
+
 	reservationStatus := fmt.Sprintf("成功预约 [%s %s]", row.LibraryName, row.SeatName)
 	return nil, reservationStatus, true
 }
@@ -379,6 +406,17 @@ func (s *Service) executeBeaconCheckin(ctx context.Context, cli *traceint.Client
 			ReservationStatus: reservationStatus,
 			CheckinStatus:     "获取服务器时间失败",
 			Message:           fmt.Sprintf("已成功占座 [%s %s]，但获取签到服务器时间失败: %v", row.LibraryName, row.SeatName, err),
+			ExecutedAt:        execTime,
+		}
+	}
+	if err := s.pacePipeline(ctx); err != nil {
+		return &do.PipelineRunResult{
+			Success:           true,
+			ConfigID:          id,
+			Name:              row.Name,
+			ReservationStatus: reservationStatus,
+			CheckinStatus:     err.Error(),
+			Message:           err.Error(),
 			ExecutedAt:        execTime,
 		}
 	}

@@ -74,6 +74,7 @@ export class IGoPipelineService extends BaseService {
     return this.post<PipelineExecutionResult>(
       `/configs/${encodeURIComponent(id)}/run`,
       (data || {}) as unknown as Record<string, unknown>,
+      { timeout: 180000 },
     );
   }
 
