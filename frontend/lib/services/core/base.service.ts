@@ -1,6 +1,6 @@
 import apiClient from './api-client';
 import { ApiResponse } from './types';
-import { InternalAxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 
 /**
  * 服务基类
@@ -44,7 +44,7 @@ export class BaseService {
   protected static async get<T>(
     path: string,
     params?: Record<string, unknown>,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const requestConfig: InternalAxiosRequestConfig = {
       ...config,
@@ -71,12 +71,12 @@ export class BaseService {
   protected static async post<T>(
     path: string,
     data?: unknown,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.post<ApiResponse<T>>(
       this.getFullPath(path),
       data,
-      config,
+      config as InternalAxiosRequestConfig,
     );
     if (response.status === 204 || !response.data) {
       return undefined as T;
@@ -95,12 +95,12 @@ export class BaseService {
   protected static async put<T>(
     path: string,
     data?: unknown,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.put<ApiResponse<T>>(
       this.getFullPath(path),
       data,
-      config,
+      config as InternalAxiosRequestConfig,
     );
     if (response.status === 204 || !response.data) {
       return undefined as T;
@@ -119,12 +119,12 @@ export class BaseService {
   protected static async patch<T>(
     path: string,
     data?: unknown,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await apiClient.patch<ApiResponse<T>>(
       this.getFullPath(path),
       data,
-      config,
+      config as InternalAxiosRequestConfig,
     );
     if (response.status === 204 || !response.data) {
       return undefined as T;
@@ -143,7 +143,7 @@ export class BaseService {
   protected static async delete<T>(
     path: string,
     params?: Record<string, unknown>,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     const isDataInParams = Boolean(params && 'data' in params);
     const requestConfig: InternalAxiosRequestConfig = {
@@ -194,9 +194,13 @@ export class BaseService {
   protected static async rawPost<T>(
     url: string,
     data?: unknown,
-    config?: InternalAxiosRequestConfig,
+    config?: AxiosRequestConfig,
   ): Promise<T> {
-    const response = await apiClient.post<T>(url, data, config);
+    const response = await apiClient.post<T>(
+      url,
+      data,
+      config as InternalAxiosRequestConfig,
+    );
     return response.data;
   }
 }
